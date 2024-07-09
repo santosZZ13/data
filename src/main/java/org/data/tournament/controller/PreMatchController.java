@@ -17,7 +17,7 @@ public class PreMatchController {
 		preMatchService.getAllTour();
 	}
 
-	@GetMapping("/api/v1/sport/football/scheduled-events/2024-07-09")
+	@GetMapping("/api/v1/sport/football/scheduled-events/2024-07-10")
 	public void getScheduleEventsByDate() {
 		scheduledEventsService.getAllScheduleEventsByDate();
 	}

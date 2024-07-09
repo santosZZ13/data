@@ -20,7 +20,10 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 
 
 		ResponseEntity<ScheduledEventsResponse> response = restTemplate.exchange(url, HttpMethod.GET, null, ScheduledEventsResponse.class);
-		ScheduledEventsResponse body = response.getBody();
+		ScheduledEventsResponse scheduledEventsResponse = response.getBody();
+
+
+		List<ScheduledEventsResponse.Event> events = scheduledEventsResponse.getEvents();
 
 
 		return null;

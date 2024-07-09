@@ -18,6 +18,10 @@ spring:
       connection-timeout: 60000
       maximum-pool-size: 5
 
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017
+      database: football
   jpa:
     hibernate:
       ddl-auto: none
