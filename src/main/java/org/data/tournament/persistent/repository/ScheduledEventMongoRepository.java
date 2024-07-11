@@ -11,4 +11,9 @@ import java.util.List;
 public interface ScheduledEventMongoRepository extends MongoRepository<ScheduledEventsEntity, String> {
 	@Override
 	<S extends ScheduledEventsEntity> @NotNull List<S> saveAll(@NotNull Iterable<S> entities);
+	@Override
+	@NotNull
+	List<ScheduledEventsEntity> findAll();
+	@Override
+	<S extends ScheduledEventsEntity> @NotNull S save(@NotNull S entity);
 }

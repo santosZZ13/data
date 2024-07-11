@@ -6,6 +6,7 @@ import org.data.tournament.persistent.entity.base.ScheduledEventsBaseEntity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
@@ -22,6 +23,7 @@ public class ScheduledEventsEntity extends ScheduledEventsBaseEntity {
 	private RoundInfoEntity roundInfo;
 	private String customId;
 	private StatusEntity status;
+	private Integer winnerCode;
 	private TeamEntity homeTeam;
 	private TeamEntity awayTeam;
 	private ScoreEntity homeScore;
@@ -51,8 +53,8 @@ public class ScheduledEventsEntity extends ScheduledEventsBaseEntity {
 	public static class SeasonEntity {
 		private String name;
 		private String year;
-		private boolean editor;
-		private int id;
+		private Boolean editor;
+		private Integer id;
 	}
 
 
@@ -61,9 +63,9 @@ public class ScheduledEventsEntity extends ScheduledEventsBaseEntity {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	public static class RoundInfoEntity {
-		private int round;
+		private Integer round;
 		private String name;
-		private int cupRoundType;
+		private Integer cupRoundType;
 	}
 
 	@Builder
@@ -115,7 +117,9 @@ public class ScheduledEventsEntity extends ScheduledEventsBaseEntity {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	public static class TimeEntity {
-		private String currentPeriodStartTimestamp;
+		private String injuryTime1;
+		private String injuryTime2;
+		private LocalDateTime currentPeriodStartTimestamp;
 	}
 
 	@Builder
@@ -123,7 +127,8 @@ public class ScheduledEventsEntity extends ScheduledEventsBaseEntity {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	public static class ChangesEntity {
-		private long changeTimestamp;
+		private List<String> changes;
+		private LocalDateTime changeTimestamp;
 	}
 
 }

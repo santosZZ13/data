@@ -1,17 +1,19 @@
 package org.data.tournament.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public interface ScheduledEventsCommonResponse {
 	@Builder
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
+	@ToString
 	class UniqueTournament {
+		@NotNull
 		private String name;
+		@NotNull
 		private String slug;
 		private ScheduledEventsCommonResponse.Category category;
 		private int userCount;
@@ -26,12 +28,18 @@ public interface ScheduledEventsCommonResponse {
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
+	@ToString
 	class Category {
+		@NotNull
 		private String name;
+		@NotNull
 		private String slug;
+		@Nullable
 		private ScheduledEventsCommonResponse.Sport sport;
-		private int id;
+		private Integer id;
+		@Nullable
 		private ScheduledEventsCommonResponse.Country country;
+		@Nullable
 		private String flag;
 	}
 
@@ -39,19 +47,26 @@ public interface ScheduledEventsCommonResponse {
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
+	@ToString
 	class Sport {
+		@Nullable
 		private String name;
+		@Nullable
 		private String slug;
-		private int id;
+		private Integer id;
 	}
 
 	@Builder
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
+	@ToString
 	class Country {
+		@Nullable
 		private String alpha2;
+		@Nullable
 		private String alpha3;
+		@Nullable
 		private String name;
 	}
 
@@ -59,9 +74,13 @@ public interface ScheduledEventsCommonResponse {
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
+	@ToString
 	class TeamColors {
+		@Nullable
 		private String primary;
+		@Nullable
 		private String secondary;
+		@Nullable
 		private String text;
 	}
 
@@ -69,8 +88,11 @@ public interface ScheduledEventsCommonResponse {
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
+	@ToString
 	class FieldTranslations {
+		@Nullable
 		private ScheduledEventsCommonResponse.Translations nameTranslation;
+		@Nullable
 		private ScheduledEventsCommonResponse.Translations shortNameTranslation;
 	}
 
@@ -78,8 +100,11 @@ public interface ScheduledEventsCommonResponse {
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
+	@ToString
 	class Translations {
+		@Nullable
 		private String ar;
+		@Nullable
 		private String ru;
 	}
 }

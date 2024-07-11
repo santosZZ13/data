@@ -7,4 +7,9 @@ import java.util.List;
 
 public interface ScheduledEventsRepository {
 	List<ScheduledEventsEntity> saveEvents(List<ScheduledEventsResponse.Event> events);
+
+	List<ScheduledEventsResponse.Event> getAllEvents();
+
+	ScheduledEventsResponse.Event saveEvent(ScheduledEventsResponse.Event event);
+
 }

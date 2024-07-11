@@ -32,7 +32,7 @@ public interface ScheduledEventsCommon {
 		private String name;
 		private String slug;
 		private Sport sport;
-		private int id;
+		private Integer id;
 		private Country country;
 		private String flag;
 	}
@@ -44,7 +44,7 @@ public interface ScheduledEventsCommon {
 	class Sport {
 		private String name;
 		private String slug;
-		private int id;
+		private Integer id;
 	}
 
 	@Builder

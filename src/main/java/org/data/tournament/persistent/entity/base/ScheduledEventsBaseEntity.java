@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class ScheduledEventsBaseEntity {
 	private boolean hasGlobalHighlights;
+	private boolean hasEventPlayerStatistics;
+	private boolean hasEventPlayerHeatMap;
 	private int detailId;
 	private boolean crowdsourcingDataDisplayEnabled;
 	private int idEvent;
