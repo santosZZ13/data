@@ -11,7 +11,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class TournamentResponse {
+public class Tournament8xResponse {
 	private String msg;
 	private int code;
 	private Data data;

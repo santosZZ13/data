@@ -15,6 +15,6 @@ public class MatchModel {
 	private String name;
 	private String home;
 	private String away;
-	private TournamentResponse.Round round;
+	private Tournament8xResponse.Round round;
 	private LocalDateTime kickoffTime;
 }

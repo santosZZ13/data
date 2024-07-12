@@ -30,18 +30,18 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 
 		events.forEach(event -> {
 
-			ScheduledEventsResponse.TournamentResponse tournamentResponse = event.getTournament();
-			ScheduledEventsResponse.SeasonResponse seasonResponse = event.getSeason();
-			ScheduledEventsResponse.RoundInfo roundInfoResponse = event.getRoundInfo();
+			ScheduledEventsCommonResponse.TournamentResponse tournamentResponse = event.getTournament();
+			ScheduledEventsCommonResponse.SeasonResponse seasonResponse = event.getSeason();
+			ScheduledEventsCommonResponse.RoundInfo roundInfoResponse = event.getRoundInfo();
 			String customIdResponse = event.getCustomId();
-			ScheduledEventsResponse.Status statusResponse = event.getStatus();
+			ScheduledEventsCommonResponse.Status statusResponse = event.getStatus();
 			Integer winnerCodeResponse = event.getWinnerCode();
-			ScheduledEventsResponse.Team homeTeamResponse = event.getHomeTeam();
-			ScheduledEventsResponse.Team awayTeamResponse = event.getAwayTeam();
-			ScheduledEventsResponse.Score homeScoreResponse = event.getHomeScore();
-			ScheduledEventsResponse.Score awayScoreResponse = event.getAwayScore();
-			ScheduledEventsResponse.Time timeResponse = event.getTime();
-			ScheduledEventsResponse.Changes changesResponse = event.getChanges();
+			ScheduledEventsCommonResponse.Team homeTeamResponse = event.getHomeTeam();
+			ScheduledEventsCommonResponse.Team awayTeamResponse = event.getAwayTeam();
+			ScheduledEventsCommonResponse.Score homeScoreResponse = event.getHomeScore();
+			ScheduledEventsCommonResponse.Score awayScoreResponse = event.getAwayScore();
+			ScheduledEventsCommonResponse.Time timeResponse = event.getTime();
+			ScheduledEventsCommonResponse.Changes changesResponse = event.getChanges();
 			boolean hasGlobalHighlightsResponse = event.isHasGlobalHighlights();
 			boolean hasEventPlayerStatisticsResponse = event.isHasEventPlayerStatistics();
 			boolean hasEventPlayerHeatMapResponse = event.isHasEventPlayerHeatMap();
@@ -113,11 +113,11 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 
 
 	@Override
-	public ScheduledEventsResponse.Event saveEvent() {
+	public ScheduledEventsResponse.Event saveEvent(ScheduledEventsResponse.Event event) {
 		return null;
 	}
 
-	private ScheduledEventsEntity.ChangesEntity populatedChanges(ScheduledEventsResponse.Changes changesResponse) {
+	private ScheduledEventsEntity.ChangesEntity populatedChanges(ScheduledEventsCommonResponse.Changes changesResponse) {
 		return ScheduledEventsEntity.ChangesEntity.builder()
 				.changeTimestamp(TimeUtil.convertUnixTimestampToLocalDateTime(changesResponse.getChangeTimestamp()))
 				.changes(changesResponse.getChanges())
@@ -125,7 +125,7 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 	}
 
 
-	private ScheduledEventsEntity.TimeEntity populatedTime(ScheduledEventsResponse.Time timeResponse) {
+	private ScheduledEventsEntity.TimeEntity populatedTime(ScheduledEventsCommonResponse.Time timeResponse) {
 		return ScheduledEventsEntity.TimeEntity.builder()
 				.injuryTime1(timeResponse.getInjuryTime1())
 				.injuryTime2(timeResponse.getInjuryTime2())
@@ -134,7 +134,7 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 	}
 
 
-	private ScheduledEventsEntity.ScoreEntity populatedScore(ScheduledEventsResponse.Score scoreResponse) {
+	private ScheduledEventsEntity.ScoreEntity populatedScore(ScheduledEventsCommonResponse.Score scoreResponse) {
 		return ScheduledEventsEntity.ScoreEntity.builder()
 				.current(scoreResponse.getCurrent())
 				.display(scoreResponse.getDisplay())
@@ -144,7 +144,7 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 				.build();
 	}
 
-	private ScheduledEventsEntity.StatusEntity populatedStatusEntity(ScheduledEventsResponse.Status statusResponse) {
+	private ScheduledEventsEntity.StatusEntity populatedStatusEntity(ScheduledEventsCommonResponse.Status statusResponse) {
 		return Objects.isNull(statusResponse) ? null : ScheduledEventsEntity.StatusEntity.builder()
 				.code(statusResponse.getCode())
 				.description(statusResponse.getDescription())
@@ -152,7 +152,7 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 				.build();
 	}
 
-	private ScheduledEventsEntity.RoundInfoEntity populatedRoundInfoEntity(ScheduledEventsResponse.RoundInfo roundInfoResponse) {
+	private ScheduledEventsEntity.RoundInfoEntity populatedRoundInfoEntity(ScheduledEventsCommonResponse.RoundInfo roundInfoResponse) {
 		return Objects.isNull(roundInfoResponse) ? null : ScheduledEventsEntity.RoundInfoEntity.builder()
 				.round(roundInfoResponse.getRound())
 				.name(roundInfoResponse.getName())
@@ -160,7 +160,7 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 				.build();
 	}
 
-	private ScheduledEventsEntity.SeasonEntity populatedSessionEntity(ScheduledEventsResponse.SeasonResponse seasonResponse) {
+	private ScheduledEventsEntity.SeasonEntity populatedSessionEntity(ScheduledEventsCommonResponse.SeasonResponse seasonResponse) {
 		return Objects.isNull(seasonResponse) ? null : ScheduledEventsEntity.SeasonEntity.builder()
 				.name(seasonResponse.getName())
 				.year(seasonResponse.getYear())
@@ -169,7 +169,7 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 				.build();
 	}
 
-	private ScheduledEventsEntity.TournamentEntity populatedTournamentEntity(ScheduledEventsResponse.TournamentResponse tournamentResponse) {
+	private ScheduledEventsEntity.TournamentEntity populatedTournamentEntity(ScheduledEventsCommonResponse.TournamentResponse tournamentResponse) {
 
 		ScheduledEventsCommonResponse.Category categoryResponse = tournamentResponse.getCategory();
 		ScheduledEventsCommonResponse.Sport sportResponse = categoryResponse.getSport();
@@ -236,7 +236,7 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 	}
 
 
-	private static ScheduledEventsEntity.TeamEntity populatedTeamEntity(ScheduledEventsResponse.Team team) {
+	private static ScheduledEventsEntity.TeamEntity populatedTeamEntity(ScheduledEventsCommonResponse.Team team) {
 		ScheduledEventsCommonResponse.Sport sport = team.getSport();
 		ScheduledEventsCommonResponse.Country country = team.getCountry();
 		ScheduledEventsCommonResponse.TeamColors teamColors = team.getTeamColors();

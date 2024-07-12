@@ -1,9 +1,6 @@
 package org.data.tournament.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 public interface ScheduledEventDTO {
@@ -13,11 +10,47 @@ public interface ScheduledEventDTO {
 	@SuperBuilder
 	@NoArgsConstructor
 	@AllArgsConstructor
-	public class Request extends PaginationDTO {
+	class Request extends PaginationDTO {
 		private String date;
 	}
 
-	public class Response {
-
+	@Data
+	@Builder
+	@NoArgsConstructor
+	@AllArgsConstructor
+	class Response {
+		private ScheduledEventsCommonResponse.TournamentResponse tournament;
+		private ScheduledEventsCommonResponse.SeasonResponse session;
+		private ScheduledEventsCommonResponse.RoundInfo round;
 	}
+
+
+
+
+//	@Data
+//	@Builder
+//	@NoArgsConstructor
+//	@AllArgsConstructor
+//	class TournamentDTO {
+//		private String name;
+//		private String category;
+//	}
+//
+//	@Data
+//	@Builder
+//	@NoArgsConstructor
+//	@AllArgsConstructor
+//	class SessionDTO {
+//		private String name;
+//		private String year;
+//	}
+//
+//	@Data
+//	@Builder
+//	@NoArgsConstructor
+//	@AllArgsConstructor
+//	class RoundInfoDTO {
+//		private String name;
+//		private String year;
+//	}
 }

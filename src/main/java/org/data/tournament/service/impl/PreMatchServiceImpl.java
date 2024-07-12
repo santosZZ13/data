@@ -3,7 +3,7 @@ package org.data.tournament.service.impl;
 import lombok.AllArgsConstructor;
 import org.data.tournament.converter.MatchConverter;
 import org.data.tournament.dto.MatchModel;
-import org.data.tournament.dto.TournamentResponse;
+import org.data.tournament.dto.Tournament8xResponse;
 import org.data.tournament.persistent.repository.MatchRepository;
 import org.data.tournament.service.PreMatchService;
 import org.springframework.http.HttpEntity;
@@ -27,7 +27,7 @@ public class PreMatchServiceImpl implements PreMatchService {
 	private final MatchConverter matchConverter;
 
 	@Override
-	public List<TournamentResponse> getAllTour() {
+	public List<Tournament8xResponse> getAllTour() {
 		RestTemplate restTemplate = new RestTemplate();
 
 		// Set the URL
@@ -59,26 +59,26 @@ public class PreMatchServiceImpl implements PreMatchService {
 		HttpEntity<String> entity = new HttpEntity<>(headers);
 
 		// Make the GET request
-		ResponseEntity<TournamentResponse> response = restTemplate.exchange(url, HttpMethod.GET, entity, TournamentResponse.class);
+		ResponseEntity<Tournament8xResponse> response = restTemplate.exchange(url, HttpMethod.GET, entity, Tournament8xResponse.class);
 
-		TournamentResponse tournamentResponse = response.getBody();
+		Tournament8xResponse tournament8xResponse = response.getBody();
 
 
 
-		List<TournamentResponse.Tournament> tournaments = tournamentResponse.getData().getTournaments();
+		List<Tournament8xResponse.Tournament> tournaments = tournament8xResponse.getData().getTournaments();
 		List<MatchModel> matchesOfTour = new ArrayList<>();
 
 		tournaments.forEach(tournament -> {
 			String tnName = tournament.getName();
 
-			List<TournamentResponse.Match> matches = tournament.getMatches();
+			List<Tournament8xResponse.Match> matches = tournament.getMatches();
 			matches.forEach(match -> {
 				String home = match.getHome().getName();
 				String away = match.getAway().getName();
 				long kickoffTime = match.getKickoffTime();
 				String name = match.getName();
 
-				TournamentResponse.Round round = match.getRound();
+				Tournament8xResponse.Round round = match.getRound();
 				MatchModel matchModel = MatchModel.builder()
 						.home(home)
 						.away(away)

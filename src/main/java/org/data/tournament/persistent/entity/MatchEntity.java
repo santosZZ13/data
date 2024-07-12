@@ -1,7 +1,6 @@
 package org.data.tournament.persistent.entity;
 
 import lombok.*;
-import org.data.tournament.dto.TournamentResponse;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
