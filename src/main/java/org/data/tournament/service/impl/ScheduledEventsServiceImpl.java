@@ -2,7 +2,7 @@ package org.data.tournament.service.impl;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.data.sap.service.SapService;
+import org.data.service.sap.SapService;
 import org.data.tournament.dto.GenericResponseWrapper;
 import org.data.tournament.dto.ScheduledEventDTO;
 import org.data.tournament.dto.ScheduledEventsResponse;
@@ -34,9 +34,6 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 		ScheduledEventsResponse scheduledEventsResponse = response.getBody();
 
 
-		// Call Sofa
-		// Call DB
-		// Compare data -> update final data -> return data
 
 //			sapService.requestGet(url, ScheduledEventsResponse.class);
 
@@ -46,8 +43,7 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 		List<ScheduledEventsResponse.Event> events = scheduledEventsRepository.getAllEvents();
 
 
-
-
+		sapService.restSofaScoreGet("213", ScheduledEventsResponse.Event.class);
 
 
 		if (eventsResponse == null) {

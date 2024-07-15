@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 public class ScheduledEventsController {
 
-	private final ScheduledEventsService scheduledEventsService;
+	private final ScheduledEventsService<T> scheduledEventsService;
 
 
 	@GetMapping("/data/api/v1/sport/football/scheduled-events/2024-07-10")

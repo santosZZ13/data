@@ -7,7 +7,7 @@ spring:
   main:
     banner-mode: console # Disable the Spring logo
     #        web-application-type: none
-#    allow-bean-definition-overriding: true
+  #    allow-bean-definition-overriding: true
 
   datasource:
     url: jdbc:mysql://localhost:3306/data?allowpublickeyretrieval=true&usessl=false
@@ -32,3 +32,14 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL5Dialect
     generate-ddl: true
+
+connection:
+  eightxbet:
+    url: https://vd001-fxh9-api.fdsgrtg.8xrgfgfgfdw.com
+    headers:
+      referer: https://8x6895.com/
+      device:
+        - mobile
+
+  sofasocre:
+    url: https://www.sofascore.com/api/v1
