@@ -1,7 +1,7 @@
 package org.data.tournament.controller;
 
 import lombok.AllArgsConstructor;
-import org.data.tournament.dto.GenericResponseWrapper;
+import org.data.common.model.GenericResponseWrapper;
 import org.data.tournament.dto.ScheduledEventDTO;
 import org.data.tournament.service.ScheduledEventsService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 public class ScheduledEventsController {
 
-	private final ScheduledEventsService<T> scheduledEventsService;
+	private final ScheduledEventsService scheduledEventsService;
 
 
 	@GetMapping("/data/api/v1/sport/football/scheduled-events/2024-07-10")

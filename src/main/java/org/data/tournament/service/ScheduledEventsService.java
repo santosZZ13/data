@@ -1,6 +1,6 @@
 package org.data.tournament.service;
 
-import org.data.tournament.dto.GenericResponseWrapper;
+import org.data.common.model.GenericResponseWrapper;
 import org.data.tournament.dto.ScheduledEventDTO;
 
 public interface ScheduledEventsService {

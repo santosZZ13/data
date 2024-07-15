@@ -3,16 +3,19 @@ package org.data.tournament.service.impl;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.data.service.sap.SapService;
-import org.data.tournament.dto.GenericResponseWrapper;
+import org.data.common.model.GenericResponseWrapper;
 import org.data.tournament.dto.ScheduledEventDTO;
 import org.data.tournament.dto.ScheduledEventsResponse;
 import org.data.tournament.repository.impl.ScheduledEventsRepository;
 import org.data.tournament.service.ScheduledEventsService;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -49,11 +52,6 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 		if (eventsResponse == null) {
 			throw new RuntimeException("Can't fetch events from remote");
 		}
-
-
-
-
-
 
 
 		List<Integer> eventsResponseId = eventsResponse
@@ -97,7 +95,19 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 		}
 
 
+		Pageable pageable = PageRequest.of(request.getPageNumber(), request.getPageSize());
+		ScheduledEventsResponse.Event eventsByDate = scheduledEventsRepository.getAllEventByDate(getLocalDateTime(request.getDate()), pageable);
 
-		return null;
+
+		return GenericResponseWrapper
+				.builder()
+				.code("")
+				.msg("")
+				.data(eventsByDate)
+				.build();
+	}
+
+	private LocalDateTime getLocalDateTime(String date) {
+		return LocalDateTime.parse(date);
 	}
 }

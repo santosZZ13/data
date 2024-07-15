@@ -14,7 +14,9 @@ import java.util.List;
 @NoArgsConstructor
 public class ScheduledEventInPlayDTO {
 
-	private List<TournamentDTO> tournamentResponses;
+	private Integer tntSize;
+	private Integer matchSize;
+	private List<TournamentDTO> tournamentDto;
 
 
 	@Builder

@@ -1,4 +1,4 @@
-package org.data.tournament.dto;
+package org.data.common.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,4 +13,6 @@ public class GenericResponseWrapper {
 	private String msg;
 	private String code;
 	private Object data;
+	private String time;
+	private String traceId;
 }

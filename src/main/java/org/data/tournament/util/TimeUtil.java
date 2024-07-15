@@ -11,4 +11,11 @@ public class TimeUtil {
 		// Convert the Instant to a LocalDateTime using the system default time zone
 		return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
 	}
+
+	public static long convertLocalDateTimeToUnixTimestamp(LocalDateTime localDateTime) {
+		// Convert the LocalDateTime to an Instant
+		Instant instant = localDateTime.atZone(ZoneId.systemDefault()).toInstant();
+		// Get the Unix timestamp from the Instant
+		return instant.getEpochSecond();
+	}
 }

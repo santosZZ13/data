@@ -16,7 +16,7 @@ import java.util.Map;
 public class RestConnectorImpl implements RestConnector {
 
 	private final RestTemplate restTemplate;
-
+	private final ConnectionProperties connectionProperties;
 
 	@Override
 	public <T> T restGet(ConnectionProperties.Host host, String requestPath, Class<T> responseType) {
@@ -25,11 +25,19 @@ public class RestConnectorImpl implements RestConnector {
 
 	@Override
 	public <T> T restGet(ConnectionProperties.Host host, String requestPath, Map<String, ?> queryParams, Class<T> responseType) {
-		HttpHeaders headers = new HttpHeaders();
+
+		ConnectionProperties.ServerConnection connectionPropertiesHost = connectionProperties.getHost(host);
+		Map<String, String> headers = connectionPropertiesHost.getHeaders();
+		String url = connectionPropertiesHost.getUrl();
+
+
+		HttpHeaders httpHeaders = new HttpHeaders();
+		headers.forEach(httpHeaders::add);
 		HttpEntity<?> entity = new HttpEntity<>(headers);
 
+
 		return restTemplate.exchange(
-				"",
+				buildUrl(url, requestPath, queryParams),
 				HttpMethod.GET,
 				entity,
 				responseType,
@@ -38,11 +46,9 @@ public class RestConnectorImpl implements RestConnector {
 	}
 
 
-	private String buildUrl(String url, String requestPath, Map<String, Object> queryParams) {
-
-		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(url);
-		uriComponentsBuilder.path(requestPath);
-
-
+	private String buildUrl(String url, String requestPath, Map<String, ?> queryParams) {
+		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(url + requestPath);
+		queryParams.forEach(uriComponentsBuilder::queryParam);
+		return uriComponentsBuilder.toUriString();
 	}
 }

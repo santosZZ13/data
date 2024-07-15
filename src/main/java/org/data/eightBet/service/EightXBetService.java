@@ -1,6 +1,6 @@
 package org.data.eightBet.service;
 
-import org.data.tournament.dto.GenericResponseWrapper;
+import org.data.common.model.GenericResponseWrapper;
 
 public interface EightXBetService {
 	GenericResponseWrapper getScheduledEventInPlay();

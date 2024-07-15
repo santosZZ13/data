@@ -62,7 +62,7 @@ public interface ScheduledEventsCommonResponse {
 		@JsonIgnore
 		private String slug;
 		@Nullable
-		private ScheduledEventsCommonResponse.Sport sport;
+		private ScheduledEventsCommonResponse.SportResponse sportResponse;
 		private Integer id;
 		@Nullable
 		private ScheduledEventsCommonResponse.Country country;
@@ -75,7 +75,7 @@ public interface ScheduledEventsCommonResponse {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	@ToString
-	class Sport {
+	class SportResponse {
 		@Nullable
 		private String name;
 		@Nullable
@@ -173,14 +173,14 @@ public interface ScheduledEventsCommonResponse {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	@ToString
-	class Team {
+	class TeamResponse {
 		@NotNull
 		private String name;
 		@NotNull
 		private String slug;
 		@NotNull
 		private String shortName;
-		private ScheduledEventsCommonResponse.Sport sport;
+		private SportResponse sportResponse;
 		private int userCount;
 		@NotNull
 		private String nameCode;
@@ -191,7 +191,7 @@ public interface ScheduledEventsCommonResponse {
 		@NotNull
 		private ScheduledEventsCommonResponse.Country country;
 		@Nullable
-		private List<Team> subTeams;
+		private List<TeamResponse> subTeamResponses;
 		@NotNull
 		private ScheduledEventsCommonResponse.TeamColors teamColors;
 		@Nullable

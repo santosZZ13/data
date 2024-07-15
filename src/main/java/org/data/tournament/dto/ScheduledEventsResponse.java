@@ -34,9 +34,9 @@ public class ScheduledEventsResponse {
 		@Nullable
 		private Integer winnerCode;
 		@NotNull
-		private ScheduledEventsCommonResponse.Team homeTeam;
+		private ScheduledEventsCommonResponse.TeamResponse homeTeamResponse;
 		@NotNull
-		private ScheduledEventsCommonResponse.Team awayTeam;
+		private ScheduledEventsCommonResponse.TeamResponse awayTeamResponse;
 		@Nullable
 		private ScheduledEventsCommonResponse.Score homeScore;
 		@Nullable

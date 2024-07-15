@@ -38,8 +38,7 @@ connection:
     url: https://vd001-fxh9-api.fdsgrtg.8xrgfgfgfdw.com
     headers:
       referer: https://8x6895.com/
-      device:
-        - mobile
+      device: mobile
 
   sofasocre:
     url: https://www.sofascore.com/api/v1

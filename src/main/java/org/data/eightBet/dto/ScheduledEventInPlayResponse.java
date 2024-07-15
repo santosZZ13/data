@@ -22,7 +22,7 @@ public class ScheduledEventInPlayResponse {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	public static class Data {
-		private List<TournamentResponse> tournamentResponses;
+		private List<TournamentResponse> tournaments;
 	}
 
 	@Builder
@@ -37,7 +37,7 @@ public class ScheduledEventInPlayResponse {
 		private boolean favorite;
 		private int priority;
 		private int count;
-		private List<MatchResponse> matchResponses;
+		private List<MatchResponse> matches;
 	}
 
 	@Builder
@@ -65,8 +65,8 @@ public class ScheduledEventInPlayResponse {
 		private int tnPriority;
 		private TeamResponse home;
 		private TeamResponse away;
-		private RoundResponse roundResponse;
-		private MarketInfoResponse marketInfoResponse;
+		private RoundResponse round;
+		private MarketInfoResponse marketInfo;
 		private MidsResponse mids;
 		private List<Object> videos;
 		private List<Tournament8xResponse.Anchor> anchors;

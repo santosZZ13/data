@@ -16,7 +16,7 @@ public class ConnectionProperties {
 
 
 	private EightXBet eightXBet;
-	private SofaScore sofaScore;
+	private SofaScore sofasocre;
 
 	@EqualsAndHashCode(callSuper = true)
 	@Data
@@ -46,7 +46,7 @@ public class ConnectionProperties {
 	public ServerConnection getHost(Host host) {
 		return switch (host) {
 			case EIGHTXBET -> this.eightXBet;
-			case SOFASCORE -> this.sofaScore;
+			case SOFASCORE -> this.sofasocre;
 			default -> null;
 		};
 	}

@@ -1,16 +1,20 @@
 package org.data.tournament.repository;
 
 import lombok.AllArgsConstructor;
-import org.data.tournament.converter.ScheduledEventsConverter;
 import org.data.tournament.dto.ScheduledEventsCommonResponse;
 import org.data.tournament.dto.ScheduledEventsResponse;
-import org.data.tournament.persistent.entity.ScheduledEventsCommon;
+import org.data.tournament.dto.ScheduledEventsResponseConverter;
+import org.data.tournament.persistent.entity.ScheduledEventsCommonEntity;
 import org.data.tournament.persistent.entity.ScheduledEventsEntity;
+import org.data.tournament.persistent.entity.ScheduledEventsEntityConverter;
 import org.data.tournament.persistent.repository.ScheduledEventMongoRepository;
 import org.data.tournament.repository.impl.ScheduledEventsRepository;
 import org.data.tournament.util.TimeUtil;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -25,6 +29,12 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 
 
 	@Override
+	public ScheduledEventsResponse.Event getAllEventByDate(LocalDateTime date, Pageable pageable) {
+		Page<ScheduledEventsEntity> evensByStartTime = scheduledEventMongoRepository.findAllByStartTimestamp(date, pageable);
+		return null;
+	}
+
+	@Override
 	public List<ScheduledEventsEntity> saveEvents(List<ScheduledEventsResponse.Event> events) {
 		List<ScheduledEventsEntity> scheduledEventsEntities = new ArrayList<>();
 
@@ -36,8 +46,8 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 			String customIdResponse = event.getCustomId();
 			ScheduledEventsCommonResponse.Status statusResponse = event.getStatus();
 			Integer winnerCodeResponse = event.getWinnerCode();
-			ScheduledEventsCommonResponse.Team homeTeamResponse = event.getHomeTeam();
-			ScheduledEventsCommonResponse.Team awayTeamResponse = event.getAwayTeam();
+			ScheduledEventsCommonResponse.TeamResponse homeTeamResponseResponse = event.getHomeTeamResponse();
+			ScheduledEventsCommonResponse.TeamResponse awayTeamResponseResponse = event.getAwayTeamResponse();
 			ScheduledEventsCommonResponse.Score homeScoreResponse = event.getHomeScore();
 			ScheduledEventsCommonResponse.Score awayScoreResponse = event.getAwayScore();
 			ScheduledEventsCommonResponse.Time timeResponse = event.getTime();
@@ -56,16 +66,16 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 			boolean feedLockedResponse = event.isFeedLocked();
 			boolean editorResponse = event.isEditor();
 
-			ScheduledEventsEntity.TournamentEntity tournamentEntity = populatedTournamentEntity(tournamentResponse);
-			ScheduledEventsEntity.SeasonEntity seasonEntity = populatedSessionEntity(seasonResponse);
-			ScheduledEventsEntity.RoundInfoEntity roundInfoEntity = populatedRoundInfoEntity(roundInfoResponse);
-			ScheduledEventsEntity.StatusEntity statusEntity = populatedStatusEntity(statusResponse);
-			ScheduledEventsEntity.TeamEntity homeTeamEntity = populatedTeamEntity(homeTeamResponse);
-			ScheduledEventsEntity.TeamEntity awayTeamEntity = populatedTeamEntity(awayTeamResponse);
-			ScheduledEventsEntity.ScoreEntity homeScoreEntity = Objects.isNull(homeScoreResponse) ? null : populatedScore(homeScoreResponse);
-			ScheduledEventsEntity.ScoreEntity awayeScoreEntity = Objects.isNull(homeScoreResponse) ? null : populatedScore(awayScoreResponse);
-			ScheduledEventsEntity.TimeEntity timeEntity = populatedTime(timeResponse);
-			ScheduledEventsEntity.ChangesEntity changesEntity = populatedChanges(changesResponse);
+			ScheduledEventsCommonEntity.TournamentEntity tournamentEntity = ScheduledEventsEntityConverter.fromTournamentResponse(tournamentResponse);
+			ScheduledEventsCommonEntity.SeasonEntity seasonEntity = ScheduledEventsEntityConverter.fromSesSeasonResponse(seasonResponse);
+			ScheduledEventsCommonEntity.RoundInfoEntity roundInfoEntity = ScheduledEventsEntityConverter.fromRoundInfoResponse(roundInfoResponse);
+			ScheduledEventsCommonEntity.StatusEntity statusEntity = ScheduledEventsEntityConverter.fromStatusResponse(statusResponse);
+			ScheduledEventsCommonEntity.TeamEntity homeTeamEntity = ScheduledEventsEntityConverter.fromTeamResponse(homeTeamResponseResponse);
+			ScheduledEventsCommonEntity.TeamEntity awayTeamEntity = ScheduledEventsEntityConverter.fromTeamResponse(awayTeamResponseResponse);
+			ScheduledEventsCommonEntity.ScoreEntity homeScoreEntity = Objects.isNull(homeScoreResponse) ? null : ScheduledEventsEntityConverter.fromScoreResponse(homeScoreResponse);
+			ScheduledEventsCommonEntity.ScoreEntity awayeScoreEntity = Objects.isNull(homeScoreResponse) ? null : ScheduledEventsEntityConverter.fromScoreResponse(awayScoreResponse);
+			ScheduledEventsCommonEntity.TimeEntity timeEntity = ScheduledEventsEntityConverter.fromTimeResponse(timeResponse);
+			ScheduledEventsCommonEntity.ChangesEntity changesEntity = ScheduledEventsEntityConverter.fromChangesResponse(changesResponse);
 
 			ScheduledEventsEntity scheduledEventsEntity = ScheduledEventsEntity.builder()
 					.tournament(tournamentEntity)
@@ -106,9 +116,50 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 	public List<ScheduledEventsResponse.Event> getAllEvents() {
 
 		List<ScheduledEventsEntity> scheduledEventsEntities = scheduledEventMongoRepository.findAll();
+		List<ScheduledEventsResponse.Event> events = new ArrayList<>();
 
-
-		return List.of();
+		for (int i = 0; i < scheduledEventsEntities.size(); i++) {
+			ScheduledEventsEntity scheduledEventsEntity = scheduledEventsEntities.get(i);
+			ScheduledEventsCommonResponse.TournamentResponse tournamentResponse = ScheduledEventsResponseConverter.fromTournamentEntity(scheduledEventsEntity.getTournament());
+			ScheduledEventsCommonResponse.SeasonResponse seasonResponse = ScheduledEventsResponseConverter.fromSesSeasonEntity(scheduledEventsEntity.getSeason());
+			ScheduledEventsCommonResponse.Status statusResponse = ScheduledEventsResponseConverter.fromStatusEntity(scheduledEventsEntity.getStatus());
+			ScheduledEventsCommonResponse.TeamResponse homeTeamResponse = ScheduledEventsResponseConverter.fromTeamEntity(scheduledEventsEntity.getHomeTeam());
+			ScheduledEventsCommonResponse.TeamResponse awayTeamResponse = ScheduledEventsResponseConverter.fromTeamEntity(scheduledEventsEntity.getAwayTeam());
+			ScheduledEventsCommonResponse.Score homeScoreResponse = ScheduledEventsResponseConverter.fromScoreResponse(scheduledEventsEntity.getHomeScore());
+			ScheduledEventsCommonResponse.Score awayScoreResponse = ScheduledEventsResponseConverter.fromScoreResponse(scheduledEventsEntity.getAwayScore());
+			ScheduledEventsCommonResponse.Time timeResponse = ScheduledEventsResponseConverter.fromTimeResponse(scheduledEventsEntity.getTime());
+			ScheduledEventsCommonResponse.Changes changesResponse = ScheduledEventsResponseConverter.fromChangesResponse(scheduledEventsEntity.getChanges());
+			ScheduledEventsCommonResponse.RoundInfo roundInfoResponse = ScheduledEventsResponseConverter.fromRoundInfoResponse(scheduledEventsEntity.getRoundInfo());
+			ScheduledEventsResponse.Event event = ScheduledEventsResponse.Event.builder()
+					.idDB(scheduledEventsEntity.getId())
+					.tournament(tournamentResponse)
+					.season(seasonResponse)
+					.roundInfo(roundInfoResponse)
+					.customId(scheduledEventsEntity.getCustomId())
+					.status(statusResponse)
+					.winnerCode(scheduledEventsEntity.getWinnerCode())
+					.homeTeamResponse(homeTeamResponse)
+					.awayTeamResponse(awayTeamResponse)
+					.homeScore(homeScoreResponse)
+					.awayScore(awayScoreResponse)
+					.time(timeResponse)
+					.changes(changesResponse)
+					.hasGlobalHighlights(scheduledEventsEntity.isHasGlobalHighlights())
+					.hasEventPlayerStatistics(scheduledEventsEntity.isHasEventPlayerStatistics())
+					.hasEventPlayerHeatMap(scheduledEventsEntity.isHasEventPlayerHeatMap())
+					.detailId(scheduledEventsEntity.getDetailId())
+					.crowdsourcingDataDisplayEnabled(scheduledEventsEntity.isCrowdsourcingDataDisplayEnabled())
+					.id(scheduledEventsEntity.getIdEvent())
+					.crowdsourcingEnabled(scheduledEventsEntity.isCrowdsourcingEnabled())
+					.startTimestamp(TimeUtil.convertLocalDateTimeToUnixTimestamp(scheduledEventsEntity.getStartTimestamp()))
+					.slug(scheduledEventsEntity.getSlug())
+					.finalResultOnly(scheduledEventsEntity.isFinalResultOnly())
+					.feedLocked(scheduledEventsEntity.isFeedLocked())
+					.isEditor(scheduledEventsEntity.isEditor())
+					.build();
+			events.add(event);
+		}
+		return events;
 	}
 
 
@@ -117,182 +168,6 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 		return null;
 	}
 
-	private ScheduledEventsEntity.ChangesEntity populatedChanges(ScheduledEventsCommonResponse.Changes changesResponse) {
-		return ScheduledEventsEntity.ChangesEntity.builder()
-				.changeTimestamp(TimeUtil.convertUnixTimestampToLocalDateTime(changesResponse.getChangeTimestamp()))
-				.changes(changesResponse.getChanges())
-				.build();
-	}
-
-
-	private ScheduledEventsEntity.TimeEntity populatedTime(ScheduledEventsCommonResponse.Time timeResponse) {
-		return ScheduledEventsEntity.TimeEntity.builder()
-				.injuryTime1(timeResponse.getInjuryTime1())
-				.injuryTime2(timeResponse.getInjuryTime2())
-				.currentPeriodStartTimestamp(TimeUtil.convertUnixTimestampToLocalDateTime(timeResponse.getCurrentPeriodStartTimestamp()))
-				.build();
-	}
-
-
-	private ScheduledEventsEntity.ScoreEntity populatedScore(ScheduledEventsCommonResponse.Score scoreResponse) {
-		return ScheduledEventsEntity.ScoreEntity.builder()
-				.current(scoreResponse.getCurrent())
-				.display(scoreResponse.getDisplay())
-				.period1(scoreResponse.getPeriod1())
-				.period2(scoreResponse.getPeriod2())
-				.normaltime(scoreResponse.getNormaltime())
-				.build();
-	}
-
-	private ScheduledEventsEntity.StatusEntity populatedStatusEntity(ScheduledEventsCommonResponse.Status statusResponse) {
-		return Objects.isNull(statusResponse) ? null : ScheduledEventsEntity.StatusEntity.builder()
-				.code(statusResponse.getCode())
-				.description(statusResponse.getDescription())
-				.type(statusResponse.getType())
-				.build();
-	}
-
-	private ScheduledEventsEntity.RoundInfoEntity populatedRoundInfoEntity(ScheduledEventsCommonResponse.RoundInfo roundInfoResponse) {
-		return Objects.isNull(roundInfoResponse) ? null : ScheduledEventsEntity.RoundInfoEntity.builder()
-				.round(roundInfoResponse.getRound())
-				.name(roundInfoResponse.getName())
-				.cupRoundType(roundInfoResponse.getCupRoundType())
-				.build();
-	}
-
-	private ScheduledEventsEntity.SeasonEntity populatedSessionEntity(ScheduledEventsCommonResponse.SeasonResponse seasonResponse) {
-		return Objects.isNull(seasonResponse) ? null : ScheduledEventsEntity.SeasonEntity.builder()
-				.name(seasonResponse.getName())
-				.year(seasonResponse.getYear())
-				.editor(seasonResponse.getEditor())
-				.id(seasonResponse.getId())
-				.build();
-	}
-
-	private ScheduledEventsEntity.TournamentEntity populatedTournamentEntity(ScheduledEventsCommonResponse.TournamentResponse tournamentResponse) {
-
-		ScheduledEventsCommonResponse.Category categoryResponse = tournamentResponse.getCategory();
-		ScheduledEventsCommonResponse.Sport sportResponse = categoryResponse.getSport();
-		ScheduledEventsCommonResponse.Country countryResponse = categoryResponse.getCountry();
-		String flagResponse = categoryResponse.getFlag();
-		Integer idResponse = categoryResponse.getId();
-
-		ScheduledEventsCommon.Sport sport = ScheduledEventsConverter.fromSportScheduledEventsCommonResponse(sportResponse);
-		ScheduledEventsCommon.Country country = ScheduledEventsConverter.fromCountryScheduledEventsCommonResponse(countryResponse);
-
-		ScheduledEventsCommon.Category category = ScheduledEventsCommon.Category
-				.builder()
-				.id(idResponse)
-				.name(categoryResponse.getName())
-				.slug(categoryResponse.getSlug())
-				.sport(sport)
-				.country(country)
-				.flag(flagResponse)
-				.build();
-
-
-		ScheduledEventsCommonResponse.UniqueTournament uniqueTournamentResponse = tournamentResponse.getUniqueTournament();
-		ScheduledEventsCommonResponse.Category categoryUniQueTournamentResponse = uniqueTournamentResponse.getCategory();
-		ScheduledEventsCommonResponse.Sport sportUniQueTournament = categoryUniQueTournamentResponse.getSport();
-		ScheduledEventsCommonResponse.Country countryUniQueTournament = categoryUniQueTournamentResponse.getCountry();
-		Integer categoryUniQueTournamentId = categoryUniQueTournamentResponse.getId();
-		String categoryUniQueTournamentFlag = categoryUniQueTournamentResponse.getFlag();
-
-		ScheduledEventsCommon.Sport sportCategoryUniQueTournament = ScheduledEventsConverter.fromSportScheduledEventsCommonResponse(sportUniQueTournament);
-		ScheduledEventsCommon.Country countryCategoryUniQueTournament = ScheduledEventsConverter.fromCountryScheduledEventsCommonResponse(countryUniQueTournament);
-
-		ScheduledEventsCommon.Category categoryUniQueTournament = ScheduledEventsCommon.Category
-				.builder()
-				.id(categoryUniQueTournamentId)
-				.name(categoryUniQueTournamentResponse.getName())
-				.slug(categoryUniQueTournamentResponse.getSlug())
-				.sport(sportCategoryUniQueTournament)
-				.country(countryCategoryUniQueTournament)
-				.flag(categoryUniQueTournamentFlag)
-				.build();
-
-
-		ScheduledEventsCommon.UniqueTournament uniqueTournament = ScheduledEventsCommon.UniqueTournament.builder()
-				.name(uniqueTournamentResponse.getName())
-				.slug(uniqueTournamentResponse.getSlug())
-				.category(categoryUniQueTournament)
-				.userCount(uniqueTournamentResponse.getUserCount())
-				.crowdsourcingEnabled(uniqueTournamentResponse.isCrowdsourcingEnabled())
-				.hasPerformanceGraphFeature(uniqueTournamentResponse.isHasPerformanceGraphFeature())
-				.id(uniqueTournamentResponse.getId())
-				.hasEventPlayerStatistics(uniqueTournamentResponse.isHasEventPlayerStatistics())
-				.displayInverseHomeAwayTeams(uniqueTournamentResponse.isDisplayInverseHomeAwayTeams())
-				.build();
-
-		return ScheduledEventsEntity.TournamentEntity
-				.builder()
-				.name(tournamentResponse.getName())
-				.slug(tournamentResponse.getSlug())
-				.category(category)
-				.uniqueTournament(uniqueTournament)
-				.priority(tournamentResponse.getPriority())
-				.id(tournamentResponse.getId())
-				.build();
-	}
-
-
-	private static ScheduledEventsEntity.TeamEntity populatedTeamEntity(ScheduledEventsCommonResponse.Team team) {
-		ScheduledEventsCommonResponse.Sport sport = team.getSport();
-		ScheduledEventsCommonResponse.Country country = team.getCountry();
-		ScheduledEventsCommonResponse.TeamColors teamColors = team.getTeamColors();
-		ScheduledEventsCommonResponse.FieldTranslations fieldTranslations = team.getFieldTranslations();
-
-
-		ScheduledEventsEntity.TeamEntity teamEntity = ScheduledEventsEntity.TeamEntity.builder()
-				.name(team.getName())
-				.slug(team.getSlug())
-				.shortName(team.getShortName())
-				.sport(ScheduledEventsConverter.fromSportScheduledEventsCommonResponse(sport))
-				.userCount(team.getUserCount())
-				.nameCode(team.getNameCode())
-				.disabled(team.isDisabled())
-				.national(team.isNational())
-				.type(team.getType())
-				.id(team.getId())
-				.country(ScheduledEventsConverter.fromCountryScheduledEventsCommonResponse(country))
-				.subTeams(null)
-				.teamColors(ScheduledEventsConverter.fromTeamColorsScheduledEventsCommonResponse(teamColors))
-				.build();
-
-		if (Objects.isNull(fieldTranslations)) {
-			teamEntity.setFieldTranslations(null);
-		} else {
-
-			ScheduledEventsCommonResponse.Translations nameTranslation = fieldTranslations.getNameTranslation();
-			ScheduledEventsCommonResponse.Translations shortNameTranslation = fieldTranslations.getShortNameTranslation();
-			ScheduledEventsCommon.FieldTranslations.FieldTranslationsBuilder fieldTranslationsBuilder = ScheduledEventsCommon.FieldTranslations.builder();
-
-
-			if (!Objects.isNull(nameTranslation)) {
-				fieldTranslationsBuilder
-						.nameTranslation(ScheduledEventsCommon.Translations.builder()
-								.ru(nameTranslation.getRu())
-								.ar(nameTranslation.getAr())
-								.build()
-						);
-			} else {
-				fieldTranslationsBuilder.nameTranslation(null);
-			}
-
-			if (!Objects.isNull(shortNameTranslation)) {
-				fieldTranslationsBuilder.shortNameTranslation(ScheduledEventsCommon.Translations.builder()
-						.ru(shortNameTranslation.getRu())
-						.ar(shortNameTranslation.getAr())
-						.build()
-				);
-			} else {
-				fieldTranslationsBuilder.shortNameTranslation(null);
-			}
-
-			teamEntity.setFieldTranslations(fieldTranslationsBuilder.build());
-		}
-		return teamEntity;
-	}
 
 
 }
