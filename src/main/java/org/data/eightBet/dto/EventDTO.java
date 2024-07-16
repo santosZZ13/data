@@ -8,22 +8,13 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Builder
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class ScheduledEventInPlayDTO {
-
-	private Integer tntSize;
-	private Integer matchSize;
-	private List<TournamentDTO> tournamentDto;
-
+public interface EventDTO {
 
 	@Builder
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	public static class TournamentDTO {
+	class TournamentDTO {
 		private String tntName;
 		private List<MatchDTO> matches;
 	}
@@ -33,7 +24,7 @@ public class ScheduledEventInPlayDTO {
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	public static class MatchDTO {
+	class MatchDTO {
 		private Boolean inPlay;
 		private String homeName;
 		private String awayName;

@@ -1,21 +1,19 @@
-package org.data.tournament.persistent.entity;
+package org.data.persistent.entity;
 
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.data.tournament.persistent.entity.base.ScheduledEventsBaseEntity;
+import org.data.persistent.common.ScheduledEventsCommonEntity;
+import org.data.persistent.entity.base.ScheduledEventsBaseEntity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Document(collection = "scheduled_events")
-public class ScheduledEventsEntity extends ScheduledEventsBaseEntity {
+@Document(collection = "scheduled_events_sofascore")
+public class ScheduledEventsSofaScoreEntity extends ScheduledEventsBaseEntity {
 	@Id
 	private String id;
 	private ScheduledEventsCommonEntity.TournamentEntity tournament;

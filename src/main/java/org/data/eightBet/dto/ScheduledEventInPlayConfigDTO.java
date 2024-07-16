@@ -10,7 +10,7 @@ public class ScheduledEventInPlayConfigDTO {
 	private static final String LANGUAGE = "en-us";
 
 
-	public static Map<String, Object> queryParam() {
+	public static Map<String, Object> queryParams() {
 		return Map.of("sid", S_ID, "sort", SORT,
 				"inplay", IN_PLAY, "language", LANGUAGE);
 	}

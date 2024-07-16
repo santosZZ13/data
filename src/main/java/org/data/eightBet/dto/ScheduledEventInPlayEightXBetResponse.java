@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.data.tournament.dto.Tournament8xResponse;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -12,7 +12,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ScheduledEventInPlayResponse {
+public class ScheduledEventInPlayEightXBetResponse {
 	private String msg;
 	private int code;
 	private Data data;
@@ -30,13 +30,13 @@ public class ScheduledEventInPlayResponse {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	public static class TournamentResponse {
-		private int sid;
-		private int tid;
-		private int cid;
+		private Integer sid;
+		private Integer tid;
+		private Integer cid;
 		private String name;
-		private boolean favorite;
-		private int priority;
-		private int count;
+		private Boolean favorite;
+		private Integer priority;
+		private Integer count;
 		private List<MatchResponse> matches;
 	}
 
@@ -45,31 +45,32 @@ public class ScheduledEventInPlayResponse {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	public static class MatchResponse {
-		private int sid;
-		private int cid;
-		private int tid;
-		private int iid;
-		private int countdown;
+		private Integer sid;
+		private Integer cid;
+		private Integer tid;
+		private Integer iid;
+		private Integer countdown;
 		private String state;
 		private String series;
 		private String vd;
-		private int streaming;
-		private int chatMid;
-		private int gifMid;
-		private int graphMid;
-		private boolean inplay;
-		private boolean video;
-		private boolean nv;
+		private Integer streaming;
+		private Integer chatMid;
+		private Integer gifMid;
+		private Integer graphMid;
+		private Boolean inplay;
+		private Boolean video;
+		private Boolean nv;
 		private String scoreId;
 		private String tnName;
-		private int tnPriority;
+		private Integer tnPriority;
 		private TeamResponse home;
 		private TeamResponse away;
 		private RoundResponse round;
 		private MarketInfoResponse marketInfo;
 		private MidsResponse mids;
+		private List<GiftResponse> gifs;
 		private List<Object> videos;
-		private List<Tournament8xResponse.Anchor> anchors;
+		private List<AnchorResponse> anchors;
 		private String name;
 		private long kickoffTime;
 	}
@@ -78,11 +79,22 @@ public class ScheduledEventInPlayResponse {
 	@lombok.Data
 	@AllArgsConstructor
 	@NoArgsConstructor
+	public static class GiftResponse {
+		private String source;
+		private String type;
+		private String info;
+	}
+
+	@Builder
+	@lombok.Data
+	@AllArgsConstructor
+	@NoArgsConstructor
 	public static class TeamResponse {
-		private int id;
-		private int cid;
+		private Integer id;
+		private Integer cid;
 		private String name;
-		private Tournament8xResponse.Jersey jersey;
+		@Nullable
+		private JerseyResponse jersey;
 	}
 
 	@Builder
@@ -103,11 +115,17 @@ public class ScheduledEventInPlayResponse {
 	@lombok.Data
 	@AllArgsConstructor
 	@NoArgsConstructor
+	@Nullable
 	public static class RoundResponse {
+		@Nullable
 		private String roundType;
+		@Nullable
 		private String roundName;
+		@Nullable
 		private String roundGroup;
+		@Nullable
 		private String roundGroupName;
+		@Nullable
 		private String roundNumber;
 	}
 
@@ -115,14 +133,22 @@ public class ScheduledEventInPlayResponse {
 	@lombok.Data
 	@AllArgsConstructor
 	@NoArgsConstructor
+	@Nullable
 	public static class MarketInfoResponse {
-		private boolean cr;
-		private boolean ot;
-		private boolean pk;
-		private boolean otcr;
-		private boolean ad;
-		private boolean redCard;
-		private boolean otRedCard;
+		@Nullable
+		private Boolean cr;
+		@Nullable
+		private Boolean ot;
+		@Nullable
+		private Boolean pk;
+		@Nullable
+		private Boolean otcr;
+		@Nullable
+		private Boolean ad;
+		@Nullable
+		private Boolean redCard;
+		@Nullable
+		private Boolean otRedCard;
 	}
 
 	@Builder
@@ -130,22 +156,29 @@ public class ScheduledEventInPlayResponse {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	public static class MidsResponse {
-		private int fmid;
-		private int bmid;
-		private int amid;
-		private int cmid;
-		private int dmid;
-		private int jmid;
+		@Nullable
+		private Integer fmid;
+		@Nullable
+		private Integer bmid;
+		@Nullable
+		private Integer amid;
+		@Nullable
+		private Integer cmid;
+		@Nullable
+		private Integer dmid;
+		@Nullable
+		private Integer jmid;
 	}
 
 	@Builder
 	@lombok.Data
 	@AllArgsConstructor
 	@NoArgsConstructor
+	@Nullable
 	public static class AnchorResponse {
 		private String houseId;
-		private int liveStatus;
-		private int visitHistory;
+		private Integer liveStatus;
+		private Integer visitHistory;
 		private String playStreamAddress;
 		private String playStreamAddress2;
 		private String userImage;

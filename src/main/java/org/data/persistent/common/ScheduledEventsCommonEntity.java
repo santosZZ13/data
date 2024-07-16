@@ -1,4 +1,4 @@
-package org.data.tournament.persistent.entity;
+package org.data.persistent.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

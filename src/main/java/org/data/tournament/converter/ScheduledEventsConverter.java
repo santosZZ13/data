@@ -1,7 +1,7 @@
 package org.data.tournament.converter;
 
 import org.data.tournament.dto.ScheduledEventsCommonResponse;
-import org.data.tournament.persistent.entity.ScheduledEventsCommonEntity;
+import org.data.persistent.common.ScheduledEventsCommonEntity;
 
 import java.util.Objects;
 

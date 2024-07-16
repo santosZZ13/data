@@ -1,24 +1,26 @@
 package org.data.eightBet.service;
 
 import lombok.AllArgsConstructor;
+import org.data.common.exception.ApiException;
+import org.data.eightBet.dto.EventDTO;
 import org.data.eightBet.dto.ScheduledEventInPlayConfigDTO;
-import org.data.eightBet.dto.ScheduledEventInPlayDTO.TournamentDTO;
-import org.data.eightBet.dto.ScheduledEventInPlayResponse;
-import org.data.eightBet.dto.ScheduledEventInPlayDTO;
-import org.data.eightBet.dto.ScheduledEventInPlayResponse.MatchResponse;
-import org.data.eightBet.dto.ScheduledEventInPlayResponse.TournamentResponse;
+import org.data.eightBet.dto.ScheduledEventInPlayEightXBetResponse;
+import org.data.eightBet.dto.EventInPlayDTO;
+import org.data.eightBet.dto.ScheduledEventInPlayEightXBetResponse.MatchResponse;
+import org.data.eightBet.dto.ScheduledEventInPlayEightXBetResponse.TournamentResponse;
 import org.data.eightBet.repository.EightXBetRepository;
+import org.data.persistent.entity.ScheduledEventsEightXBetEntity;
 import org.data.service.sap.SapService;
 import org.data.common.model.GenericResponseWrapper;
-import org.data.tournament.util.TimeUtil;
+import org.data.util.TimeUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static org.data.eightBet.dto.ScheduledEventInPlayDTO.*;
-import static org.data.eightBet.dto.ScheduledEventInPlayResponse.*;
+import static org.data.eightBet.dto.EventDTO.*;
+import static org.data.eightBet.dto.ScheduledEventInPlayEightXBetResponse.*;
 
 
 @Service
@@ -31,37 +33,33 @@ public class EightXBetServiceImpl implements EightXBetService {
 	@Override
 	public GenericResponseWrapper getScheduledEventInPlay() {
 
-		try {
+		ScheduledEventInPlayEightXBetResponse scheduledEventInPlayEightXBetResponse = sapService.restEightXBetGet(ScheduledEventInPlayConfigDTO.EIGHT_X_BET,
+				ScheduledEventInPlayConfigDTO.queryParams(),
+				ScheduledEventInPlayEightXBetResponse.class);
 
-			ScheduledEventInPlayResponse scheduledEventInPlayResponse = sapService.restEightXBetGet(ScheduledEventInPlayConfigDTO.EIGHT_X_BET,
-					ScheduledEventInPlayConfigDTO.queryParam(),
-					ScheduledEventInPlayResponse.class);
+		Data data = scheduledEventInPlayEightXBetResponse.getData();
 
-			Data data = scheduledEventInPlayResponse.getData();
-
-			if (Objects.isNull(data.getTournaments())) {
-				throw new Exception("Can get data from remote");
-			}
-
-			ScheduledEventInPlayDTO scheduledEventInPlayDTO = populateScheduledEventInPlayResponseToDTO(data);
-
-			return GenericResponseWrapper
-					.builder()
-					.code("")
-					.msg("")
-					.data(scheduledEventInPlayDTO)
-					.build();
-
-		} catch (Exception ex) {
-			System.out.println(ex);
+		if (Objects.isNull(data.getTournaments())) {
+			throw new ApiException("Errors", "", "No data found for scheduled events in play");
 		}
 
-		return null;
+		EventInPlayDTO.Response response = populateScheduledEventInPlayResponseToDTO(data.getTournaments());
+
+		if (!Objects.equals(response.getTntSize(), 0)) {
+			List<ScheduledEventsEightXBetEntity> scheduledEventsEightXBetEntities = eightXBetRepository.saveTournamentResponse(data.getTournaments());
+		}
+
+		return GenericResponseWrapper
+				.builder()
+				.code("")
+				.msg("")
+				.data(response)
+				.build();
+
 	}
 
-	public ScheduledEventInPlayDTO populateScheduledEventInPlayResponseToDTO(Data data) {
+	public EventInPlayDTO.Response populateScheduledEventInPlayResponseToDTO(List<TournamentResponse> tournamentResponses) {
 
-		List<TournamentResponse> tournamentResponses = data.getTournaments();
 		List<TournamentDTO> tournaments = new ArrayList<>();
 		int matchSize = 0;
 
@@ -76,7 +74,7 @@ public class EightXBetServiceImpl implements EightXBetService {
 			for (int i1 = 0; i1 < matchResponses.size(); i1++) {
 				matchSize++;
 
-				MatchResponse matchResponse = matchResponses.get(i);
+				MatchResponse matchResponse = matchResponses.get(i1);
 
 				TeamResponse homeResponse = matchResponse.getHome();
 				TeamResponse awayResponse = matchResponse.getAway();
@@ -86,7 +84,7 @@ public class EightXBetServiceImpl implements EightXBetService {
 						.homeName(homeResponse.getName())
 						.awayName(awayResponse.getName())
 						.slug(matchResponse.getName())
-						.inPlay(matchResponse.isInplay())
+						.inPlay(matchResponse.getInplay())
 						.kickoffTime(TimeUtil.convertUnixTimestampToLocalDateTime(kickoffTime))
 						.build();
 
@@ -104,7 +102,8 @@ public class EightXBetServiceImpl implements EightXBetService {
 
 		}
 
-		return ScheduledEventInPlayDTO
+		return EventInPlayDTO
+				.Response
 				.builder()
 				.tournamentDto(tournaments)
 				.tntSize(tournamentResponses.size())

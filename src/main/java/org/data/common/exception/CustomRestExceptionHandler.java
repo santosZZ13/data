@@ -1,5 +1,6 @@
 package org.data.common.exception;
 
+import lombok.extern.log4j.Log4j2;
 import org.data.common.model.FieldErrorWrapper;
 import org.data.common.model.GenericResponseWrapper;
 import org.jetbrains.annotations.NotNull;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.Objects;
 
 @ControllerAdvice
+@Log4j2
 public class CustomRestExceptionHandler extends ResponseEntityExceptionHandler {
 
 	@Override
@@ -51,16 +53,30 @@ public class CustomRestExceptionHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler({ApiException.class})
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public ResponseEntity<Object> handlerApiException(@NotNull ApiException ex, WebRequest request) {
-		System.out.println();
-		return null;
+		String message = ex.getMessage();
+		String code = ex.getCode();
+		String shortDesc = ex.getShortDesc();
+
+		GenericResponseWrapper response = GenericResponseWrapper.builder()
+				.code(code)
+				.msg(shortDesc)
+				.data(message)
+				.build();
+
+		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 	}
 
-	@ExceptionHandler({Exception.class})
-	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-	public ResponseEntity<Object> handleAll(@NotNull Exception ex, WebRequest request) {
-		System.out.println();
-		return null;
+
+	@ExceptionHandler(Exception.class)
+	public ResponseEntity<Object> handAll(Exception ex, WebRequest request) {
+		log.error("Exception occurred: ", ex);
+		GenericResponseWrapper response = GenericResponseWrapper.builder()
+				.code("INTERNAL_SERVER_ERROR")
+				.msg("Request could not be processed due to an internal error")
+				.build();
+		return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
+
 
 
 	private String getErrorCode(Object[] arguments) {

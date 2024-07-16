@@ -1,53 +1,41 @@
-package org.data.tournament.dto;
+package org.data.persistent.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
 
+@Document(collection = "scheduled_events_eight_x_bet")
+@Getter
+@Setter
 @Builder
-@Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class Tournament8xResponse {
-	private String msg;
-	private int code;
-	private Data data;
+@AllArgsConstructor
+public class ScheduledEventsEightXBetEntity {
+
+	@Id
+	private String id;
+
+	private Integer sId;
+	private Integer tId;
+	private Integer cId;
+	private String name;
+	private Boolean favorite;
+	private Integer priority;
+	private Integer count;
+	private List<MatchEntity> matchEntities;
+
 
 	@Builder
-	@lombok.Data
+	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	public static class Data {
-		private List<Tournament> tournaments;
-	}
-
-	@Builder
-	@lombok.Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	public static class Tournament {
-		private int sid;
-		private int tid;
-		private int cid;
-		private String name;
-		private boolean favorite;
-		private int priority;
-		private int count;
-		private List<Match> matches;
-	}
-
-	@Builder
-	@lombok.Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	public static class Match {
-		private int sid;
-		private int cid;
-		private int tid;
-		private int iid;
+	public static class MatchEntity {
+		private int sId;
+		private int cId;
+		private int tId;
+		private int iId;
 		private int countdown;
 		private String state;
 		private String series;
@@ -56,39 +44,54 @@ public class Tournament8xResponse {
 		private int chatMid;
 		private int gifMid;
 		private int graphMid;
-		private boolean inplay;
-		private boolean video;
-		private boolean nv;
+		private Boolean inplay;
+		private Boolean video;
+		private Boolean nv;
 		private String scoreId;
 		private String tnName;
 		private int tnPriority;
-		private Team home;
-		private Team away;
-		private Round round;
-		private MarketInfo marketInfo;
-		private Mids mids;
+		private TeamEntity home;
+		private TeamEntity away;
+		private RoundEntity round;
+		private MarketInfoEntity marketInfo;
+		private MidsEntity mids;
+		private List<GiftEntity> gifts;
 		private List<Object> videos;
-		private List<Anchor> anchors;
+		private List<AnchorEntity> anchors;
 		private String name;
 		private long kickoffTime;
+
 	}
 
 	@Builder
 	@lombok.Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	public static class Team {
+	public static class GiftEntity {
+		private String source;
+		private String type;
+		private String info;
+	}
+
+
+
+	@Builder
+	@lombok.Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class TeamEntity {
 		private int id;
 		private int cid;
 		private String name;
-		private Jersey jersey;
+		private JerseyEntity jerseyEntity;
 	}
 
+
 	@Builder
-	@lombok.Data
+	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	public static class Jersey {
+	public static class JerseyEntity {
 		private String base;
 		private String sleeve;
 		private String style;
@@ -97,12 +100,11 @@ public class Tournament8xResponse {
 		private String sleeveDetails;
 	}
 
-
 	@Builder
-	@lombok.Data
+	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	public static class Round {
+	public static class RoundEntity {
 		private String roundType;
 		private String roundName;
 		private String roundGroup;
@@ -114,7 +116,7 @@ public class Tournament8xResponse {
 	@lombok.Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	public static class MarketInfo {
+	public static class MarketInfoEntity {
 		private boolean cr;
 		private boolean ot;
 		private boolean pk;
@@ -128,7 +130,7 @@ public class Tournament8xResponse {
 	@lombok.Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	public static class Mids {
+	public static class MidsEntity {
 		private int fmid;
 		private int bmid;
 		private int amid;
@@ -141,7 +143,7 @@ public class Tournament8xResponse {
 	@lombok.Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	public static class Anchor {
+	public static class AnchorEntity {
 		private String houseId;
 		private int liveStatus;
 		private int visitHistory;
@@ -158,4 +160,5 @@ public class Tournament8xResponse {
 		private String languageType;
 		private List<String> vendors;
 	}
+
 }

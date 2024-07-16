@@ -4,12 +4,12 @@ import lombok.AllArgsConstructor;
 import org.data.tournament.dto.ScheduledEventsCommonResponse;
 import org.data.tournament.dto.ScheduledEventsResponse;
 import org.data.tournament.dto.ScheduledEventsResponseConverter;
-import org.data.tournament.persistent.entity.ScheduledEventsCommonEntity;
-import org.data.tournament.persistent.entity.ScheduledEventsEntity;
-import org.data.tournament.persistent.entity.ScheduledEventsEntityConverter;
-import org.data.tournament.persistent.repository.ScheduledEventMongoRepository;
+import org.data.persistent.common.ScheduledEventsCommonEntity;
+import org.data.persistent.entity.ScheduledEventsSofaScoreEntity;
+import org.data.persistent.common.ScheduledEventsEntityConverter;
+import org.data.persistent.repository.ScheduledEventMongoRepository;
 import org.data.tournament.repository.impl.ScheduledEventsRepository;
-import org.data.tournament.util.TimeUtil;
+import org.data.util.TimeUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static org.data.tournament.util.TimeUtil.convertUnixTimestampToLocalDateTime;
+import static org.data.util.TimeUtil.convertUnixTimestampToLocalDateTime;
 
 @Repository
 @AllArgsConstructor
@@ -30,13 +30,13 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 
 	@Override
 	public ScheduledEventsResponse.Event getAllEventByDate(LocalDateTime date, Pageable pageable) {
-		Page<ScheduledEventsEntity> evensByStartTime = scheduledEventMongoRepository.findAllByStartTimestamp(date, pageable);
+		Page<ScheduledEventsSofaScoreEntity> evensByStartTime = scheduledEventMongoRepository.findAllByStartTimestamp(date, pageable);
 		return null;
 	}
 
 	@Override
-	public List<ScheduledEventsEntity> saveEvents(List<ScheduledEventsResponse.Event> events) {
-		List<ScheduledEventsEntity> scheduledEventsEntities = new ArrayList<>();
+	public List<ScheduledEventsSofaScoreEntity> saveEvents(List<ScheduledEventsResponse.Event> events) {
+		List<ScheduledEventsSofaScoreEntity> scheduledEventsEntities = new ArrayList<>();
 
 		events.forEach(event -> {
 
@@ -77,7 +77,7 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 			ScheduledEventsCommonEntity.TimeEntity timeEntity = ScheduledEventsEntityConverter.fromTimeResponse(timeResponse);
 			ScheduledEventsCommonEntity.ChangesEntity changesEntity = ScheduledEventsEntityConverter.fromChangesResponse(changesResponse);
 
-			ScheduledEventsEntity scheduledEventsEntity = ScheduledEventsEntity.builder()
+			ScheduledEventsSofaScoreEntity scheduledEventsSofaScoreEntity = ScheduledEventsSofaScoreEntity.builder()
 					.tournament(tournamentEntity)
 					.season(seasonEntity)
 					.roundInfo(roundInfoEntity)
@@ -104,7 +104,7 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 					.isEditor(editorResponse)
 					.build();
 
-			scheduledEventsEntities.add(scheduledEventsEntity);
+			scheduledEventsEntities.add(scheduledEventsSofaScoreEntity);
 		});
 
 
@@ -115,47 +115,47 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 	@Override
 	public List<ScheduledEventsResponse.Event> getAllEvents() {
 
-		List<ScheduledEventsEntity> scheduledEventsEntities = scheduledEventMongoRepository.findAll();
+		List<ScheduledEventsSofaScoreEntity> scheduledEventsEntities = scheduledEventMongoRepository.findAll();
 		List<ScheduledEventsResponse.Event> events = new ArrayList<>();
 
 		for (int i = 0; i < scheduledEventsEntities.size(); i++) {
-			ScheduledEventsEntity scheduledEventsEntity = scheduledEventsEntities.get(i);
-			ScheduledEventsCommonResponse.TournamentResponse tournamentResponse = ScheduledEventsResponseConverter.fromTournamentEntity(scheduledEventsEntity.getTournament());
-			ScheduledEventsCommonResponse.SeasonResponse seasonResponse = ScheduledEventsResponseConverter.fromSesSeasonEntity(scheduledEventsEntity.getSeason());
-			ScheduledEventsCommonResponse.Status statusResponse = ScheduledEventsResponseConverter.fromStatusEntity(scheduledEventsEntity.getStatus());
-			ScheduledEventsCommonResponse.TeamResponse homeTeamResponse = ScheduledEventsResponseConverter.fromTeamEntity(scheduledEventsEntity.getHomeTeam());
-			ScheduledEventsCommonResponse.TeamResponse awayTeamResponse = ScheduledEventsResponseConverter.fromTeamEntity(scheduledEventsEntity.getAwayTeam());
-			ScheduledEventsCommonResponse.Score homeScoreResponse = ScheduledEventsResponseConverter.fromScoreResponse(scheduledEventsEntity.getHomeScore());
-			ScheduledEventsCommonResponse.Score awayScoreResponse = ScheduledEventsResponseConverter.fromScoreResponse(scheduledEventsEntity.getAwayScore());
-			ScheduledEventsCommonResponse.Time timeResponse = ScheduledEventsResponseConverter.fromTimeResponse(scheduledEventsEntity.getTime());
-			ScheduledEventsCommonResponse.Changes changesResponse = ScheduledEventsResponseConverter.fromChangesResponse(scheduledEventsEntity.getChanges());
-			ScheduledEventsCommonResponse.RoundInfo roundInfoResponse = ScheduledEventsResponseConverter.fromRoundInfoResponse(scheduledEventsEntity.getRoundInfo());
+			ScheduledEventsSofaScoreEntity scheduledEventsSofaScoreEntity = scheduledEventsEntities.get(i);
+			ScheduledEventsCommonResponse.TournamentResponse tournamentResponse = ScheduledEventsResponseConverter.fromTournamentEntity(scheduledEventsSofaScoreEntity.getTournament());
+			ScheduledEventsCommonResponse.SeasonResponse seasonResponse = ScheduledEventsResponseConverter.fromSesSeasonEntity(scheduledEventsSofaScoreEntity.getSeason());
+			ScheduledEventsCommonResponse.Status statusResponse = ScheduledEventsResponseConverter.fromStatusEntity(scheduledEventsSofaScoreEntity.getStatus());
+			ScheduledEventsCommonResponse.TeamResponse homeTeamResponse = ScheduledEventsResponseConverter.fromTeamEntity(scheduledEventsSofaScoreEntity.getHomeTeam());
+			ScheduledEventsCommonResponse.TeamResponse awayTeamResponse = ScheduledEventsResponseConverter.fromTeamEntity(scheduledEventsSofaScoreEntity.getAwayTeam());
+			ScheduledEventsCommonResponse.Score homeScoreResponse = ScheduledEventsResponseConverter.fromScoreResponse(scheduledEventsSofaScoreEntity.getHomeScore());
+			ScheduledEventsCommonResponse.Score awayScoreResponse = ScheduledEventsResponseConverter.fromScoreResponse(scheduledEventsSofaScoreEntity.getAwayScore());
+			ScheduledEventsCommonResponse.Time timeResponse = ScheduledEventsResponseConverter.fromTimeResponse(scheduledEventsSofaScoreEntity.getTime());
+			ScheduledEventsCommonResponse.Changes changesResponse = ScheduledEventsResponseConverter.fromChangesResponse(scheduledEventsSofaScoreEntity.getChanges());
+			ScheduledEventsCommonResponse.RoundInfo roundInfoResponse = ScheduledEventsResponseConverter.fromRoundInfoResponse(scheduledEventsSofaScoreEntity.getRoundInfo());
 			ScheduledEventsResponse.Event event = ScheduledEventsResponse.Event.builder()
-					.idDB(scheduledEventsEntity.getId())
+					.idDB(scheduledEventsSofaScoreEntity.getId())
 					.tournament(tournamentResponse)
 					.season(seasonResponse)
 					.roundInfo(roundInfoResponse)
-					.customId(scheduledEventsEntity.getCustomId())
+					.customId(scheduledEventsSofaScoreEntity.getCustomId())
 					.status(statusResponse)
-					.winnerCode(scheduledEventsEntity.getWinnerCode())
+					.winnerCode(scheduledEventsSofaScoreEntity.getWinnerCode())
 					.homeTeamResponse(homeTeamResponse)
 					.awayTeamResponse(awayTeamResponse)
 					.homeScore(homeScoreResponse)
 					.awayScore(awayScoreResponse)
 					.time(timeResponse)
 					.changes(changesResponse)
-					.hasGlobalHighlights(scheduledEventsEntity.isHasGlobalHighlights())
-					.hasEventPlayerStatistics(scheduledEventsEntity.isHasEventPlayerStatistics())
-					.hasEventPlayerHeatMap(scheduledEventsEntity.isHasEventPlayerHeatMap())
-					.detailId(scheduledEventsEntity.getDetailId())
-					.crowdsourcingDataDisplayEnabled(scheduledEventsEntity.isCrowdsourcingDataDisplayEnabled())
-					.id(scheduledEventsEntity.getIdEvent())
-					.crowdsourcingEnabled(scheduledEventsEntity.isCrowdsourcingEnabled())
-					.startTimestamp(TimeUtil.convertLocalDateTimeToUnixTimestamp(scheduledEventsEntity.getStartTimestamp()))
-					.slug(scheduledEventsEntity.getSlug())
-					.finalResultOnly(scheduledEventsEntity.isFinalResultOnly())
-					.feedLocked(scheduledEventsEntity.isFeedLocked())
-					.isEditor(scheduledEventsEntity.isEditor())
+					.hasGlobalHighlights(scheduledEventsSofaScoreEntity.isHasGlobalHighlights())
+					.hasEventPlayerStatistics(scheduledEventsSofaScoreEntity.isHasEventPlayerStatistics())
+					.hasEventPlayerHeatMap(scheduledEventsSofaScoreEntity.isHasEventPlayerHeatMap())
+					.detailId(scheduledEventsSofaScoreEntity.getDetailId())
+					.crowdsourcingDataDisplayEnabled(scheduledEventsSofaScoreEntity.isCrowdsourcingDataDisplayEnabled())
+					.id(scheduledEventsSofaScoreEntity.getIdEvent())
+					.crowdsourcingEnabled(scheduledEventsSofaScoreEntity.isCrowdsourcingEnabled())
+					.startTimestamp(TimeUtil.convertLocalDateTimeToUnixTimestamp(scheduledEventsSofaScoreEntity.getStartTimestamp()))
+					.slug(scheduledEventsSofaScoreEntity.getSlug())
+					.finalResultOnly(scheduledEventsSofaScoreEntity.isFinalResultOnly())
+					.feedLocked(scheduledEventsSofaScoreEntity.isFeedLocked())
+					.isEditor(scheduledEventsSofaScoreEntity.isEditor())
 					.build();
 			events.add(event);
 		}

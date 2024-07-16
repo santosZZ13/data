@@ -1,7 +1,7 @@
 package org.data.tournament.dto;
 
-import org.data.tournament.persistent.entity.ScheduledEventsCommonEntity;
-import org.data.tournament.util.TimeUtil;
+import org.data.persistent.common.ScheduledEventsCommonEntity;
+import org.data.util.TimeUtil;
 
 import java.util.Objects;
 

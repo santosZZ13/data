@@ -1,4 +1,4 @@
-package org.data.tournament.util;
+package org.data.util;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
