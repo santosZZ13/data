@@ -32,8 +32,9 @@ public class RestConnectorImpl implements RestConnector {
 
 
 		HttpHeaders httpHeaders = new HttpHeaders();
-		headers.forEach(httpHeaders::add);
-		HttpEntity<?> entity = new HttpEntity<>(headers);
+		httpHeaders.set("referer", "https://8x6895.com/");
+
+		HttpEntity<?> entity = new HttpEntity<>(httpHeaders);
 
 
 		return restTemplate.exchange(

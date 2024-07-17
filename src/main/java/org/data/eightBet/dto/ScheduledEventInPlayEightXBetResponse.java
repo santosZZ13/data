@@ -69,10 +69,20 @@ public class ScheduledEventInPlayEightXBetResponse {
 		private MarketInfoResponse marketInfo;
 		private MidsResponse mids;
 		private List<GiftResponse> gifs;
-		private List<Object> videos;
+		private List<VideoResponse> videos;
 		private List<AnchorResponse> anchors;
 		private String name;
 		private long kickoffTime;
+	}
+
+	@Builder
+	@lombok.Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class VideoResponse {
+		private String source;
+		private String type;
+		private String info;
 	}
 
 	@Builder

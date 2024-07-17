@@ -21,9 +21,7 @@ public class EightXBetController {
 	}
 
 	@GetMapping("/api/eightXBet/events")
-	public GenericResponseWrapper getEventsByDate(@RequestParam String date,
-												  @RequestParam(defaultValue = "0") String pageNumber,
-												  @RequestParam(defaultValue = "10") String pageSize) {
-		return null;
+	public GenericResponseWrapper getEventsByDate(@RequestParam String date) {
+		return eightXBetService.getEventsByDate(date);
 	}
 }

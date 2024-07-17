@@ -4,6 +4,7 @@ import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Document(collection = "scheduled_events_eight_x_bet")
@@ -12,19 +13,62 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ScheduledEventsEightXBetEntity {
-
+public class EventsEightXBetEntity {
 	@Id
 	private String id;
-
 	private Integer sId;
-	private Integer tId;
 	private Integer cId;
+	private Integer tId;
+	private Integer iId;
+	private Integer countdown;
+	private String state;
+	private String series;
+	private String vd;
+	private Integer streaming;
+	private Integer chatMid;
+	private Integer gifMid;
+	private Integer graphMid;
+	private Boolean inplay;
+	private Boolean video;
+	private Boolean nv;
+	private String scoreId;
+	private String tnName;
+	private Integer tnPriority;
+	private TeamEntity homeTeam;
+	private TeamEntity awayTeam;
+	private TournamentEntity tournament;
+	private RoundEntity round;
+	private MarketInfoEntity marketInfo;
+	private MidsEntity mids;
+	private List<GiftEntity> gifts;
+	private List<VideoEntity> videos;
+	private List<AnchorEntity> anchors;
 	private String name;
-	private Boolean favorite;
-	private Integer priority;
-	private Integer count;
-	private List<MatchEntity> matchEntities;
+	private LocalDateTime kickoffTime;
+
+	@Builder
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class TournamentEntity {
+		private Integer sId;
+		private Integer cId;
+		private Integer tId;
+		private String name;
+		private Boolean favorite;
+		private Integer priority;
+		private Integer count;
+	}
+
+	@Builder
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class VideoEntity {
+		private String source;
+		private String type;
+		private String info;
+	}
 
 
 	@Builder
@@ -32,24 +76,7 @@ public class ScheduledEventsEightXBetEntity {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	public static class MatchEntity {
-		private int sId;
-		private int cId;
-		private int tId;
-		private int iId;
-		private int countdown;
-		private String state;
-		private String series;
-		private String vd;
-		private int streaming;
-		private int chatMid;
-		private int gifMid;
-		private int graphMid;
-		private Boolean inplay;
-		private Boolean video;
-		private Boolean nv;
-		private String scoreId;
-		private String tnName;
-		private int tnPriority;
+
 		private TeamEntity home;
 		private TeamEntity away;
 		private RoundEntity round;
@@ -74,14 +101,13 @@ public class ScheduledEventsEightXBetEntity {
 	}
 
 
-
 	@Builder
 	@lombok.Data
 	@AllArgsConstructor
 	@NoArgsConstructor
 	public static class TeamEntity {
-		private int id;
-		private int cid;
+		private Integer id;
+		private Integer cid;
 		private String name;
 		private JerseyEntity jerseyEntity;
 	}
