@@ -16,6 +16,7 @@ public interface EventDTO {
 	@NoArgsConstructor
 	class TournamentDTO {
 		private String tntName;
+		private Integer count;
 		private List<MatchDTO> matches;
 	}
 

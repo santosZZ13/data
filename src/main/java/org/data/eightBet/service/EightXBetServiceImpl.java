@@ -82,29 +82,46 @@ public class EightXBetServiceImpl implements EightXBetService {
 
 	private EventsByDateDTO.Response populateScheduledEventByDateResponseToDTO(List<TournamentResponse> tournamentResponses, String date) {
 
-
-		// date: yyyy-MM-dd
-
+		LocalDateTime localDateTimeRequest = TimeUtil.convertStringToLocalDateTime(date);
 		List<TournamentDTO> tournamentDTOS = new ArrayList<>();
-
+		int mtSize = 0;
 
 		for (TournamentResponse tournamentResponse : tournamentResponses) {
 
-
 			List<MatchResponse> matchesResponse = tournamentResponse.getMatches();
+			List<MatchDTO> matchDTOS = new ArrayList<>();
+			String tournamentResponseName = tournamentResponse.getName();
+
 
 			for (MatchResponse matchResponse : matchesResponse) {
-
 				long kickoffTimeResponse = matchResponse.getKickoffTime();
 				LocalDateTime localDateTimeResponse = TimeUtil.convertUnixTimestampToLocalDateTime(kickoffTimeResponse);
+				if (localDateTimeRequest.getDayOfMonth() == localDateTimeResponse.getDayOfMonth()) {
+					MatchDTO matchDTO = buildMatchDTO(matchResponse);
+					mtSize++;
+					matchDTOS.add(matchDTO);
+				}
+
+			}
+
+			if (!matchDTOS.isEmpty()) {
+				TournamentDTO tournamentDTO = TournamentDTO
+						.builder()
+						.tntName(tournamentResponseName)
+						.matches(matchDTOS)
+						.count(matchDTOS.size())
+						.build();
+				tournamentDTOS.add(tournamentDTO);
 			}
 		}
-		return null;
+		return EventsByDateDTO
+				.Response
+				.builder()
+				.tournamentDto(tournamentDTOS)
+				.tntSize(tournamentDTOS.size())
+				.matchSize(mtSize)
+				.build();
 	}
-
-
-
-
 
 
 	public EventInPlayDTO.Response populateScheduledEventInPlayResponseToDTO(List<TournamentResponse> tournamentResponses) {
@@ -142,6 +159,7 @@ public class EightXBetServiceImpl implements EightXBetService {
 				.build();
 
 	}
+
 
 	private MatchDTO buildMatchDTO(MatchResponse matchResponse) {
 		TeamResponse homeResponse = matchResponse.getHome();
