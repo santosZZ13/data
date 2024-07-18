@@ -3,6 +3,7 @@ package org.data.persistent.entity;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -44,6 +45,7 @@ public class EventsEightXBetEntity {
 	private List<VideoEntity> videos;
 	private List<AnchorEntity> anchors;
 	private String name;
+//	@DateTimeFormat()
 	private LocalDateTime kickoffTime;
 
 	@Builder
@@ -143,13 +145,13 @@ public class EventsEightXBetEntity {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	public static class MarketInfoEntity {
-		private boolean cr;
-		private boolean ot;
-		private boolean pk;
-		private boolean otcr;
-		private boolean ad;
-		private boolean redCard;
-		private boolean otRedCard;
+		private Boolean cr;
+		private Boolean ot;
+		private Boolean pk;
+		private Boolean otcr;
+		private Boolean ad;
+		private Boolean redCard;
+		private Boolean otRedCard;
 	}
 
 	@Builder
@@ -157,12 +159,12 @@ public class EventsEightXBetEntity {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	public static class MidsEntity {
-		private int fmid;
-		private int bmid;
-		private int amid;
-		private int cmid;
-		private int dmid;
-		private int jmid;
+		private Integer fmid;
+		private Integer bmid;
+		private Integer amid;
+		private Integer cmid;
+		private Integer dmid;
+		private Integer jmid;
 	}
 
 	@Builder

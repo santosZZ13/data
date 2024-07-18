@@ -19,7 +19,7 @@ public class TournamentEightXBetConverter {
 	}
 
 	private static JerseyEntity convertToJerseyEntity(JerseyResponse jerseyResponse) {
-		return JerseyEntity.builder()
+		return Objects.isNull(jerseyResponse) ? null : JerseyEntity.builder()
 				.base(jerseyResponse.getBase())
 				.sleeve(jerseyResponse.getSleeve())
 				.style(jerseyResponse.getStyle())
@@ -30,7 +30,7 @@ public class TournamentEightXBetConverter {
 	}
 
 	public static RoundEntity convertToRoundEntity(RoundResponse roundResponse) {
-		return RoundEntity.builder()
+		return Objects.isNull(roundResponse) ? null : RoundEntity.builder()
 				.roundType(roundResponse.getRoundType())
 				.roundName(roundResponse.getRoundName())
 				.roundGroup(roundResponse.getRoundGroup())
@@ -40,7 +40,7 @@ public class TournamentEightXBetConverter {
 	}
 
 	public static MarketInfoEntity convertToMarketInfoEntity(MarketInfoResponse marketInfoResponse) {
-		return MarketInfoEntity.builder()
+		return Objects.isNull(marketInfoResponse) ? null : MarketInfoEntity.builder()
 				.cr(marketInfoResponse.getCr())
 				.ot(marketInfoResponse.getOt())
 				.pk(marketInfoResponse.getPk())
@@ -52,7 +52,7 @@ public class TournamentEightXBetConverter {
 	}
 
 	public static MidsEntity convertToMidsEntity(MidsResponse midsResponse) {
-		return MidsEntity.builder()
+		return Objects.isNull(midsResponse) ? null : MidsEntity.builder()
 				.fmid(midsResponse.getFmid())
 				.bmid(midsResponse.getBmid())
 				.amid(midsResponse.getAmid())
@@ -63,7 +63,7 @@ public class TournamentEightXBetConverter {
 	}
 
 	public static List<AnchorEntity> convertToAnchorEntity(List<AnchorResponse> anchorResponses) {
-		return anchorResponses.stream()
+		return Objects.isNull(anchorResponses) ? null : anchorResponses.stream()
 				.map(anchorResponse -> AnchorEntity.builder()
 						.houseId(anchorResponse.getHouseId())
 						.liveStatus(anchorResponse.getLiveStatus())
@@ -87,7 +87,8 @@ public class TournamentEightXBetConverter {
 	}
 
 	public static List<GiftEntity> convertToGiftEntity(List<GiftResponse> gifs) {
-		return gifs.stream()
+
+		return Objects.isNull(gifs) ? null : gifs.stream()
 				.map(giftResponse -> GiftEntity.builder()
 						.source(giftResponse.getSource())
 						.type(giftResponse.getType())

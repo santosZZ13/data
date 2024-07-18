@@ -73,6 +73,17 @@ public class ScheduledEventInPlayEightXBetResponse {
 		private List<AnchorResponse> anchors;
 		private String name;
 		private long kickoffTime;
+
+		@Override
+		public String toString() {
+			return "MatchResponse{" +
+					"iid=" + iid +
+					", home=" + home.getName() +
+					", away=" + away.getName() +
+					", kickoffTime=" + kickoffTime +
+					", tntName='" + tnName + '\'' +
+					'}';
+		}
 	}
 
 	@Builder

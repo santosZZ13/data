@@ -66,21 +66,25 @@ public class EightXBetServiceImpl implements EightXBetService {
 
 		Data data = scheduledEventInPlayEightXBetResponse.getData();
 
-		if (Objects.isNull(data.getTournaments())) {
+		if (!Objects.isNull(data.getTournaments())) {
+			EventsByDateDTO.Response response = populateScheduledEventByDateResponseToDTOToDisplay(data.getTournaments(), date);
+			// save to db
+			// handle in another thread.
+			if (!data.getTournaments().isEmpty()) {
+				eightXBetRepository.saveTournamentResponse(data.getTournaments());
+			}
+			return GenericResponseWrapper
+					.builder()
+					.code("")
+					.msg("")
+					.data(response)
+					.build();
+		} else {
 			throw new ApiException("Errors", "", "No data found for scheduled events in play");
 		}
-
-		EventsByDateDTO.Response response = populateScheduledEventByDateResponseToDTO(data.getTournaments(), date);
-
-		return GenericResponseWrapper
-				.builder()
-				.code("")
-				.msg("")
-				.data(response)
-				.build();
 	}
 
-	private EventsByDateDTO.Response populateScheduledEventByDateResponseToDTO(List<TournamentResponse> tournamentResponses, String date) {
+	private EventsByDateDTO.Response populateScheduledEventByDateResponseToDTOToDisplay(List<TournamentResponse> tournamentResponses, String date) {
 
 		LocalDateTime localDateTimeRequest = TimeUtil.convertStringToLocalDateTime(date);
 		List<TournamentDTO> tournamentDTOS = new ArrayList<>();

@@ -1,6 +1,7 @@
 package org.data.eightBet.repository;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.data.eightBet.dto.EventInPlayDTO;
 import org.data.persistent.entity.EventsEightXBetEntity;
 import org.data.persistent.projection.EventsEightXBetProjection;
@@ -11,12 +12,12 @@ import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.data.eightBet.dto.ScheduledEventInPlayEightXBetResponse.*;
 
 @Repository
 @AllArgsConstructor
+@Log4j2
 public class EightXBetRepositoryImpl implements EightXBetRepository {
 
 	private final ScheduledEventsEightXBetMongoRepository scheduledEventsEightXBetMongoRepository;
@@ -39,6 +40,7 @@ public class EightXBetRepositoryImpl implements EightXBetRepository {
 			List<MatchResponse> matchesResponses = tournamentResponse.getMatches();
 			for (MatchResponse matchesResponse : matchesResponses) {
 				if (!iIds.contains(matchesResponse.getIid())) {
+					log.info("Detected new match with iid: {}", matchesResponse);
 					EventsEightXBetEntity eventsEightXBetEntity = populateScheduledEventsEightXBetEntity(tournamentResponse, matchesResponse);
 					scheduledEventsEightXBetEntities.add(eventsEightXBetEntity);
 				}
