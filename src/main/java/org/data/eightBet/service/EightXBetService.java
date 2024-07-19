@@ -6,4 +6,7 @@ public interface EightXBetService {
 	GenericResponseWrapper getScheduledEventInPlay();
 
 	GenericResponseWrapper getEventsByDate(String date);
+
+	GenericResponseWrapper fetchEvents();
+
 }

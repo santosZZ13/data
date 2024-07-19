@@ -84,6 +84,12 @@ public class EightXBetServiceImpl implements EightXBetService {
 		}
 	}
 
+	@Override
+	public GenericResponseWrapper fetchEvents() {
+		System.out.println("Fetching...");
+		return null;
+	}
+
 	private EventsByDateDTO.Response populateScheduledEventByDateResponseToDTOToDisplay(List<TournamentResponse> tournamentResponses, String date) {
 
 		LocalDateTime localDateTimeRequest = TimeUtil.convertStringToLocalDateTime(date);

@@ -18,6 +18,11 @@ public class SapServiceImpl implements SapService {
 		return restConnector.restGet(ConnectionProperties.Host.EIGHTXBET, requestPath, response);
 	}
 
+	@Override
+	public <T> T restLocalGet(String requestPath, Class<T> response) {
+		return restConnector.restGet(ConnectionProperties.Host.LOCAL, requestPath, response);
+	}
+
 
 	@Override
 	public <T> T restEightXBetGet(String requestPath, Class<T> response) {

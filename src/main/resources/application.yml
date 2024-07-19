@@ -42,3 +42,5 @@ connection:
 
   sofasocre:
     url: https://www.sofascore.com/api/v1
+  local:
+    url: http://localhost:8080/

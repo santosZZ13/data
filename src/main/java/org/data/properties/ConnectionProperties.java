@@ -14,9 +14,9 @@ import java.util.stream.Stream;
 @Data
 public class ConnectionProperties {
 
-
 	private EightXBet eightXBet;
 	private SofaScore sofasocre;
+	private Local local;
 
 	@EqualsAndHashCode(callSuper = true)
 	@Data
@@ -27,6 +27,12 @@ public class ConnectionProperties {
 	@EqualsAndHashCode(callSuper = true)
 	@Data
 	public static class SofaScore extends ServerConnection {
+
+	}
+
+	@EqualsAndHashCode(callSuper = true)
+	@Data
+	public static class Local extends ServerConnection {
 
 	}
 
@@ -47,6 +53,7 @@ public class ConnectionProperties {
 		return switch (host) {
 			case EIGHTXBET -> this.eightXBet;
 			case SOFASCORE -> this.sofasocre;
+			case LOCAL -> this.local;
 			default -> null;
 		};
 	}
@@ -54,7 +61,8 @@ public class ConnectionProperties {
 
 	public enum Host {
 		EIGHTXBET,
-		SOFASCORE;
+		SOFASCORE,
+		LOCAL;
 
 		public static Optional<Host> lookup(String host) {
 			return Stream.of(values())

@@ -48,6 +48,12 @@ public class RestConnectorImpl implements RestConnector {
 	}
 
 
+
+
+
+
+
+
 	private String buildUrl(String url, String requestPath, Map<String, ?> queryParams) {
 		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(url + requestPath);
 		queryParams.forEach(uriComponentsBuilder::queryParam);
