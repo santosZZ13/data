@@ -26,36 +26,36 @@ public class SchedulerServiceImpl implements SchedulerService {
 
 
 	@Override
-	public GenericResponseWrapper createJob(JobDTO.Job request) {
-
-		String requestPath = request.getRequestPath();
-		String baseURL = request.getBaseURL();
+	public GenericResponseWrapper createJob(JobDTO.Request request) {
+		JobDTO.Job job = request.getJob();
+		String requestPath = job.getRequestPath();
+		String baseURL = request.getJob().getBaseURL();
 		Optional<ConnectionProperties.Host> host = ConnectionProperties.Host.lookup(baseURL);
 
 		if (host.isEmpty()) {
 			throw new IllegalArgumentException("Invalid host");
 		}
 
-		if (fetchEventScheduler.checkIfJobNameExist(request.getJobName())) {
-			log.error("Job with name:" + request.getJobName() + " already exist");
-			throw new RuntimeException("Job with name:" + request.getJobName() + " already exist");
+		if (fetchEventScheduler.checkIfJobNameExist(request.getJob().getJobName())) {
+			log.error("Job with name:" + request.getJob().getJobName() + " already exist");
+			throw new RuntimeException("Job with name:" + request.getJob().getJobName() + " already exist");
 		}
 
 
 		Runnable task = () -> {
 			GenericResponseWrapper genericResponseWrapper = restConnector.restGet(host.get(), requestPath, GenericResponseWrapper.class);
 			if (genericResponseWrapper.getData() == null) {
-				log.error("Failure calling Job:" + request.getJobName() + "with URL:" + request.getBaseURL() + request.getRequestPath());
+				log.error("Failure calling Job:" + request.getJob().getJobName() + "with URL:" + request.getJob().getBaseURL() + request.getJob().getRequestPath());
 			}
 		};
 
 
 		CronTrigger cronTrigger = new CronTrigger(
-				request.getCronExpression(),
+				request.getJob().getCronExpression(),
 				TimeZone.getTimeZone(TimeZone.getDefault().toZoneId())
 		);
 		ScheduledFuture<?> schedule = fetchEventScheduler.schedule(task, cronTrigger);
-		fetchEventScheduler.addJob(request, schedule);
+		fetchEventScheduler.addJob(request.getJob(), schedule);
 
 
 		return GenericResponseWrapper.builder()
