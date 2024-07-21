@@ -18,9 +18,28 @@ public class RestConnectorImpl implements RestConnector {
 	private final RestTemplate restTemplate;
 	private final ConnectionProperties connectionProperties;
 
+
+
 	@Override
 	public <T> T restGet(ConnectionProperties.Host host, String requestPath, Class<T> responseType) {
-		return null;
+
+		ConnectionProperties.ServerConnection connectionPropertiesHost = connectionProperties.getHost(host);
+		Map<String, String> headers = connectionPropertiesHost.getHeaders();
+		String url = connectionPropertiesHost.getUrl();
+		HttpHeaders httpHeaders;
+		HttpEntity<?> entity = null;
+		if (headers != null) {
+			httpHeaders = new HttpHeaders();
+			headers.forEach(httpHeaders::set);
+			entity = new HttpEntity<>(httpHeaders);
+		}
+
+		return restTemplate.exchange(
+				url + requestPath,
+				HttpMethod.GET,
+				entity,
+				responseType
+		).getBody();
 	}
 
 	@Override

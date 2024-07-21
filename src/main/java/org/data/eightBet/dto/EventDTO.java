@@ -26,6 +26,7 @@ public interface EventDTO {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class MatchDTO {
+		private Integer iid;
 		private Boolean inPlay;
 		private String homeName;
 		private String awayName;

@@ -35,9 +35,9 @@ spring:
 
 connection:
   eightxbet:
-    url: https://vd0018fmddg5as56akfa-api.fwefhu.app
+    url: https://vd001eyxibmdmwe45iij-api.fwefhu.app
     headers:
-      referer: https://8x1305.com/
+      referer: https://8xbet00.cc/
 #      device: mobile
 
   sofasocre:
