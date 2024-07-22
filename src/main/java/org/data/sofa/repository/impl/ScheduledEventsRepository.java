@@ -1,6 +1,6 @@
 package org.data.sofa.repository.impl;
 
-import org.data.sofa.dto.ScheduledEventsResponse;
+import org.data.sofa.dto.SofaScheduledEventsResponse;
 import org.data.persistent.entity.ScheduledEventsSofaScoreEntity;
 import org.springframework.data.domain.Pageable;
 
@@ -8,11 +8,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ScheduledEventsRepository {
-	List<ScheduledEventsSofaScoreEntity> saveEvents(List<ScheduledEventsResponse.Event> events);
+	List<ScheduledEventsSofaScoreEntity> saveEvents(List<SofaScheduledEventsResponse.EventResponse> eventResponses);
 
-	List<ScheduledEventsResponse.Event> getAllEvents();
+	List<SofaScheduledEventsResponse.EventResponse> getAllEvents();
 
-	ScheduledEventsResponse.Event saveEvent(ScheduledEventsResponse.Event event);
+	SofaScheduledEventsResponse.EventResponse saveEvent(SofaScheduledEventsResponse.EventResponse eventResponse);
 
-	ScheduledEventsResponse.Event getAllEventByDate(LocalDateTime date, Pageable pageable);
+	SofaScheduledEventsResponse.EventResponse getAllEventByDate(LocalDateTime date, Pageable pageable);
 }

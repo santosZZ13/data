@@ -2,7 +2,7 @@ package org.data.sofa.repository;
 
 import lombok.AllArgsConstructor;
 import org.data.sofa.dto.ScheduledEventsCommonResponse;
-import org.data.sofa.dto.ScheduledEventsResponse;
+import org.data.sofa.dto.SofaScheduledEventsResponse;
 import org.data.sofa.dto.ScheduledEventsResponseConverter;
 import org.data.persistent.common.ScheduledEventsCommonEntity;
 import org.data.persistent.entity.ScheduledEventsSofaScoreEntity;
@@ -29,42 +29,42 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 
 
 	@Override
-	public ScheduledEventsResponse.Event getAllEventByDate(LocalDateTime date, Pageable pageable) {
+	public SofaScheduledEventsResponse.EventResponse getAllEventByDate(LocalDateTime date, Pageable pageable) {
 		Page<ScheduledEventsSofaScoreEntity> evensByStartTime = scheduledEventMongoRepository.findAllByStartTimestamp(date, pageable);
 		return null;
 	}
 
 	@Override
-	public List<ScheduledEventsSofaScoreEntity> saveEvents(List<ScheduledEventsResponse.Event> events) {
+	public List<ScheduledEventsSofaScoreEntity> saveEvents(List<SofaScheduledEventsResponse.EventResponse> eventResponses) {
 		List<ScheduledEventsSofaScoreEntity> scheduledEventsEntities = new ArrayList<>();
 
-		events.forEach(event -> {
+		eventResponses.forEach(eventResponse -> {
 
-			ScheduledEventsCommonResponse.TournamentResponse tournamentResponse = event.getTournament();
-			ScheduledEventsCommonResponse.SeasonResponse seasonResponse = event.getSeason();
-			ScheduledEventsCommonResponse.RoundInfo roundInfoResponse = event.getRoundInfo();
-			String customIdResponse = event.getCustomId();
-			ScheduledEventsCommonResponse.Status statusResponse = event.getStatus();
-			Integer winnerCodeResponse = event.getWinnerCode();
-			ScheduledEventsCommonResponse.TeamResponse homeTeamResponseResponse = event.getHomeTeamResponse();
-			ScheduledEventsCommonResponse.TeamResponse awayTeamResponseResponse = event.getAwayTeamResponse();
-			ScheduledEventsCommonResponse.Score homeScoreResponse = event.getHomeScore();
-			ScheduledEventsCommonResponse.Score awayScoreResponse = event.getAwayScore();
-			ScheduledEventsCommonResponse.Time timeResponse = event.getTime();
-			ScheduledEventsCommonResponse.Changes changesResponse = event.getChanges();
-			boolean hasGlobalHighlightsResponse = event.isHasGlobalHighlights();
-			boolean hasEventPlayerStatisticsResponse = event.isHasEventPlayerStatistics();
-			boolean hasEventPlayerHeatMapResponse = event.isHasEventPlayerHeatMap();
+			ScheduledEventsCommonResponse.TournamentResponse tournamentResponse = eventResponse.getTournament();
+			ScheduledEventsCommonResponse.SeasonResponse seasonResponse = eventResponse.getSeason();
+			ScheduledEventsCommonResponse.RoundInfo roundInfoResponse = eventResponse.getRoundInfo();
+			String customIdResponse = eventResponse.getCustomId();
+			ScheduledEventsCommonResponse.Status statusResponse = eventResponse.getStatus();
+			Integer winnerCodeResponse = eventResponse.getWinnerCode();
+			ScheduledEventsCommonResponse.TeamResponse homeTeamResponseResponse = eventResponse.getHomeTeam();
+			ScheduledEventsCommonResponse.TeamResponse awayTeamResponseResponse = eventResponse.getAwayTeam();
+			ScheduledEventsCommonResponse.Score homeScoreResponse = eventResponse.getHomeScore();
+			ScheduledEventsCommonResponse.Score awayScoreResponse = eventResponse.getAwayScore();
+			ScheduledEventsCommonResponse.Time timeResponse = eventResponse.getTime();
+			ScheduledEventsCommonResponse.Changes changesResponse = eventResponse.getChanges();
+			boolean hasGlobalHighlightsResponse = eventResponse.getHasGlobalHighlights();
+			boolean hasEventPlayerStatisticsResponse = eventResponse.getHasEventPlayerStatistics();
+			boolean hasEventPlayerHeatMapResponse = eventResponse.getHasEventPlayerHeatMap();
 
-			int detailIdResponse = event.getDetailId();
-			boolean crowdSourcingDataDisplayEnabledResponse = event.isCrowdsourcingDataDisplayEnabled();
-			int idResponse = event.getId();
-			boolean crowdSourcingEnabledResponse = event.isCrowdsourcingEnabled();
-			long startTimestampResponse = event.getStartTimestamp();
-			String slugResponse = event.getSlug();
-			boolean finalResultOnlyResponse = event.isFinalResultOnly();
-			boolean feedLockedResponse = event.isFeedLocked();
-			boolean editorResponse = event.isEditor();
+			int detailIdResponse = eventResponse.getDetailId();
+			boolean crowdSourcingDataDisplayEnabledResponse = eventResponse.getCrowdsourcingDataDisplayEnabled();
+			int idResponse = eventResponse.getId();
+			boolean crowdSourcingEnabledResponse = eventResponse.getCrowdsourcingEnabled();
+			long startTimestampResponse = eventResponse.getStartTimestamp();
+			String slugResponse = eventResponse.getSlug();
+			boolean finalResultOnlyResponse = eventResponse.getFinalResultOnly();
+			boolean feedLockedResponse = eventResponse.getFeedLocked();
+			boolean editorResponse = eventResponse.getIsEditor();
 
 			ScheduledEventsCommonEntity.TournamentEntity tournamentEntity = ScheduledEventsEntityConverter.fromTournamentResponse(tournamentResponse);
 			ScheduledEventsCommonEntity.SeasonEntity seasonEntity = ScheduledEventsEntityConverter.fromSesSeasonResponse(seasonResponse);
@@ -113,10 +113,10 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 	}
 
 	@Override
-	public List<ScheduledEventsResponse.Event> getAllEvents() {
+	public List<SofaScheduledEventsResponse.EventResponse> getAllEvents() {
 
 		List<ScheduledEventsSofaScoreEntity> scheduledEventsEntities = scheduledEventMongoRepository.findAll();
-		List<ScheduledEventsResponse.Event> events = new ArrayList<>();
+		List<SofaScheduledEventsResponse.EventResponse> eventResponses = new ArrayList<>();
 
 		for (int i = 0; i < scheduledEventsEntities.size(); i++) {
 			ScheduledEventsSofaScoreEntity scheduledEventsSofaScoreEntity = scheduledEventsEntities.get(i);
@@ -130,16 +130,15 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 			ScheduledEventsCommonResponse.Time timeResponse = ScheduledEventsResponseConverter.fromTimeResponse(scheduledEventsSofaScoreEntity.getTime());
 			ScheduledEventsCommonResponse.Changes changesResponse = ScheduledEventsResponseConverter.fromChangesResponse(scheduledEventsSofaScoreEntity.getChanges());
 			ScheduledEventsCommonResponse.RoundInfo roundInfoResponse = ScheduledEventsResponseConverter.fromRoundInfoResponse(scheduledEventsSofaScoreEntity.getRoundInfo());
-			ScheduledEventsResponse.Event event = ScheduledEventsResponse.Event.builder()
-					.idDB(scheduledEventsSofaScoreEntity.getId())
+			SofaScheduledEventsResponse.EventResponse eventResponse = SofaScheduledEventsResponse.EventResponse.builder()
 					.tournament(tournamentResponse)
 					.season(seasonResponse)
 					.roundInfo(roundInfoResponse)
 					.customId(scheduledEventsSofaScoreEntity.getCustomId())
 					.status(statusResponse)
 					.winnerCode(scheduledEventsSofaScoreEntity.getWinnerCode())
-					.homeTeamResponse(homeTeamResponse)
-					.awayTeamResponse(awayTeamResponse)
+					.homeTeam(homeTeamResponse)
+					.awayTeam(awayTeamResponse)
 					.homeScore(homeScoreResponse)
 					.awayScore(awayScoreResponse)
 					.time(timeResponse)
@@ -157,14 +156,14 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 					.feedLocked(scheduledEventsSofaScoreEntity.isFeedLocked())
 					.isEditor(scheduledEventsSofaScoreEntity.isEditor())
 					.build();
-			events.add(event);
+			eventResponses.add(eventResponse);
 		}
-		return events;
+		return eventResponses;
 	}
 
 
 	@Override
-	public ScheduledEventsResponse.Event saveEvent(ScheduledEventsResponse.Event event) {
+	public SofaScheduledEventsResponse.EventResponse saveEvent(SofaScheduledEventsResponse.EventResponse eventResponse) {
 		return null;
 	}
 

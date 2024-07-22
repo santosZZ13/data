@@ -15,7 +15,7 @@ public class SapServiceImpl implements SapService {
 
 	@Override
 	public <T> T restSofaScoreGet(String requestPath, Class<T> response) {
-		return restConnector.restGet(ConnectionProperties.Host.EIGHTXBET, requestPath, response);
+		return restConnector.restGet(ConnectionProperties.Host.SOFASCORE, requestPath, response);
 	}
 
 	@Override

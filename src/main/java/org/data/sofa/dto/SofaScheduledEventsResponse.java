@@ -10,54 +10,40 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ScheduledEventsResponse {
+public class SofaScheduledEventsResponse {
 
-	private List<Event> events;
+	private List<EventResponse> events;
 
 	@Builder
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
 	@ToString
-	public static class Event {
-		private String idDB;
-		@NotNull
+	public static class EventResponse {
 		private ScheduledEventsCommonResponse.TournamentResponse tournament;
-		@NotNull
 		private ScheduledEventsCommonResponse.SeasonResponse season;
-		@Nullable
 		private ScheduledEventsCommonResponse.RoundInfo roundInfo;
-		@NotNull
 		private String customId;
-		@NotNull
 		private ScheduledEventsCommonResponse.Status status;
-		@Nullable
 		private Integer winnerCode;
-		@NotNull
-		private ScheduledEventsCommonResponse.TeamResponse homeTeamResponse;
-		@NotNull
-		private ScheduledEventsCommonResponse.TeamResponse awayTeamResponse;
-		@Nullable
+		private ScheduledEventsCommonResponse.TeamResponse homeTeam;
+		private ScheduledEventsCommonResponse.TeamResponse awayTeam;
 		private ScheduledEventsCommonResponse.Score homeScore;
-		@Nullable
 		private ScheduledEventsCommonResponse.Score awayScore;
-		@NotNull
 		private ScheduledEventsCommonResponse.Time time;
-		@NotNull
 		private ScheduledEventsCommonResponse.Changes changes;
-		private boolean hasGlobalHighlights;
-		private boolean hasEventPlayerStatistics;
-		private boolean hasEventPlayerHeatMap;
-		private int detailId;
-		private boolean crowdsourcingDataDisplayEnabled;
+		private Boolean hasGlobalHighlights;
+		private Boolean hasEventPlayerStatistics;
+		private Boolean hasEventPlayerHeatMap;
+		private Integer detailId;
+		private Boolean crowdsourcingDataDisplayEnabled;
 		private Integer id;
-		private boolean crowdsourcingEnabled;
+		private Boolean crowdsourcingEnabled;
 		private long startTimestamp;
-		@NotNull
 		private String slug;
-		private boolean finalResultOnly;
-		private boolean feedLocked;
-		private boolean isEditor;
+		private Boolean finalResultOnly;
+		private Boolean feedLocked;
+		private Boolean isEditor;
 
 	}
 }

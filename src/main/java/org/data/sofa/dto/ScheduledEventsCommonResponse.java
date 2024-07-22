@@ -1,6 +1,5 @@
 package org.data.sofa.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -13,22 +12,12 @@ public interface ScheduledEventsCommonResponse {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class TournamentResponse {
-		@NotNull
 		private String name;
-		@NotNull
-		@JsonIgnore
 		private String slug;
-		@NotNull
 		private ScheduledEventsCommonResponse.Category category;
-		@NotNull
-		@JsonIgnore
 		private ScheduledEventsCommonResponse.UniqueTournament uniqueTournament;
-
-		@JsonIgnore
-		private int priority;
-
-		@JsonIgnore
-		private int id;
+		private Integer priority;
+		private Integer id;
 	}
 
 	@Builder
@@ -37,17 +26,15 @@ public interface ScheduledEventsCommonResponse {
 	@NoArgsConstructor
 	@ToString
 	class UniqueTournament {
-		@NotNull
 		private String name;
-		@NotNull
 		private String slug;
 		private ScheduledEventsCommonResponse.Category category;
-		private int userCount;
-		private boolean crowdsourcingEnabled;
-		private boolean hasPerformanceGraphFeature;
-		private int id;
-		private boolean hasEventPlayerStatistics;
-		private boolean displayInverseHomeAwayTeams;
+		private Integer userCount;
+		private Boolean crowdsourcingEnabled;
+		private Boolean hasPerformanceGraphFeature;
+		private Integer id;
+		private Boolean hasEventPlayerStatistics;
+		private Boolean displayInverseHomeAwayTeams;
 	}
 
 	@Builder
@@ -56,17 +43,11 @@ public interface ScheduledEventsCommonResponse {
 	@NoArgsConstructor
 	@ToString
 	class Category {
-		@NotNull
 		private String name;
-		@NotNull
-		@JsonIgnore
 		private String slug;
-		@Nullable
-		private ScheduledEventsCommonResponse.SportResponse sportResponse;
+		private ScheduledEventsCommonResponse.SportResponse sport;
 		private Integer id;
-		@Nullable
 		private ScheduledEventsCommonResponse.Country country;
-		@Nullable
 		private String flag;
 	}
 
@@ -76,9 +57,7 @@ public interface ScheduledEventsCommonResponse {
 	@NoArgsConstructor
 	@ToString
 	class SportResponse {
-		@Nullable
 		private String name;
-		@Nullable
 		private String slug;
 		private Integer id;
 	}
@@ -89,11 +68,8 @@ public interface ScheduledEventsCommonResponse {
 	@NoArgsConstructor
 	@ToString
 	class Country {
-		@Nullable
 		private String alpha2;
-		@Nullable
 		private String alpha3;
-		@Nullable
 		private String name;
 	}
 
@@ -103,11 +79,8 @@ public interface ScheduledEventsCommonResponse {
 	@NoArgsConstructor
 	@ToString
 	class TeamColors {
-		@Nullable
 		private String primary;
-		@Nullable
 		private String secondary;
-		@Nullable
 		private String text;
 	}
 
@@ -117,9 +90,7 @@ public interface ScheduledEventsCommonResponse {
 	@NoArgsConstructor
 	@ToString
 	class FieldTranslations {
-		@Nullable
 		private ScheduledEventsCommonResponse.Translations nameTranslation;
-		@Nullable
 		private ScheduledEventsCommonResponse.Translations shortNameTranslation;
 	}
 
@@ -129,9 +100,7 @@ public interface ScheduledEventsCommonResponse {
 	@NoArgsConstructor
 	@ToString
 	class Translations {
-		@Nullable
 		private String ar;
-		@Nullable
 		private String ru;
 	}
 
@@ -142,13 +111,9 @@ public interface ScheduledEventsCommonResponse {
 	@NoArgsConstructor
 	@ToString
 	class SeasonResponse {
-		@Nullable
 		private String name;
-		@Nullable
 		private String year;
-		@Nullable
 		private Boolean editor;
-		@Nullable
 		private Integer id;
 
 	}
@@ -159,11 +124,8 @@ public interface ScheduledEventsCommonResponse {
 	@NoArgsConstructor
 	@ToString
 	class RoundInfo {
-		@Nullable
 		private Integer round;
-		@Nullable
 		private String name;
-		@Nullable
 		private Integer cupRoundType;
 
 	}
@@ -174,20 +136,17 @@ public interface ScheduledEventsCommonResponse {
 	@NoArgsConstructor
 	@ToString
 	class TeamResponse {
-		@NotNull
 		private String name;
-		@NotNull
 		private String slug;
-		@NotNull
 		private String shortName;
 		private SportResponse sportResponse;
-		private int userCount;
+		private Integer userCount;
 		@NotNull
 		private String nameCode;
-		private boolean disabled;
-		private boolean national;
-		private int type;
-		private int id;
+		private Boolean disabled;
+		private Boolean national;
+		private Integer type;
+		private Integer id;
 		@NotNull
 		private ScheduledEventsCommonResponse.Country country;
 		@Nullable
@@ -203,18 +162,16 @@ public interface ScheduledEventsCommonResponse {
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	@Nullable
 	class Score {
-		@Nullable
 		private Integer current;
-		@Nullable
 		private Integer display;
-		@Nullable
 		private Integer period1;
-		@Nullable
 		private Integer period2;
-		@Nullable
 		private Integer normaltime;
+		private Integer extra1;
+		private Integer extra2;
+		private Integer overtime;
+		private Integer penalties;
 	}
 
 
@@ -223,7 +180,7 @@ public interface ScheduledEventsCommonResponse {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class Status {
-		private int code;
+		private Integer code;
 		@NotNull
 		private String description;
 		@NotNull
@@ -238,7 +195,7 @@ public interface ScheduledEventsCommonResponse {
 	class Time {
 		private String injuryTime1;
 		private String injuryTime2;
-		private long currentPeriodStartTimestamp;
+		private Long currentPeriodStartTimestamp;
 	}
 
 	@Builder
@@ -248,6 +205,6 @@ public interface ScheduledEventsCommonResponse {
 	@ToString
 	class Changes {
 		private List<String> changes;
-		private long changeTimestamp;
+		private Long changeTimestamp;
 	}
 }

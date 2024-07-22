@@ -9,7 +9,7 @@ public class ScheduledEventsEntityConverter {
 	public static ScheduledEventsCommonEntity.TournamentEntity fromTournamentResponse(ScheduledEventsCommonResponse.TournamentResponse tournamentResponse) {
 
 		ScheduledEventsCommonResponse.Category categoryResponse = tournamentResponse.getCategory();
-		ScheduledEventsCommonResponse.SportResponse sportResponse = categoryResponse.getSportResponse();
+		ScheduledEventsCommonResponse.SportResponse sportResponse = categoryResponse.getSport();
 		ScheduledEventsCommonResponse.Country countryResponse = categoryResponse.getCountry();
 		String flagResponse = categoryResponse.getFlag();
 		Integer idResponse = categoryResponse.getId();
@@ -32,7 +32,7 @@ public class ScheduledEventsEntityConverter {
 
 		ScheduledEventsCommonResponse.UniqueTournament uniqueTournamentResponse = tournamentResponse.getUniqueTournament();
 		ScheduledEventsCommonResponse.Category categoryUniQueTournamentResponse = uniqueTournamentResponse.getCategory();
-		ScheduledEventsCommonResponse.SportResponse sportResponseUniQueTournament = categoryUniQueTournamentResponse.getSportResponse();
+		ScheduledEventsCommonResponse.SportResponse sportResponseUniQueTournament = categoryUniQueTournamentResponse.getSport();
 		ScheduledEventsCommonResponse.Country countryUniQueTournament = categoryUniQueTournamentResponse.getCountry();
 		Integer categoryUniQueTournamentId = categoryUniQueTournamentResponse.getId();
 		String categoryUniQueTournamentFlag = categoryUniQueTournamentResponse.getFlag();
@@ -55,11 +55,11 @@ public class ScheduledEventsEntityConverter {
 				.slug(uniqueTournamentResponse.getSlug())
 				.category(categoryUniQueTournament)
 				.userCount(uniqueTournamentResponse.getUserCount())
-				.crowdsourcingEnabled(uniqueTournamentResponse.isCrowdsourcingEnabled())
-				.hasPerformanceGraphFeature(uniqueTournamentResponse.isHasPerformanceGraphFeature())
+				.crowdsourcingEnabled(uniqueTournamentResponse.getCrowdsourcingEnabled())
+				.hasPerformanceGraphFeature(uniqueTournamentResponse.getHasPerformanceGraphFeature())
 				.id(uniqueTournamentResponse.getId())
-				.hasEventPlayerStatistics(uniqueTournamentResponse.isHasEventPlayerStatistics())
-				.displayInverseHomeAwayTeams(uniqueTournamentResponse.isDisplayInverseHomeAwayTeams())
+				.hasEventPlayerStatistics(uniqueTournamentResponse.getHasEventPlayerStatistics())
+				.displayInverseHomeAwayTeams(uniqueTournamentResponse.getDisplayInverseHomeAwayTeams())
 				.build();
 
 
@@ -106,8 +106,8 @@ public class ScheduledEventsEntityConverter {
 				.sport(fromSportResponse(sportResponse))
 				.userCount(teamResponse.getUserCount())
 				.nameCode(teamResponse.getNameCode())
-				.disabled(teamResponse.isDisabled())
-				.national(teamResponse.isNational())
+				.disabled(teamResponse.getDisabled())
+				.national(teamResponse.getNational())
 				.type(teamResponse.getType())
 				.id(teamResponse.getId())
 				.country(fromCountryResponse(country))

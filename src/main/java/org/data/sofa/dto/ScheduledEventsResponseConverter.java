@@ -24,7 +24,7 @@ public class ScheduledEventsResponseConverter {
 				.id(idResponse)
 				.name(entityCategory.getName())
 				.slug(entityCategory.getSlug())
-				.sportResponse(sport)
+				.sport(sport)
 				.country(country)
 				.flag(flagResponse)
 				.build();
@@ -45,7 +45,7 @@ public class ScheduledEventsResponseConverter {
 				.id(categoryUniQueTournamentId)
 				.name(categoryUniQueTournamentResponse.getName())
 				.slug(categoryUniQueTournamentResponse.getSlug())
-				.sportResponse(sportCategoryUniQueTournament)
+				.sport(sportCategoryUniQueTournament)
 				.country(countryCategoryUniQueTournament)
 				.flag(categoryUniQueTournamentFlag)
 				.build();
