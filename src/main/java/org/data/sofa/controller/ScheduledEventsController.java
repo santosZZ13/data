@@ -1,9 +1,9 @@
-package org.data.tournament.controller;
+package org.data.sofa.controller;
 
 import lombok.AllArgsConstructor;
 import org.data.common.model.GenericResponseWrapper;
-import org.data.tournament.dto.ScheduledEventDTO;
-import org.data.tournament.service.ScheduledEventsService;
+import org.data.sofa.dto.ScheduledEventDTO;
+import org.data.sofa.service.ScheduledEventsService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;

@@ -1,4 +1,4 @@
-package org.data.tournament.dto;
+package org.data.sofa.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;

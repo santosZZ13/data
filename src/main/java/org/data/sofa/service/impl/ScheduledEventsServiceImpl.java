@@ -1,13 +1,13 @@
-package org.data.tournament.service.impl;
+package org.data.sofa.service.impl;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.data.service.sap.SapService;
 import org.data.common.model.GenericResponseWrapper;
-import org.data.tournament.dto.ScheduledEventDTO;
-import org.data.tournament.dto.ScheduledEventsResponse;
-import org.data.tournament.repository.impl.ScheduledEventsRepository;
-import org.data.tournament.service.ScheduledEventsService;
+import org.data.sofa.dto.ScheduledEventDTO;
+import org.data.sofa.dto.ScheduledEventsResponse;
+import org.data.sofa.repository.impl.ScheduledEventsRepository;
+import org.data.sofa.service.ScheduledEventsService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpMethod;

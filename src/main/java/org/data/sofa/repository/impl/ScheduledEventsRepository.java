@@ -1,6 +1,6 @@
-package org.data.tournament.repository.impl;
+package org.data.sofa.repository.impl;
 
-import org.data.tournament.dto.ScheduledEventsResponse;
+import org.data.sofa.dto.ScheduledEventsResponse;
 import org.data.persistent.entity.ScheduledEventsSofaScoreEntity;
 import org.springframework.data.domain.Pageable;
 

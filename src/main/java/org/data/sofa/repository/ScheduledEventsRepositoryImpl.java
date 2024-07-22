@@ -1,14 +1,14 @@
-package org.data.tournament.repository;
+package org.data.sofa.repository;
 
 import lombok.AllArgsConstructor;
-import org.data.tournament.dto.ScheduledEventsCommonResponse;
-import org.data.tournament.dto.ScheduledEventsResponse;
-import org.data.tournament.dto.ScheduledEventsResponseConverter;
+import org.data.sofa.dto.ScheduledEventsCommonResponse;
+import org.data.sofa.dto.ScheduledEventsResponse;
+import org.data.sofa.dto.ScheduledEventsResponseConverter;
 import org.data.persistent.common.ScheduledEventsCommonEntity;
 import org.data.persistent.entity.ScheduledEventsSofaScoreEntity;
 import org.data.persistent.common.ScheduledEventsEntityConverter;
 import org.data.persistent.repository.ScheduledEventMongoRepository;
-import org.data.tournament.repository.impl.ScheduledEventsRepository;
+import org.data.sofa.repository.impl.ScheduledEventsRepository;
 import org.data.util.TimeUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -1,6 +1,6 @@
-package org.data.tournament.converter;
+package org.data.sofa.converter;
 
-import org.data.tournament.dto.ScheduledEventsCommonResponse;
+import org.data.sofa.dto.ScheduledEventsCommonResponse;
 import org.data.persistent.common.ScheduledEventsCommonEntity;
 
 import java.util.Objects;

@@ -1,4 +1,4 @@
-package org.data.tournament.dto;
+package org.data.sofa.dto;
 
 import org.data.persistent.common.ScheduledEventsCommonEntity;
 import org.data.util.TimeUtil;

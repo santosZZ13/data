@@ -1,4 +1,4 @@
-package org.data.tournament.dto;
+package org.data.sofa.dto;
 
 import lombok.Builder;
 import lombok.Data;
