@@ -2,7 +2,6 @@ package org.data.eightBet.repository;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.data.eightBet.dto.EventInPlayDTO;
 import org.data.persistent.entity.EventsEightXBetEntity;
 import org.data.persistent.projection.EventsEightXBetProjection;
 import org.data.persistent.repository.ScheduledEventsEightXBetMongoRepository;
@@ -10,8 +9,10 @@ import org.data.util.TimeUtil;
 import org.data.util.TournamentEightXBetConverter;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.data.eightBet.dto.ScheduledEventInPlayEightXBetResponse.*;
 
@@ -23,8 +24,20 @@ public class EightXBetRepositoryImpl implements EightXBetRepository {
 	private final ScheduledEventsEightXBetMongoRepository scheduledEventsEightXBetMongoRepository;
 
 	@Override
-	public List<EventInPlayDTO> getAllInPlayMatches() {
-		return List.of();
+	public void updateInplayEvent() {
+		List<EventsEightXBetEntity> inPlayEvent = scheduledEventsEightXBetMongoRepository.findAllByInPlay();
+		List<EventsEightXBetEntity> inPlayEventUpdated = new ArrayList<>();
+
+		for (EventsEightXBetEntity eventsEightXBetEntity : inPlayEvent) {
+			LocalDateTime kickoffTime = eventsEightXBetEntity.getKickoffTime();
+			LocalDateTime now = LocalDateTime.now();
+			if (now.isAfter(kickoffTime)) {
+				eventsEightXBetEntity.setInplay(false);
+				inPlayEventUpdated.add(eventsEightXBetEntity);
+			}
+		}
+
+		scheduledEventsEightXBetMongoRepository.saveAll(inPlayEventUpdated);
 	}
 
 	@Override
@@ -50,6 +63,27 @@ public class EightXBetRepositoryImpl implements EightXBetRepository {
 
 		scheduledEventsEightXBetMongoRepository.saveAll(scheduledEventsEightXBetEntities);
 		return scheduledEventsEightXBetEntities;
+	}
+
+	@Override
+	public List<EventsEightXBetEntity> getAllEventsEntity() {
+		return scheduledEventsEightXBetMongoRepository.findAll();
+	}
+
+	@Override
+	public void saveMatchesMap(Map<TournamentResponse, MatchResponse> tournamentMatchResponseMap) {
+		List<EventsEightXBetEntity> eventsEightXBetEntities = new ArrayList<>();
+		for (Map.Entry<TournamentResponse, MatchResponse> entry : tournamentMatchResponseMap.entrySet()) {
+			EventsEightXBetEntity eventsEightXBetEntity = populateScheduledEventsEightXBetEntity(entry.getKey(), entry.getValue());
+			eventsEightXBetEntities.add(eventsEightXBetEntity);
+		}
+		scheduledEventsEightXBetMongoRepository.saveAll(eventsEightXBetEntities);
+	}
+
+	@Override
+	public void saveMatch(TournamentResponse tournament, MatchResponse match) {
+		EventsEightXBetEntity eventsEightXBetEntity = populateScheduledEventsEightXBetEntity(tournament, match);
+		scheduledEventsEightXBetMongoRepository.save(eventsEightXBetEntity);
 	}
 
 	private EventsEightXBetEntity populateScheduledEventsEightXBetEntity(TournamentResponse tournamentResponse, MatchResponse matchesResponse) {

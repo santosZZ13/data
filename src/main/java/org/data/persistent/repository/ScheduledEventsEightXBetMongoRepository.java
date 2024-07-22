@@ -16,4 +16,8 @@ public interface ScheduledEventsEightXBetMongoRepository extends MongoRepository
 
 	@Query(value = "{}", fields = "{iId: 1, _id: 0}")
 	List<EventsEightXBetProjection> findAllByIId();
+
+	//  get all events with inplay = true
+	@Query(value = "{inplay: true}")
+	List<EventsEightXBetEntity> findAllByInPlay();
 }

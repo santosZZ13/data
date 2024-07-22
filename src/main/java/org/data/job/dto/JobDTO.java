@@ -22,7 +22,7 @@ public interface JobDTO {
 	class Job {
 		private String jobName;
 		private String requestPath;
-		private String baseURL;
+		private String service;
 		private String cronExpression;
 	}
 }

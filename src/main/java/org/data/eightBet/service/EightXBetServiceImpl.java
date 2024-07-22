@@ -13,11 +13,10 @@ import org.data.service.sap.SapService;
 import org.data.common.model.GenericResponseWrapper;
 import org.data.util.TimeUtil;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import static org.data.eightBet.dto.EventDTO.*;
 import static org.data.eightBet.dto.ScheduledEventInPlayEightXBetResponse.*;
@@ -85,9 +84,51 @@ public class EightXBetServiceImpl implements EightXBetService {
 	}
 
 	@Override
+	@Transactional
 	public GenericResponseWrapper fetchEvents() {
-		System.out.println("Fetching...");
-		return null;
+
+//		eightXBetRepository.updateInplayEvent();
+
+		ScheduledEventInPlayEightXBetResponse scheduledEventInPlayEightXBetResponse = sapService.restEightXBetGet(EventsByDateDTO.GET_EVENTS_BY_DATE,
+				EventsByDateDTO.queryParams(),
+				ScheduledEventInPlayEightXBetResponse.class);
+
+		Data data = scheduledEventInPlayEightXBetResponse.getData();
+		List<TournamentResponse> tournaments = data.getTournaments();
+
+		List<Integer> iidEventEntities = new ArrayList<>();
+		Map<TournamentResponse, MatchResponse> tournamentMatchResponseMap = new LinkedHashMap<>();
+
+		if (!tournaments.isEmpty()) {
+			List<EventsEightXBetEntity> eventsEntities = eightXBetRepository.getAllEventsEntity();
+			eventsEntities.forEach(eventEntity -> iidEventEntities.add(eventEntity.getIId()));
+
+
+			tournaments.forEach(tournament -> {
+				List<MatchResponse> matches = tournament.getMatches();
+				matches.forEach(match -> {
+					if (!iidEventEntities.contains(match.getIid())) {
+						tournamentMatchResponseMap.put(tournament, match);
+					}
+				});
+			});
+
+			eightXBetRepository.saveMatchesMap(tournamentMatchResponseMap);
+		}
+
+		Collection<MatchResponse> matches = tournamentMatchResponseMap.values();
+		List<MatchDTO> matchDTOS = new ArrayList<>();
+		for (MatchResponse match : matches) {
+			matchDTOS.add(buildMatchDTO(match));
+		}
+
+
+		return GenericResponseWrapper
+				.builder()
+				.code("")
+				.msg("")
+				.data(matchDTOS)
+				.build();
 	}
 
 	private EventsByDateDTO.Response populateScheduledEventByDateResponseToDTOToDisplay(List<TournamentResponse> tournamentResponses, String date) {
@@ -176,6 +217,7 @@ public class EightXBetServiceImpl implements EightXBetService {
 		TeamResponse awayResponse = matchResponse.getAway();
 		long kickoffTime = matchResponse.getKickoffTime();
 		return MatchDTO.builder()
+				.iid(matchResponse.getIid())
 				.homeName(homeResponse.getName())
 				.awayName(awayResponse.getName())
 				.slug(matchResponse.getName())
