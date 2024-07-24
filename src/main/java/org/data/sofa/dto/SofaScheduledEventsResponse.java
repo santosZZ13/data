@@ -13,6 +13,7 @@ import java.util.List;
 public class SofaScheduledEventsResponse {
 
 	private List<EventResponse> events;
+	private Boolean hasNextPage;
 
 	@Builder
 	@Data

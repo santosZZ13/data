@@ -2,6 +2,7 @@ package org.data.sofa.service.impl;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.data.properties.ConnectionProperties;
 import org.data.service.sap.SapService;
 import org.data.common.model.GenericResponseWrapper;
 import org.data.sofa.dto.ScheduledEventsCommonResponse;
@@ -9,12 +10,14 @@ import org.data.sofa.dto.SofaScheduledEventByDateDTO;
 import org.data.sofa.dto.SofaScheduledEventsResponse;
 import org.data.sofa.repository.impl.ScheduledEventsRepository;
 import org.data.sofa.service.ScheduledEventsService;
+import org.data.util.RestConnector;
 import org.data.util.TimeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -28,6 +31,7 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 
 	private final ScheduledEventsRepository scheduledEventsRepository;
 	private final SapService sapService;
+	private final RestConnector restConnector;
 
 	@Override
 	public GenericResponseWrapper getAllScheduleEventsByDate(Request request) {
@@ -100,5 +104,48 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 				.build();
 	}
 
+
+	private void fetchHistoricalMatches(List<Integer> ids) {
+		for (Integer id : ids) {
+			int initLast = 0;
+			int intNext = 0;
+			boolean isLast = true;
+			boolean isNext = true;
+
+			List<SofaScheduledEventsResponse> sofaScheduledEventsResponses = new ArrayList<>();
+
+			while (true) {
+
+				if (isLast) {
+					SofaScheduledEventsResponse sofaScheduledEventsResponseLast = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
+							SCHEDULED_EVENT_TEAM_LAST, SofaScheduledEventsResponse.class, Arrays.asList(id, initLast));
+					if (sofaScheduledEventsResponseLast.getHasNextPage()) {
+						initLast++;
+						sofaScheduledEventsResponses.add(sofaScheduledEventsResponseLast);
+					} else {
+						isLast = false;
+					}
+				}
+
+				if (isNext) {
+					SofaScheduledEventsResponse sofaScheduledEventsResponseNExt = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
+							SCHEDULED_EVENT_TEAM_NEXT, SofaScheduledEventsResponse.class, Arrays.asList(id, intNext));
+
+					if (sofaScheduledEventsResponseNExt.getHasNextPage()) {
+						sofaScheduledEventsResponses.add(sofaScheduledEventsResponseNExt);
+						intNext++;
+					} else {
+						isNext = false;
+					}
+				}
+
+
+				if (!isLast && !isNext) {
+					break;
+				}
+
+			}
+		}
+	}
 
 }
