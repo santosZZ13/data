@@ -53,7 +53,6 @@ public class RestConnectorImpl implements RestConnector {
 
 		HttpHeaders httpHeaders = new HttpHeaders();
 		headers.forEach(httpHeaders::set);
-		httpHeaders.set("User-Agent", "PostmanRuntime/7.40.0");
 
 
 		HttpEntity<?> entity = new HttpEntity<>(httpHeaders);
@@ -82,12 +81,12 @@ public class RestConnectorImpl implements RestConnector {
 	private String buildUrlWithArgs(String url, String requestPath, List<Integer> args) {
 		String[] split = requestPath.split("/");
 		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < split.length; i++) {
-			if (split[i].contains("{}")) {
+		for (String s : split) {
+			if (s.contains("{}")) {
 				sb.append(args.get(0));
 				args.remove(0);
 			} else {
-				sb.append(split[i]);
+				sb.append(s);
 			}
 		}
 		return url + sb;

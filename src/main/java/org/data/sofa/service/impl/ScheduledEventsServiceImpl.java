@@ -6,7 +6,6 @@ import org.data.properties.ConnectionProperties;
 import org.data.service.sap.SapService;
 import org.data.common.model.GenericResponseWrapper;
 import org.data.sofa.dto.ScheduledEventsCommonResponse;
-import org.data.sofa.dto.SofaScheduledEventByDateDTO;
 import org.data.sofa.dto.SofaScheduledEventsResponse;
 import org.data.sofa.repository.impl.ScheduledEventsRepository;
 import org.data.sofa.service.ScheduledEventsService;
@@ -18,8 +17,12 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+
 
 import static org.data.sofa.dto.SofaScheduledEventByDateDTO.*;
 import static org.data.sofa.dto.SofaScheduledEventsResponse.*;
@@ -32,6 +35,8 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 	private final ScheduledEventsRepository scheduledEventsRepository;
 	private final SapService sapService;
 	private final RestConnector restConnector;
+	private static final int BATCH_SIZE = 100; // Adjust batch size as needed
+
 
 	@Override
 	public GenericResponseWrapper getAllScheduleEventsByDate(Request request) {
@@ -45,6 +50,11 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 
 		List<EventDetail> eventDetails = getEventDetails(sofaScheduledEventsResponse, sofaInverseScheduledEventsResponse, requestDate);
 
+		// sort eventDetails by kickOffMatch DESC
+		eventDetails.sort(Comparator.comparing(EventDetail::getKickOffMatch));
+
+		List<Integer> ids = eventDetails.stream().map(EventDetail::getId).toList();
+		fetchHistoricalMatches(ids);
 
 		Response response = Response
 				.builder()
@@ -106,46 +116,71 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 
 
 	private void fetchHistoricalMatches(List<Integer> ids) {
-		for (Integer id : ids) {
-			int initLast = 0;
-			int intNext = 0;
-			boolean isLast = true;
-			boolean isNext = true;
+		List<CompletableFuture<Void>> futures = ids.stream()
+				.map(id -> CompletableFuture.runAsync(() -> fetchHistoricalMatchesForId(id)))
+				.toList();
 
-			List<SofaScheduledEventsResponse> sofaScheduledEventsResponses = new ArrayList<>();
+		// Wait for all futures to complete
+		CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+		try {
+			allOf.get();
+		} catch (InterruptedException | ExecutionException e) {
+			log.error("Error fetching historical matches", e);
+			Thread.currentThread().interrupt();
+		}
+	}
 
-			while (true) {
+	private void fetchHistoricalMatchesForId(Integer id) {
+		int initLast = 0;
+		int intNext = 0;
+		boolean isLast = true;
+		boolean isNext = true;
 
-				if (isLast) {
-					SofaScheduledEventsResponse sofaScheduledEventsResponseLast = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
-							SCHEDULED_EVENT_TEAM_LAST, SofaScheduledEventsResponse.class, Arrays.asList(id, initLast));
-					if (sofaScheduledEventsResponseLast.getHasNextPage()) {
-						initLast++;
-						sofaScheduledEventsResponses.add(sofaScheduledEventsResponseLast);
-					} else {
-						isLast = false;
-					}
+		List<SofaScheduledEventsResponse> sofaScheduledEventsResponses = new ArrayList<>();
+		List<EventResponse> eventResponses = new ArrayList<>();
+
+
+		while (true) {
+			if (isLast) {
+				SofaScheduledEventsResponse sofaScheduledEventsResponseLast = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
+						SCHEDULED_EVENT_TEAM_LAST, SofaScheduledEventsResponse.class, Arrays.asList(id, initLast));
+				if (sofaScheduledEventsResponseLast.getHasNextPage()) {
+					initLast++;
+					sofaScheduledEventsResponses.add(sofaScheduledEventsResponseLast);
+				} else {
+					isLast = false;
 				}
+			}
 
-				if (isNext) {
-					SofaScheduledEventsResponse sofaScheduledEventsResponseNExt = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
-							SCHEDULED_EVENT_TEAM_NEXT, SofaScheduledEventsResponse.class, Arrays.asList(id, intNext));
+			if (isNext) {
+				SofaScheduledEventsResponse sofaScheduledEventsResponseNext = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
+						SCHEDULED_EVENT_TEAM_NEXT, SofaScheduledEventsResponse.class, Arrays.asList(id, intNext));
 
-					if (sofaScheduledEventsResponseNExt.getHasNextPage()) {
-						sofaScheduledEventsResponses.add(sofaScheduledEventsResponseNExt);
-						intNext++;
-					} else {
-						isNext = false;
-					}
+				if (sofaScheduledEventsResponseNext.getHasNextPage()) {
+					sofaScheduledEventsResponses.add(sofaScheduledEventsResponseNext);
+					intNext++;
+				} else {
+					isNext = false;
 				}
+			}
 
-
-				if (!isLast && !isNext) {
-					break;
-				}
-
+			if (!isLast && !isNext) {
+				break;
 			}
 		}
+
+
+		sofaScheduledEventsResponses.forEach(sofaScheduledEventsResponse -> {
+			List<EventResponse> events = sofaScheduledEventsResponse.getEvents();
+			eventResponses.addAll(events);
+
+			if (eventResponses.size() >= BATCH_SIZE) {
+				scheduledEventsRepository.saveEvents(new ArrayList<>(eventResponses));
+				eventResponses.clear();
+			}
+		});
+
+		scheduledEventsRepository.saveEvents(eventResponses);
 	}
 
 }
