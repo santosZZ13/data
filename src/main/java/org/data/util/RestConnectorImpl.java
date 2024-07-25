@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -18,7 +19,6 @@ public class RestConnectorImpl implements RestConnector {
 
 	private final RestTemplate restTemplate;
 	private final ConnectionProperties connectionProperties;
-
 
 
 	@Override
@@ -66,7 +66,7 @@ public class RestConnectorImpl implements RestConnector {
 		).getBody();
 	}
 
-//	String SCHEDULED_EVENT_TEAM_NEXT = "/team/{}/events/next/{}";
+	//	String SCHEDULED_EVENT_TEAM_NEXT = "/team/{}/events/next/{}";
 	// fill args in the requestPath
 	@Override
 	public <T> T restGet(ConnectionProperties.Host host, String requestPath, Class<T> response, List<Integer> args) {
@@ -78,15 +78,25 @@ public class RestConnectorImpl implements RestConnector {
 		return restTemplate.getForObject(urlWithArgs, response);
 	}
 
-	private String buildUrlWithArgs(String url, String requestPath, List<Integer> args) {
+	public String buildUrlWithArgs(String url, String requestPath, List<Integer> args) {
 		String[] split = requestPath.split("/");
+		long count = Arrays.stream(split).filter(s -> s.contains("{}")).count();
+
+		if (count != args.size()) {
+			throw new IllegalArgumentException("Number of arguments does not match the number of placeholders");
+		}
+
+		int index = 0;
 		StringBuilder sb = new StringBuilder();
 		for (String s : split) {
 			if (s.contains("{}")) {
-				sb.append(args.get(0));
-				args.remove(0);
+				sb.append("/").append(args.get(index));
+				index++;
 			} else {
-				sb.append(s);
+				if (s.isEmpty()) {
+					continue;
+				}
+				sb.append("/").append(s);
 			}
 		}
 		return url + sb;
