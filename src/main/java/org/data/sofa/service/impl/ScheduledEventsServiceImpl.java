@@ -53,49 +53,62 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 //
 //		List<EventDetail> eventDetails = getEventDetails(sofaScheduledEventsResponse, sofaInverseScheduledEventsResponse, requestDate);
 //
-//		// sort eventDetails by kickOffMatch DESC
-//		eventDetails.sort(Comparator.comparing(EventDetail::getKickOffMatch));
 //
-//		List<Integer> ids = eventDetails.stream()
-//				.flatMap(eventDetail -> {
-//					Integer idTeamHome = eventDetail.getHomeDetails().getIdTeam();
-//					Integer idTeamAway = eventDetail.getAwayDetails().getIdTeam();
-//					return Stream.of(idTeamHome, idTeamAway);
-//				})
-//				.toList();
+//		List<EventResponse> eventResponses = new ArrayList<>();
+//		eventResponses.addAll(sofaScheduledEventsResponse.getEvents());
+//		eventResponses.addAll(sofaInverseScheduledEventsResponse.getEvents());
+//		scheduledEventsRepository.saveEvents(eventResponses);
+//
+//		return GenericResponseWrapper
+//				.builder()
+//				.code("")
+//				.msg("")
+//				.data(Response.builder()
+//						.eventDetails(eventDetails)
+//						.build())
+//				.build();
 
+		//TODO:
+		// check data if exist in redis.
+		// if exist return data from redis.
+		// if not exist, fetch data from sap and save to redis.
 
 		CompletableFuture<SofaScheduledEventsResponse> sofaScheduledEventsResponseFuture =
 				CompletableFuture.supplyAsync(() -> {
-					log.info("Fetching scheduled events for date: [{}] in [Thread: {}]", request.getDate(), Thread.currentThread().getName());
+					log.info("#getAllScheduleEventsByDate - fetching scheduled events for date: [{}] in [Thread: {}]", request.getDate(), Thread.currentThread().getName());
 					return sapService.restSofaScoreGet(SCHEDULED_EVENTS + request.getDate(), SofaScheduledEventsResponse.class);
 				});
 
 
 		CompletableFuture<SofaScheduledEventsResponse> sofaInverseScheduledEventsResponseFuture =
 				CompletableFuture.supplyAsync(() -> {
-					log.info("Fetching inverse scheduled events for date: [{}] in [Thread: {}]", request.getDate(), Thread.currentThread().getName());
+					log.info("#getAllScheduleEventsByDate - fetching inverse scheduled events for date: [{}] in [Thread: {}]", request.getDate(), Thread.currentThread().getName());
 					return sapService.restSofaScoreGet(SCHEDULED_EVENTS + request.getDate() + SCHEDULED_EVENTS_INVERSE, SofaScheduledEventsResponse.class);
 				});
 
 		List<EventDetail> eventDetailsList = sofaScheduledEventsResponseFuture
 				.thenCombine(sofaInverseScheduledEventsResponseFuture, (sofaScheduledEventsResponse, sofaInverseScheduledEventsResponse) -> {
+					//TODO:
+					// cache sofaScheduledEventsResponseFuture and sofaInverseScheduledEventsResponseFuture to redis
+
 					String date = request.getDate();
 					LocalDateTime requestDate = TimeUtil.convertStringToLocalDateTime(date);
 					List<EventDetail> eventDetails = getEventDetails(sofaScheduledEventsResponse, sofaInverseScheduledEventsResponse, requestDate);
 					eventDetails.sort(Comparator.comparing(EventDetail::getKickOffMatch));
+					log.info("#getAllScheduleEventsByDate - eventDetails size: [{}]", eventDetails.size());
 					return eventDetails;
 				})
 				// get ids from eventDetails and return
 				.thenApply(eventDetails -> {
-//					List<Integer> ids = eventDetails.stream()
-//							.flatMap(eventDetail -> {
-//								Integer idTeamHome = eventDetail.getHomeDetails().getIdTeam();
-//								Integer idTeamAway = eventDetail.getAwayDetails().getIdTeam();
-//								return Stream.of(idTeamHome, idTeamAway);
-//							})
-//							.toList();
-					List<Integer> ids = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+					List<Integer> ids = eventDetails.stream()
+							.flatMap(eventDetail -> {
+								Integer idTeamHome = eventDetail.getHomeDetails().getIdTeam();
+								Integer idTeamAway = eventDetail.getAwayDetails().getIdTeam();
+								return Stream.of(idTeamHome, idTeamAway);
+							})
+//							.distinct()
+							.toList();
+//					List<Integer> ids = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 					CompletableFuture.runAsync(() -> fetchHistoricalMatches(ids));
 					return eventDetails;
 				})
@@ -169,90 +182,77 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 
 
 	private void fetchHistoricalMatches(List<Integer> ids) {
-
-//		try {
-//			fetchHistoricalMatchesForId(ids.get(0));
-//		} catch (Exception exception) {
-//			System.out.println(exception.getMessage());
-//		}
-
-//		CompletableFuture<?>[] futures = ids.stream()
-//				.map(id -> CompletableFuture.runAsync(() -> {
-//					try {
-//						fetchHistoricalMatchesForId(id);
-//					} catch (InterruptedException e) {
-//						e.printStackTrace();
-//					}
-//				}))
-//				.toArray(CompletableFuture[]::new);
-
-		for (Integer id : ids) {
+		List<Integer> idsTest = Arrays.asList(ids.get(0), ids.get(1));
+		List<CompletableFuture<Void>> futures = new ArrayList<>();
+		for (Integer id : idsTest) {
 			CompletableFuture<Void> voidCompletableFuture = CompletableFuture.runAsync(() -> {
 				try {
 					fetchHistoricalMatchesForId(id);
-				} catch (InterruptedException e) {
-					throw new RuntimeException(e);
+				} catch (Exception e) {
+					log.error("Error fetching historical matches for id: {}", id, e);
 				}
 			});
+			futures.add(voidCompletableFuture);
 		}
-
-//		CompletableFuture.allOf(futures).join();
+		// Run asynchronously without waiting for completion
+		CompletableFuture
+				.allOf(futures.toArray(new CompletableFuture[0]));
 	}
 
 	private void fetchHistoricalMatchesForId(Integer id) throws InterruptedException {
+		// TODO:
+		// Caching Strategies for APIs: https://medium.com/@satyendra.jaiswal/caching-strategies-for-apis-improving-performance-and-reducing-load-1d4bd2df2b44
 
-		log.info("#fetchHistoricalMatchesForId starting fetch for [id: {}] in [Thread : {}]", id, Thread.currentThread().getName());
+		log.info("#fetchHistoricalMatchesForId - starting fetch for [id: {}] in [Thread : {}]", id, Thread.currentThread().getName());
 		Instant start = Instant.now();
 		int initLast = 0;
 		int intNext = 0;
 		boolean isLast = true;
 		boolean isNext = true;
 
-		int timesTestForLast = 0;
-		int timesTestForNext = 0;
+//		int timesTestForLast = 0;
+//		int timesTestForNext = 0;
 
 		List<SofaScheduledEventsResponse> sofaScheduledEventsResponses = new ArrayList<>();
-		List<EventResponse> eventResponses = new ArrayList<>();
-
 
 		while (true) {
 			if (isLast) {
+//
+//				Thread.sleep(500);
+//				timesTestForLast++;
 
-				Thread.sleep(500);
-				timesTestForLast++;
-
-				if (timesTestForLast > 5) {
+/*				if (timesTestForLast > 5) {
+					isLast = false;
+				}*/
+				SofaScheduledEventsResponse sofaScheduledEventsResponseLast = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
+						SCHEDULED_EVENT_TEAM_LAST, SofaScheduledEventsResponse.class, Arrays.asList(id, initLast));
+				if (sofaScheduledEventsResponseLast.getHasNextPage()) {
+					initLast++;
+					sofaScheduledEventsResponses.add(sofaScheduledEventsResponseLast);
+				} else {
+					sofaScheduledEventsResponses.add(sofaScheduledEventsResponseLast);
 					isLast = false;
 				}
-//				SofaScheduledEventsResponse sofaScheduledEventsResponseLast = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
-//						SCHEDULED_EVENT_TEAM_LAST, SofaScheduledEventsResponse.class, Arrays.asList(id, initLast));
-//				if (sofaScheduledEventsResponseLast.getHasNextPage()) {
-//					initLast++;
-//					sofaScheduledEventsResponses.add(sofaScheduledEventsResponseLast);
-//				} else {
-//					sofaScheduledEventsResponses.add(sofaScheduledEventsResponseLast);
-//					isLast = false;
-//				}
 			}
 
 			if (isNext) {
 
-				Thread.sleep(500);
-				timesTestForNext++;
-
-				if (timesTestForNext > 2) {
-					isNext = false;
-				}
-//				SofaScheduledEventsResponse sofaScheduledEventsResponseNext = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
-//						SCHEDULED_EVENT_TEAM_NEXT, SofaScheduledEventsResponse.class, Arrays.asList(id, intNext));
+//				Thread.sleep(500);
+//				timesTestForNext++;
 //
-//				if (sofaScheduledEventsResponseNext.getHasNextPage()) {
-//					sofaScheduledEventsResponses.add(sofaScheduledEventsResponseNext);
-//					intNext++;
-//				} else {
-//					sofaScheduledEventsResponses.add(sofaScheduledEventsResponseNext);
+//				if (timesTestForNext > 2) {
 //					isNext = false;
 //				}
+				SofaScheduledEventsResponse sofaScheduledEventsResponseNext = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
+						SCHEDULED_EVENT_TEAM_NEXT, SofaScheduledEventsResponse.class, Arrays.asList(id, intNext));
+
+				if (sofaScheduledEventsResponseNext.getHasNextPage()) {
+					sofaScheduledEventsResponses.add(sofaScheduledEventsResponseNext);
+					intNext++;
+				} else {
+					sofaScheduledEventsResponses.add(sofaScheduledEventsResponseNext);
+					isNext = false;
+				}
 			}
 
 			if (!isLast && !isNext) {
@@ -267,20 +267,35 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 				.reduce(Integer::sum)
 				.ifPresent(totalEvents -> log.info("Total events for id: {} is: {}", id, totalEvents));
 
+
+		List<EventResponse> eventResponses = new ArrayList<>();
+		sofaScheduledEventsResponses.forEach(sofaScheduledEventsResponse -> {
+			List<EventResponse> events = sofaScheduledEventsResponse.getEvents();
+			eventResponses.addAll(events);
+		});
+
+
+		saveEventBatch(eventResponses, id);
 		Instant finish = Instant.now();
-		log.info("#fetchHistoricalMatchesForId time elapsed for [id: {}] in [{} ms]", id, TimeUtil.calculateTimeElapsed(start, finish));
-		log.info("#fetchHistoricalMatchesForId ended fetch for [id: {}]", id);
-//		sofaScheduledEventsResponses.forEach(sofaScheduledEventsResponse -> {
-//			List<EventResponse> events = sofaScheduledEventsResponse.getEvents();
-//			eventResponses.addAll(events);
-//
-//			if (eventResponses.size() >= BATCH_SIZE) {
-//				scheduledEventsRepository.saveEvents(new ArrayList<>(eventResponses));
-//				eventResponses.clear();
-//			}
-//		});
-//
-//		scheduledEventsRepository.saveEvents(eventResponses);
+		log.info("#fetchHistoricalMatchesForId - time elapsed for [id: {}] in [{} ms]", id, TimeUtil.calculateTimeElapsed(start, finish));
+		log.info("#fetchHistoricalMatchesForId - ended fetch for [id: {}]", id);
+
 	}
 
+
+	private void saveEventBatch(List<EventResponse> eventResponses, Integer idMatch) {
+		log.info("#fetchHistoricalMatchesForId - saving events for [id: {}] with size: [{}]", idMatch, eventResponses.size());
+		scheduledEventsRepository.saveEvents(eventResponses);
+		//			if (eventResponses.size() >= BATCH_SIZE) {
+//				log.info("#fetchHistoricalMatchesForId - saving events for [id: {}] with size: [{}]", id, eventResponses.size());
+//				scheduledEventsRepository.saveEvents(eventResponses);
+//				eventResponses.clear();
+//			}
+//		for (int i = 0; i < eventResponses.size(); i += BATCH_SIZE) {
+//			int end = Math.min(eventResponses.size(), i + BATCH_SIZE);
+//			List<EventResponse> batch = eventResponses.subList(i, end);
+//			log.info("#fetchHistoricalMatchesForId - saving events for [id: {}] with size: [{}]", id, batch.size());
+//			scheduledEventsRepository.saveEvents(batch);
+//		}
+	}
 }

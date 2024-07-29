@@ -19,8 +19,8 @@ public interface ScheduledEventsCommonEntity {
 		private String slug;
 		private ScheduledEventsCommonEntity.Category category;
 		private ScheduledEventsCommonEntity.UniqueTournament uniqueTournament;
-		private int priority;
-		private int id;
+		private Integer priority;
+		private Integer id;
 	}
 
 	@Builder
@@ -39,7 +39,7 @@ public interface ScheduledEventsCommonEntity {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class StatusEntity {
-		private int code;
+		private Integer code;
 		private String description;
 		private String type;
 	}
@@ -54,12 +54,12 @@ public interface ScheduledEventsCommonEntity {
 		private String slug;
 		private String shortName;
 		private ScheduledEventsCommonEntity.Sport sport;
-		private int userCount;
+		private Integer userCount;
 		private String nameCode;
-		private boolean disabled;
-		private boolean national;
-		private int type;
-		private int id;
+		private Boolean disabled;
+		private Boolean national;
+		private Integer type;
+		private Integer id;
 		private ScheduledEventsCommonEntity.Country country;
 		private List<TeamEntity> subTeams;
 		private ScheduledEventsCommonEntity.TeamColors teamColors;
@@ -115,12 +115,12 @@ public interface ScheduledEventsCommonEntity {
 		private String name;
 		private String slug;
 		private Category category;
-		private int userCount;
-		private boolean crowdsourcingEnabled;
-		private boolean hasPerformanceGraphFeature;
-		private int id;
-		private boolean hasEventPlayerStatistics;
-		private boolean displayInverseHomeAwayTeams;
+		private Integer userCount;
+		private Boolean crowdsourcingEnabled;
+		private Boolean hasPerformanceGraphFeature;
+		private Integer id;
+		private Boolean hasEventPlayerStatistics;
+		private Boolean displayInverseHomeAwayTeams;
 	}
 
 

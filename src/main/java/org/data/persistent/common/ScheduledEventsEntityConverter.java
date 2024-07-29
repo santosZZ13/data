@@ -198,13 +198,13 @@ public class ScheduledEventsEntityConverter {
 		return ScheduledEventsCommonEntity.TimeEntity.builder()
 				.injuryTime1(timeResponse.getInjuryTime1())
 				.injuryTime2(timeResponse.getInjuryTime2())
-				.currentPeriodStartTimestamp(TimeUtil.convertUnixTimestampToLocalDateTime(timeResponse.getCurrentPeriodStartTimestamp()))
+				.currentPeriodStartTimestamp(Objects.isNull(timeResponse.getCurrentPeriodStartTimestamp()) ? null : TimeUtil.convertUnixTimestampToLocalDateTime(timeResponse.getCurrentPeriodStartTimestamp()))
 				.build();
 	}
 
 	public static ScheduledEventsCommonEntity.ChangesEntity fromChangesResponse(ScheduledEventsCommonResponse.Changes changesResponse) {
 		return ScheduledEventsCommonEntity.ChangesEntity.builder()
-				.changeTimestamp(TimeUtil.convertUnixTimestampToLocalDateTime(changesResponse.getChangeTimestamp()))
+				.changeTimestamp(Objects.isNull(changesResponse.getChangeTimestamp()) ? null : TimeUtil.convertUnixTimestampToLocalDateTime(changesResponse.getChangeTimestamp()))
 				.changes(changesResponse.getChanges())
 				.build();
 	}

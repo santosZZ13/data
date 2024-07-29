@@ -12,16 +12,16 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ScheduledEventsBaseEntity {
-	private boolean hasGlobalHighlights;
-	private boolean hasEventPlayerStatistics;
-	private boolean hasEventPlayerHeatMap;
-	private int detailId;
-	private boolean crowdsourcingDataDisplayEnabled;
-	private int idEvent;
-	private boolean crowdsourcingEnabled;
+	private Boolean hasGlobalHighlights;
+	private Boolean hasEventPlayerStatistics;
+	private Boolean hasEventPlayerHeatMap;
+	private Integer detailId;
+	private Boolean crowdsourcingDataDisplayEnabled;
+	private Integer idEvent;
+	private Boolean crowdsourcingEnabled;
 	private LocalDateTime startTimestamp;
 	private String slug;
-	private boolean finalResultOnly;
-	private boolean feedLocked;
-	private boolean isEditor;
+	private Boolean finalResultOnly;
+	private Boolean feedLocked;
+	private Boolean isEditor;
 }

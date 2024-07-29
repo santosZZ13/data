@@ -52,19 +52,18 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 			ScheduledEventsCommonResponse.Score awayScoreResponse = eventResponse.getAwayScore();
 			ScheduledEventsCommonResponse.Time timeResponse = eventResponse.getTime();
 			ScheduledEventsCommonResponse.Changes changesResponse = eventResponse.getChanges();
-			boolean hasGlobalHighlightsResponse = eventResponse.getHasGlobalHighlights();
-			boolean hasEventPlayerStatisticsResponse = eventResponse.getHasEventPlayerStatistics();
-			boolean hasEventPlayerHeatMapResponse = eventResponse.getHasEventPlayerHeatMap();
-
-			int detailIdResponse = eventResponse.getDetailId();
-			boolean crowdSourcingDataDisplayEnabledResponse = eventResponse.getCrowdsourcingDataDisplayEnabled();
-			int idResponse = eventResponse.getId();
-			boolean crowdSourcingEnabledResponse = eventResponse.getCrowdsourcingEnabled();
-			long startTimestampResponse = eventResponse.getStartTimestamp();
+			Boolean hasGlobalHighlightsResponse = eventResponse.getHasGlobalHighlights();
+			Boolean hasEventPlayerStatisticsResponse = eventResponse.getHasEventPlayerStatistics();
+			Boolean hasEventPlayerHeatMapResponse = eventResponse.getHasEventPlayerHeatMap();
+			Integer detailIdResponse = eventResponse.getDetailId();
+			Boolean crowdSourcingDataDisplayEnabledResponse = eventResponse.getCrowdsourcingDataDisplayEnabled();
+			Integer idResponse = eventResponse.getId();
+			Boolean crowdSourcingEnabledResponse = eventResponse.getCrowdsourcingEnabled();
+			Long startTimestampResponse = eventResponse.getStartTimestamp();
 			String slugResponse = eventResponse.getSlug();
-			boolean finalResultOnlyResponse = eventResponse.getFinalResultOnly();
-			boolean feedLockedResponse = eventResponse.getFeedLocked();
-			boolean editorResponse = eventResponse.getIsEditor();
+			Boolean finalResultOnlyResponse = eventResponse.getFinalResultOnly();
+			Boolean feedLockedResponse = eventResponse.getFeedLocked();
+			Boolean editorResponse = eventResponse.getIsEditor();
 
 			ScheduledEventsCommonEntity.TournamentEntity tournamentEntity = ScheduledEventsEntityConverter.fromTournamentResponse(tournamentResponse);
 			ScheduledEventsCommonEntity.SeasonEntity seasonEntity = ScheduledEventsEntityConverter.fromSesSeasonResponse(seasonResponse);
@@ -108,8 +107,8 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 		});
 
 
-		scheduledEventMongoRepository.saveAll(scheduledEventsEntities);
-		return null;
+
+		return scheduledEventMongoRepository.saveAll(scheduledEventsEntities);
 	}
 
 	@Override
@@ -143,18 +142,18 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 					.awayScore(awayScoreResponse)
 					.time(timeResponse)
 					.changes(changesResponse)
-					.hasGlobalHighlights(scheduledEventsSofaScoreEntity.isHasGlobalHighlights())
-					.hasEventPlayerStatistics(scheduledEventsSofaScoreEntity.isHasEventPlayerStatistics())
-					.hasEventPlayerHeatMap(scheduledEventsSofaScoreEntity.isHasEventPlayerHeatMap())
+					.hasGlobalHighlights(scheduledEventsSofaScoreEntity.getHasGlobalHighlights())
+					.hasEventPlayerStatistics(scheduledEventsSofaScoreEntity.getHasEventPlayerStatistics())
+					.hasEventPlayerHeatMap(scheduledEventsSofaScoreEntity.getHasEventPlayerHeatMap())
 					.detailId(scheduledEventsSofaScoreEntity.getDetailId())
-					.crowdsourcingDataDisplayEnabled(scheduledEventsSofaScoreEntity.isCrowdsourcingDataDisplayEnabled())
+					.crowdsourcingDataDisplayEnabled(scheduledEventsSofaScoreEntity.getCrowdsourcingDataDisplayEnabled())
 					.id(scheduledEventsSofaScoreEntity.getIdEvent())
-					.crowdsourcingEnabled(scheduledEventsSofaScoreEntity.isCrowdsourcingEnabled())
+					.crowdsourcingEnabled(scheduledEventsSofaScoreEntity.getCrowdsourcingEnabled())
 					.startTimestamp(TimeUtil.convertLocalDateTimeToUnixTimestamp(scheduledEventsSofaScoreEntity.getStartTimestamp()))
 					.slug(scheduledEventsSofaScoreEntity.getSlug())
-					.finalResultOnly(scheduledEventsSofaScoreEntity.isFinalResultOnly())
-					.feedLocked(scheduledEventsSofaScoreEntity.isFeedLocked())
-					.isEditor(scheduledEventsSofaScoreEntity.isEditor())
+					.finalResultOnly(scheduledEventsSofaScoreEntity.getFinalResultOnly())
+					.feedLocked(scheduledEventsSofaScoreEntity.getFeedLocked())
+					.isEditor(scheduledEventsSofaScoreEntity.getIsEditor())
 					.build();
 			eventResponses.add(eventResponse);
 		}

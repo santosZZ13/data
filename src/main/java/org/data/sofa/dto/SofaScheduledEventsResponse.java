@@ -10,6 +10,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+
 public class SofaScheduledEventsResponse {
 
 	private List<EventResponse> events;
@@ -40,7 +41,7 @@ public class SofaScheduledEventsResponse {
 		private Boolean crowdsourcingDataDisplayEnabled;
 		private Integer id;
 		private Boolean crowdsourcingEnabled;
-		private long startTimestamp;
+		private Long startTimestamp;
 		private String slug;
 		private Boolean finalResultOnly;
 		private Boolean feedLocked;

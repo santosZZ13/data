@@ -17,6 +17,8 @@ public interface ScheduledEventsCommonResponse {
 		private ScheduledEventsCommonResponse.Category category;
 		private ScheduledEventsCommonResponse.UniqueTournament uniqueTournament;
 		private Integer priority;
+		private Boolean isGroup;
+		private Boolean isLive;
 		private Integer id;
 	}
 
@@ -28,6 +30,8 @@ public interface ScheduledEventsCommonResponse {
 	class UniqueTournament {
 		private String name;
 		private String slug;
+		private String primaryColorHex;
+		private String secondaryColorHex;
 		private ScheduledEventsCommonResponse.Category category;
 		private Integer userCount;
 		private Boolean crowdsourcingEnabled;
@@ -49,6 +53,7 @@ public interface ScheduledEventsCommonResponse {
 		private Integer id;
 		private ScheduledEventsCommonResponse.Country country;
 		private String flag;
+		private String alpha2;
 	}
 
 	@Builder
@@ -141,19 +146,14 @@ public interface ScheduledEventsCommonResponse {
 		private String shortName;
 		private SportResponse sportResponse;
 		private Integer userCount;
-		@NotNull
 		private String nameCode;
 		private Boolean disabled;
 		private Boolean national;
 		private Integer type;
 		private Integer id;
-		@NotNull
 		private ScheduledEventsCommonResponse.Country country;
-		@Nullable
 		private List<TeamResponse> subTeamResponses;
-		@NotNull
 		private ScheduledEventsCommonResponse.TeamColors teamColors;
-		@Nullable
 		private ScheduledEventsCommonResponse.FieldTranslations fieldTranslations;
 	}
 
@@ -181,9 +181,7 @@ public interface ScheduledEventsCommonResponse {
 	@NoArgsConstructor
 	class Status {
 		private Integer code;
-		@NotNull
 		private String description;
-		@NotNull
 		private String type;
 	}
 
