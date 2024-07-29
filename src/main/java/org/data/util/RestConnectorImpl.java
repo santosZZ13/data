@@ -1,6 +1,7 @@
 package org.data.util;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.data.properties.ConnectionProperties;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -15,6 +16,7 @@ import java.util.Map;
 
 @Component
 @AllArgsConstructor
+@Log4j2
 public class RestConnectorImpl implements RestConnector {
 
 	private final RestTemplate restTemplate;
@@ -75,6 +77,7 @@ public class RestConnectorImpl implements RestConnector {
 		}
 		String url = connectionProperties.getHost(host).getUrl();
 		String urlWithArgs = buildUrlWithArgs(url, requestPath, args);
+		log.info("#restGet calling host: {} with url: {}", host, urlWithArgs);
 		return restTemplate.getForObject(urlWithArgs, response);
 	}
 

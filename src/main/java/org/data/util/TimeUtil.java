@@ -1,5 +1,6 @@
 package org.data.util;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -27,5 +28,9 @@ public class TimeUtil {
 		} else {
 			return LocalDateTime.parse(date + "T00:00:00");
 		}
+	}
+
+	public static long calculateTimeElapsed(Instant start, Instant finish) {
+		return Duration.between(start, finish).toMillis();
 	}
 }

@@ -14,6 +14,8 @@ import org.data.util.TimeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Array;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Stream;
 
 
 import static org.data.sofa.dto.SofaScheduledEventByDateDTO.*;
@@ -41,24 +44,67 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 	@Override
 	public GenericResponseWrapper getAllScheduleEventsByDate(Request request) {
 
-		SofaScheduledEventsResponse sofaScheduledEventsResponse = sapService.restSofaScoreGet(SCHEDULED_EVENTS + request.getDate(), SofaScheduledEventsResponse.class);
-		SofaScheduledEventsResponse sofaInverseScheduledEventsResponse = sapService.restSofaScoreGet(SCHEDULED_EVENTS
-				+ request.getDate() + SCHEDULED_EVENTS_INVERSE, SofaScheduledEventsResponse.class);
+//		SofaScheduledEventsResponse sofaScheduledEventsResponse = sapService.restSofaScoreGet(SCHEDULED_EVENTS + request.getDate(), SofaScheduledEventsResponse.class);
+//		SofaScheduledEventsResponse sofaInverseScheduledEventsResponse = sapService.restSofaScoreGet(SCHEDULED_EVENTS
+//				+ request.getDate() + SCHEDULED_EVENTS_INVERSE, SofaScheduledEventsResponse.class);
+//
+//		String date = request.getDate();
+//		LocalDateTime requestDate = TimeUtil.convertStringToLocalDateTime(date);
+//
+//		List<EventDetail> eventDetails = getEventDetails(sofaScheduledEventsResponse, sofaInverseScheduledEventsResponse, requestDate);
+//
+//		// sort eventDetails by kickOffMatch DESC
+//		eventDetails.sort(Comparator.comparing(EventDetail::getKickOffMatch));
+//
+//		List<Integer> ids = eventDetails.stream()
+//				.flatMap(eventDetail -> {
+//					Integer idTeamHome = eventDetail.getHomeDetails().getIdTeam();
+//					Integer idTeamAway = eventDetail.getAwayDetails().getIdTeam();
+//					return Stream.of(idTeamHome, idTeamAway);
+//				})
+//				.toList();
 
-		String date = request.getDate();
-		LocalDateTime requestDate = TimeUtil.convertStringToLocalDateTime(date);
 
-		List<EventDetail> eventDetails = getEventDetails(sofaScheduledEventsResponse, sofaInverseScheduledEventsResponse, requestDate);
+		CompletableFuture<SofaScheduledEventsResponse> sofaScheduledEventsResponseFuture =
+				CompletableFuture.supplyAsync(() -> {
+					log.info("Fetching scheduled events for date: [{}] in [Thread: {}]", request.getDate(), Thread.currentThread().getName());
+					return sapService.restSofaScoreGet(SCHEDULED_EVENTS + request.getDate(), SofaScheduledEventsResponse.class);
+				});
 
-		// sort eventDetails by kickOffMatch DESC
-		eventDetails.sort(Comparator.comparing(EventDetail::getKickOffMatch));
 
-		List<Integer> ids = eventDetails.stream().map(EventDetail::getId).toList();
-		fetchHistoricalMatches(ids);
+		CompletableFuture<SofaScheduledEventsResponse> sofaInverseScheduledEventsResponseFuture =
+				CompletableFuture.supplyAsync(() -> {
+					log.info("Fetching inverse scheduled events for date: [{}] in [Thread: {}]", request.getDate(), Thread.currentThread().getName());
+					return sapService.restSofaScoreGet(SCHEDULED_EVENTS + request.getDate() + SCHEDULED_EVENTS_INVERSE, SofaScheduledEventsResponse.class);
+				});
 
-		Response response = Response
-				.builder()
-				.eventDetails(eventDetails)
+		List<EventDetail> eventDetailsList = sofaScheduledEventsResponseFuture
+				.thenCombine(sofaInverseScheduledEventsResponseFuture, (sofaScheduledEventsResponse, sofaInverseScheduledEventsResponse) -> {
+					String date = request.getDate();
+					LocalDateTime requestDate = TimeUtil.convertStringToLocalDateTime(date);
+					List<EventDetail> eventDetails = getEventDetails(sofaScheduledEventsResponse, sofaInverseScheduledEventsResponse, requestDate);
+					eventDetails.sort(Comparator.comparing(EventDetail::getKickOffMatch));
+					return eventDetails;
+				})
+				// get ids from eventDetails and return
+				.thenApply(eventDetails -> {
+//					List<Integer> ids = eventDetails.stream()
+//							.flatMap(eventDetail -> {
+//								Integer idTeamHome = eventDetail.getHomeDetails().getIdTeam();
+//								Integer idTeamAway = eventDetail.getAwayDetails().getIdTeam();
+//								return Stream.of(idTeamHome, idTeamAway);
+//							})
+//							.toList();
+					List<Integer> ids = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+					CompletableFuture.runAsync(() -> fetchHistoricalMatches(ids));
+					return eventDetails;
+				})
+				.join();
+
+
+		// return
+		Response response = Response.builder()
+				.eventDetails(eventDetailsList)
 				.build();
 
 
@@ -104,37 +150,66 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 		ScheduledEventsCommonResponse.Score eventResponseAwayScore = eventResponse.getAwayScore();
 
 		return EventDetail.builder()
+				.id(eventResponse.getId())
 				.tntName(eventResponse.getTournament().getName())
 				.seasonName(Objects.isNull(eventResponse.getSeason()) ? null : eventResponse.getSeason().getName())
 				.round(Objects.isNull(eventResponse.getRoundInfo()) ? null : eventResponse.getRoundInfo().getRound())
 				.status(Objects.isNull(eventResponse.getStatus()) ? null : eventResponse.getStatus().getDescription())
-				.homeName(eventResponse.getHomeTeam().getName())
-				.awayName(eventResponse.getAwayTeam().getName())
+				.homeDetails(TeamDetails.builder()
+						.idTeam(eventResponse.getHomeTeam().getId())
+						.name(eventResponse.getHomeTeam().getName())
+						.build())
+				.awayDetails(TeamDetails.builder()
+						.idTeam(eventResponse.getAwayTeam().getId())
+						.name(eventResponse.getAwayTeam().getName())
+						.build())
 				.kickOffMatch(TimeUtil.convertUnixTimestampToLocalDateTime(eventResponse.getStartTimestamp()))
 				.build();
 	}
 
 
 	private void fetchHistoricalMatches(List<Integer> ids) {
-		List<CompletableFuture<Void>> futures = ids.stream()
-				.map(id -> CompletableFuture.runAsync(() -> fetchHistoricalMatchesForId(id)))
-				.toList();
 
-		// Wait for all futures to complete
-		CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-		try {
-			allOf.get();
-		} catch (InterruptedException | ExecutionException e) {
-			log.error("Error fetching historical matches", e);
-			Thread.currentThread().interrupt();
+//		try {
+//			fetchHistoricalMatchesForId(ids.get(0));
+//		} catch (Exception exception) {
+//			System.out.println(exception.getMessage());
+//		}
+
+//		CompletableFuture<?>[] futures = ids.stream()
+//				.map(id -> CompletableFuture.runAsync(() -> {
+//					try {
+//						fetchHistoricalMatchesForId(id);
+//					} catch (InterruptedException e) {
+//						e.printStackTrace();
+//					}
+//				}))
+//				.toArray(CompletableFuture[]::new);
+
+		for (Integer id : ids) {
+			CompletableFuture<Void> voidCompletableFuture = CompletableFuture.runAsync(() -> {
+				try {
+					fetchHistoricalMatchesForId(id);
+				} catch (InterruptedException e) {
+					throw new RuntimeException(e);
+				}
+			});
 		}
+
+//		CompletableFuture.allOf(futures).join();
 	}
 
-	private void fetchHistoricalMatchesForId(Integer id) {
+	private void fetchHistoricalMatchesForId(Integer id) throws InterruptedException {
+
+		log.info("#fetchHistoricalMatchesForId starting fetch for [id: {}] in [Thread : {}]", id, Thread.currentThread().getName());
+		Instant start = Instant.now();
 		int initLast = 0;
 		int intNext = 0;
 		boolean isLast = true;
 		boolean isNext = true;
+
+		int timesTestForLast = 0;
+		int timesTestForNext = 0;
 
 		List<SofaScheduledEventsResponse> sofaScheduledEventsResponses = new ArrayList<>();
 		List<EventResponse> eventResponses = new ArrayList<>();
@@ -142,26 +217,42 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 
 		while (true) {
 			if (isLast) {
-				SofaScheduledEventsResponse sofaScheduledEventsResponseLast = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
-						SCHEDULED_EVENT_TEAM_LAST, SofaScheduledEventsResponse.class, Arrays.asList(id, initLast));
-				if (sofaScheduledEventsResponseLast.getHasNextPage()) {
-					initLast++;
-					sofaScheduledEventsResponses.add(sofaScheduledEventsResponseLast);
-				} else {
+
+				Thread.sleep(500);
+				timesTestForLast++;
+
+				if (timesTestForLast > 5) {
 					isLast = false;
 				}
+//				SofaScheduledEventsResponse sofaScheduledEventsResponseLast = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
+//						SCHEDULED_EVENT_TEAM_LAST, SofaScheduledEventsResponse.class, Arrays.asList(id, initLast));
+//				if (sofaScheduledEventsResponseLast.getHasNextPage()) {
+//					initLast++;
+//					sofaScheduledEventsResponses.add(sofaScheduledEventsResponseLast);
+//				} else {
+//					sofaScheduledEventsResponses.add(sofaScheduledEventsResponseLast);
+//					isLast = false;
+//				}
 			}
 
 			if (isNext) {
-				SofaScheduledEventsResponse sofaScheduledEventsResponseNext = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
-						SCHEDULED_EVENT_TEAM_NEXT, SofaScheduledEventsResponse.class, Arrays.asList(id, intNext));
 
-				if (sofaScheduledEventsResponseNext.getHasNextPage()) {
-					sofaScheduledEventsResponses.add(sofaScheduledEventsResponseNext);
-					intNext++;
-				} else {
+				Thread.sleep(500);
+				timesTestForNext++;
+
+				if (timesTestForNext > 2) {
 					isNext = false;
 				}
+//				SofaScheduledEventsResponse sofaScheduledEventsResponseNext = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
+//						SCHEDULED_EVENT_TEAM_NEXT, SofaScheduledEventsResponse.class, Arrays.asList(id, intNext));
+//
+//				if (sofaScheduledEventsResponseNext.getHasNextPage()) {
+//					sofaScheduledEventsResponses.add(sofaScheduledEventsResponseNext);
+//					intNext++;
+//				} else {
+//					sofaScheduledEventsResponses.add(sofaScheduledEventsResponseNext);
+//					isNext = false;
+//				}
 			}
 
 			if (!isLast && !isNext) {
@@ -169,18 +260,27 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 			}
 		}
 
+		// sum of events
+		sofaScheduledEventsResponses
+				.stream()
+				.map(sofaScheduledEventsResponse -> sofaScheduledEventsResponse.getEvents().size())
+				.reduce(Integer::sum)
+				.ifPresent(totalEvents -> log.info("Total events for id: {} is: {}", id, totalEvents));
 
-		sofaScheduledEventsResponses.forEach(sofaScheduledEventsResponse -> {
-			List<EventResponse> events = sofaScheduledEventsResponse.getEvents();
-			eventResponses.addAll(events);
-
-			if (eventResponses.size() >= BATCH_SIZE) {
-				scheduledEventsRepository.saveEvents(new ArrayList<>(eventResponses));
-				eventResponses.clear();
-			}
-		});
-
-		scheduledEventsRepository.saveEvents(eventResponses);
+		Instant finish = Instant.now();
+		log.info("#fetchHistoricalMatchesForId time elapsed for [id: {}] in [{} ms]", id, TimeUtil.calculateTimeElapsed(start, finish));
+		log.info("#fetchHistoricalMatchesForId ended fetch for [id: {}]", id);
+//		sofaScheduledEventsResponses.forEach(sofaScheduledEventsResponse -> {
+//			List<EventResponse> events = sofaScheduledEventsResponse.getEvents();
+//			eventResponses.addAll(events);
+//
+//			if (eventResponses.size() >= BATCH_SIZE) {
+//				scheduledEventsRepository.saveEvents(new ArrayList<>(eventResponses));
+//				eventResponses.clear();
+//			}
+//		});
+//
+//		scheduledEventsRepository.saveEvents(eventResponses);
 	}
 
 }

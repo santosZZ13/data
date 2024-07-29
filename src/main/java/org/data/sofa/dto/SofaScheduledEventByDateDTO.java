@@ -40,12 +40,21 @@ public interface SofaScheduledEventByDateDTO {
 		private String seasonName;
 		private Integer round;
 		private String status;
-		private String homeName;
-		private String awayName;
+		private TeamDetails homeDetails;
+		private TeamDetails awayDetails;
 		private ScoreDetails homeScoreDetails;
 		private ScoreDetails awayScoreDetails;
 		private Integer id;
 		private LocalDateTime kickOffMatch;
+	}
+
+	@Builder
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	class TeamDetails {
+		private Integer idTeam;
+		private String name;
 	}
 
 	@Builder
