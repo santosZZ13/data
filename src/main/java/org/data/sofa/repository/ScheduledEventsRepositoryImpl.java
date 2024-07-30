@@ -1,5 +1,6 @@
 package org.data.sofa.repository;
 
+import jdk.jfr.Event;
 import lombok.AllArgsConstructor;
 import org.data.sofa.dto.ScheduledEventsCommonResponse;
 import org.data.sofa.dto.SofaScheduledEventsResponse;
@@ -8,6 +9,7 @@ import org.data.persistent.common.ScheduledEventsCommonEntity;
 import org.data.persistent.entity.ScheduledEventsSofaScoreEntity;
 import org.data.persistent.common.ScheduledEventsEntityConverter;
 import org.data.persistent.repository.ScheduledEventMongoRepository;
+import org.data.sofa.dto.SofaScheduledEventsResponse.EventResponse;
 import org.data.sofa.repository.impl.ScheduledEventsRepository;
 import org.data.util.TimeUtil;
 import org.springframework.data.domain.Page;
@@ -29,13 +31,18 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 
 
 	@Override
-	public SofaScheduledEventsResponse.EventResponse getAllEventByDate(LocalDateTime date, Pageable pageable) {
+	public EventResponse getAllEventByDate(LocalDateTime date, Pageable pageable) {
 		Page<ScheduledEventsSofaScoreEntity> evensByStartTime = scheduledEventMongoRepository.findAllByStartTimestamp(date, pageable);
 		return null;
 	}
 
 	@Override
-	public List<ScheduledEventsSofaScoreEntity> saveEvents(List<SofaScheduledEventsResponse.EventResponse> eventResponses) {
+	public List<EventResponse> getEventsById(Integer id) {
+		return List.of();
+	}
+
+	@Override
+	public List<ScheduledEventsSofaScoreEntity> saveEvents(List<EventResponse> eventResponses) {
 		List<ScheduledEventsSofaScoreEntity> scheduledEventsEntities = new ArrayList<>();
 
 		eventResponses.forEach(eventResponse -> {
@@ -112,10 +119,10 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 	}
 
 	@Override
-	public List<SofaScheduledEventsResponse.EventResponse> getAllEvents() {
+	public List<EventResponse> getAllEvents() {
 
 		List<ScheduledEventsSofaScoreEntity> scheduledEventsEntities = scheduledEventMongoRepository.findAll();
-		List<SofaScheduledEventsResponse.EventResponse> eventResponses = new ArrayList<>();
+		List<EventResponse> eventResponses = new ArrayList<>();
 
 		for (int i = 0; i < scheduledEventsEntities.size(); i++) {
 			ScheduledEventsSofaScoreEntity scheduledEventsSofaScoreEntity = scheduledEventsEntities.get(i);
@@ -129,7 +136,7 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 			ScheduledEventsCommonResponse.Time timeResponse = ScheduledEventsResponseConverter.fromTimeResponse(scheduledEventsSofaScoreEntity.getTime());
 			ScheduledEventsCommonResponse.Changes changesResponse = ScheduledEventsResponseConverter.fromChangesResponse(scheduledEventsSofaScoreEntity.getChanges());
 			ScheduledEventsCommonResponse.RoundInfo roundInfoResponse = ScheduledEventsResponseConverter.fromRoundInfoResponse(scheduledEventsSofaScoreEntity.getRoundInfo());
-			SofaScheduledEventsResponse.EventResponse eventResponse = SofaScheduledEventsResponse.EventResponse.builder()
+			EventResponse eventResponse = EventResponse.builder()
 					.tournament(tournamentResponse)
 					.season(seasonResponse)
 					.roundInfo(roundInfoResponse)
@@ -162,7 +169,7 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 
 
 	@Override
-	public SofaScheduledEventsResponse.EventResponse saveEvent(SofaScheduledEventsResponse.EventResponse eventResponse) {
+	public EventResponse saveEvent(EventResponse eventResponse) {
 		return null;
 	}
 

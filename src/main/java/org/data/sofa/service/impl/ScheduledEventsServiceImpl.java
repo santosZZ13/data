@@ -1,7 +1,10 @@
 package org.data.sofa.service.impl;
 
+import jdk.jfr.Event;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.data.persistent.entity.HistoryFetchEventEntity;
+import org.data.persistent.repository.HistoryFetchEventEntityRepository;
 import org.data.properties.ConnectionProperties;
 import org.data.service.sap.SapService;
 import org.data.common.model.GenericResponseWrapper;
@@ -17,13 +20,8 @@ import org.springframework.stereotype.Service;
 import java.lang.reflect.Array;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
 
@@ -38,6 +36,8 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 	private final ScheduledEventsRepository scheduledEventsRepository;
 	private final SapService sapService;
 	private final RestConnector restConnector;
+	private final HistoryFetchEventEntityRepository historyFetchEventEntityRepository;
+
 	private static final int BATCH_SIZE = 100; // Adjust batch size as needed
 
 
@@ -187,7 +187,11 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 		for (Integer id : idsTest) {
 			CompletableFuture<Void> voidCompletableFuture = CompletableFuture.runAsync(() -> {
 				try {
-					fetchHistoricalMatchesForId(id);
+					// TODO: Check if the team with id needs to be fetched or not
+					Optional<HistoryFetchEventEntity> byIdTeam = historyFetchEventEntityRepository.findByIdTeam(id);
+					if (byIdTeam.isPresent()) {
+						fetchHistoricalMatchesForId(id);
+					}
 				} catch (Exception e) {
 					log.error("Error fetching historical matches for id: {}", id, e);
 				}
@@ -261,11 +265,12 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 		}
 
 		// sum of events
-		sofaScheduledEventsResponses
+		Optional<Integer> totalEvents = sofaScheduledEventsResponses
 				.stream()
 				.map(sofaScheduledEventsResponse -> sofaScheduledEventsResponse.getEvents().size())
-				.reduce(Integer::sum)
-				.ifPresent(totalEvents -> log.info("Total events for id: {} is: {}", id, totalEvents));
+				.reduce(Integer::sum);
+
+		totalEvents.ifPresent(totalEvent -> log.info("Total events for id: {} is: {}", id, totalEvents.get()));
 
 
 		List<EventResponse> eventResponses = new ArrayList<>();
@@ -277,7 +282,19 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 
 		saveEventBatch(eventResponses, id);
 		Instant finish = Instant.now();
-		log.info("#fetchHistoricalMatchesForId - time elapsed for [id: {}] in [{} ms]", id, TimeUtil.calculateTimeElapsed(start, finish));
+		long timeElapses = TimeUtil.calculateTimeElapsed(start, finish);
+
+
+		HistoryFetchEventEntity build = HistoryFetchEventEntity
+				.builder()
+				.idTeam(id)
+				.timeElapsed(timeElapses)
+				.total(totalEvents.get())
+				.createdDate(LocalDateTime.now())
+				.build();
+
+
+		log.info("#fetchHistoricalMatchesForId - time elapsed for [id: {}] in [{} ms]", id, timeElapses);
 		log.info("#fetchHistoricalMatchesForId - ended fetch for [id: {}]", id);
 
 	}

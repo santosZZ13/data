@@ -1,5 +1,6 @@
 package org.data.sofa.repository.impl;
 
+import jdk.jfr.Event;
 import org.data.sofa.dto.SofaScheduledEventsResponse;
 import org.data.persistent.entity.ScheduledEventsSofaScoreEntity;
 import org.data.sofa.dto.SofaScheduledEventsResponse.EventResponse;
@@ -16,4 +17,6 @@ public interface ScheduledEventsRepository {
 	EventResponse saveEvent(EventResponse eventResponse);
 
 	EventResponse getAllEventByDate(LocalDateTime date, Pageable pageable);
+
+	List<EventResponse> getEventsById(Integer id);
 }
