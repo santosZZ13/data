@@ -22,6 +22,8 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 
@@ -39,6 +41,7 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 	private final HistoryFetchEventEntityRepository historyFetchEventEntityRepository;
 
 	private static final int BATCH_SIZE = 100; // Adjust batch size as needed
+	private static final int BATCH_SIZE_FOR_FETCH = 100; // Adjust batch size as needed
 
 
 	@Override
@@ -72,6 +75,8 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 		// check data if exist in redis.
 		// if exist return data from redis.
 		// if not exist, fetch data from sap and save to redis.
+
+		Optional<HistoryFetchEventEntity> byIdTeam = historyFetchEventEntityRepository.findByTeamId(3398);
 
 		CompletableFuture<SofaScheduledEventsResponse> sofaScheduledEventsResponseFuture =
 				CompletableFuture.supplyAsync(() -> {
@@ -182,15 +187,30 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 
 
 	private void fetchHistoricalMatches(List<Integer> ids) {
+
+//		ExecutorService executorService = Executors.newFixedThreadPool(10);
+//
+//		for (int i = 0; i < ids.size(); i += BATCH_SIZE_FOR_FETCH) {
+//			int batchIndex = Math.min(i + BATCH_SIZE_FOR_FETCH, ids.size());
+//
+//			List<Integer> batch = ids.subList(i, batchIndex);
+//
+//			System.out.println(batch);
+//		}
+
+
+
+
+		//
 		List<Integer> idsTest = Arrays.asList(ids.get(0), ids.get(1));
 		List<CompletableFuture<Void>> futures = new ArrayList<>();
 		for (Integer id : idsTest) {
 			CompletableFuture<Void> voidCompletableFuture = CompletableFuture.runAsync(() -> {
 				try {
-					// TODO: Check if the team with id needs to be fetched or not
-					Optional<HistoryFetchEventEntity> byIdTeam = historyFetchEventEntityRepository.findByIdTeam(id);
-					if (byIdTeam.isPresent()) {
+					if (!isFetchHistoricalMatchesForId(id)) {
 						fetchHistoricalMatchesForId(id);
+					} else {
+						log.info("Historical matches for id: {} already fetched", id);
 					}
 				} catch (Exception e) {
 					log.error("Error fetching historical matches for id: {}", id, e);
@@ -203,12 +223,27 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 				.allOf(futures.toArray(new CompletableFuture[0]));
 	}
 
-	private void fetchHistoricalMatchesForId(Integer id) throws InterruptedException {
+	/**
+	 * // TODO: Check if the team with id needs to be fetched or not
+	 *
+	 * @param id
+	 * @return
+	 */
+	public Boolean isFetchHistoricalMatchesForId(Integer id) {
+		Optional<HistoryFetchEventEntity> byIdTeam = historyFetchEventEntityRepository.findByTeamId(id);
+		if (byIdTeam.isPresent()) {
+			return true;
+		}
+		return false;
+	}
+
+
+	private void fetchHistoricalMatchesForId(Integer id) {
 		// TODO:
 		// Caching Strategies for APIs: https://medium.com/@satyendra.jaiswal/caching-strategies-for-apis-improving-performance-and-reducing-load-1d4bd2df2b44
-
-		log.info("#fetchHistoricalMatchesForId - starting fetch for [id: {}] in [Thread : {}]", id, Thread.currentThread().getName());
 		Instant start = Instant.now();
+		log.info("#fetchHistoricalMatchesForId - [STARTING] fetch for [id: {}] in [Thread : {}]", id, Thread.currentThread().getName());
+
 		int initLast = 0;
 		int intNext = 0;
 		boolean isLast = true;
@@ -263,42 +298,38 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 				break;
 			}
 		}
+		List<EventResponse> eventResponses = new ArrayList<>();
 
 		// sum of events
 		Optional<Integer> totalEvents = sofaScheduledEventsResponses
 				.stream()
+				.map(sofaScheduledEventsResponse -> {
+					eventResponses.addAll(sofaScheduledEventsResponse.getEvents());
+					return sofaScheduledEventsResponse;
+				})
 				.map(sofaScheduledEventsResponse -> sofaScheduledEventsResponse.getEvents().size())
 				.reduce(Integer::sum);
 
 		totalEvents.ifPresent(totalEvent -> log.info("Total events for id: {} is: {}", id, totalEvents.get()));
 
-
-		List<EventResponse> eventResponses = new ArrayList<>();
-		sofaScheduledEventsResponses.forEach(sofaScheduledEventsResponse -> {
-			List<EventResponse> events = sofaScheduledEventsResponse.getEvents();
-			eventResponses.addAll(events);
-		});
-
-
 		saveEventBatch(eventResponses, id);
-		Instant finish = Instant.now();
-		long timeElapses = TimeUtil.calculateTimeElapsed(start, finish);
-
-
-		HistoryFetchEventEntity build = HistoryFetchEventEntity
-				.builder()
-				.idTeam(id)
-				.timeElapsed(timeElapses)
-				.total(totalEvents.get())
-				.createdDate(LocalDateTime.now())
-				.build();
-
-
-		log.info("#fetchHistoricalMatchesForId - time elapsed for [id: {}] in [{} ms]", id, timeElapses);
-		log.info("#fetchHistoricalMatchesForId - ended fetch for [id: {}]", id);
+		long timeElapses = TimeUtil.calculateTimeElapsed(start, Instant.now());
+		saveHistoryFetch(id, timeElapses, totalEvents.get());
+		log.info("#fetchHistoricalMatchesForId - [END] time elapsed for [id: {}] in [{} ms]", id, timeElapses);
 
 	}
 
+	private void saveHistoryFetch(Integer id, Long timeElapses,
+								  Integer totalEvents) {
+		HistoryFetchEventEntity historyFetchEventEntity = HistoryFetchEventEntity
+				.builder()
+				.teamId(id)
+				.timeElapsed(timeElapses)
+				.total(totalEvents)
+				.createdDate(LocalDateTime.now())
+				.build();
+		historyFetchEventEntityRepository.save(historyFetchEventEntity);
+	}
 
 	private void saveEventBatch(List<EventResponse> eventResponses, Integer idMatch) {
 		log.info("#fetchHistoricalMatchesForId - saving events for [id: {}] with size: [{}]", idMatch, eventResponses.size());

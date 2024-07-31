@@ -6,5 +6,5 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.Optional;
 
 public interface HistoryFetchEventEntityRepository extends MongoRepository<HistoryFetchEventEntity, String> {
-	Optional<HistoryFetchEventEntity> findByIdTeam(Integer idTeam);
+	Optional<HistoryFetchEventEntity> findByTeamId(Integer idTeam);
 }

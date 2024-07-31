@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
 
-@Document(collection = "history_fetch_events")
+@Document(collection = "history_fetch_event")
 @Getter
 @Setter
 @Builder
@@ -14,10 +14,13 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class HistoryFetchEventEntity {
 	private String id;
-	private int idTeam;
+	@Field("team_id")
+	private Integer teamId;
+	@Field("time_elapsed")
 	private Long timeElapsed;
+	@Field("total")
 	private Integer total;
-//	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+	//	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
 	@Field("created_date")
 	private LocalDateTime createdDate;
 	@Field("updated_date")
