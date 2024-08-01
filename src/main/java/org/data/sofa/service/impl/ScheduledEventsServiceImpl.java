@@ -3,6 +3,7 @@ package org.data.sofa.service.impl;
 import jdk.jfr.Event;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.data.config.FetchEventScheduler;
 import org.data.persistent.entity.HistoryFetchEventEntity;
 import org.data.persistent.repository.HistoryFetchEventEntityRepository;
 import org.data.properties.ConnectionProperties;
@@ -17,13 +18,10 @@ import org.data.util.TimeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.Array;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.stream.Stream;
 
 
@@ -39,10 +37,10 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 	private final SapService sapService;
 	private final RestConnector restConnector;
 	private final HistoryFetchEventEntityRepository historyFetchEventEntityRepository;
-
-	private static final int BATCH_SIZE = 100; // Adjust batch size as needed
-	private static final int BATCH_SIZE_FOR_FETCH = 100; // Adjust batch size as needed
-
+	private final FetchEventScheduler fetchEventScheduler;
+	private static final int BATCH_SIZE = 4; // Adjust batch size as needed
+	private static final int BATCH_SIZE_FOR_FETCH = 5; // Adjust batch size as needed
+	private static final long DELAY_BETWEEN_BATCHES_MS = 5000;
 
 	@Override
 	public GenericResponseWrapper getAllScheduleEventsByDate(Request request) {
@@ -113,7 +111,7 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 							})
 //							.distinct()
 							.toList();
-//					List<Integer> ids = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+//					List<Integer> idsTest = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 					CompletableFuture.runAsync(() -> fetchHistoricalMatches(ids));
 					return eventDetails;
 				})
@@ -132,6 +130,11 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 				.msg("")
 				.data(response)
 				.build();
+	}
+
+	@Override
+	public GenericResponseWrapper fetchId(Integer id) {
+		return null;
 	}
 
 	private @NotNull List<EventDetail> getEventDetails(SofaScheduledEventsResponse sofaScheduledEventsResponse,
@@ -187,41 +190,72 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 
 
 	private void fetchHistoricalMatches(List<Integer> ids) {
+		List<Integer> idsTest = ids.subList(0, 10);
+		List<List<Integer>> batches = createBatches(idsTest, BATCH_SIZE);
 
-//		ExecutorService executorService = Executors.newFixedThreadPool(10);
-//
-//		for (int i = 0; i < ids.size(); i += BATCH_SIZE_FOR_FETCH) {
-//			int batchIndex = Math.min(i + BATCH_SIZE_FOR_FETCH, ids.size());
-//
-//			List<Integer> batch = ids.subList(i, batchIndex);
-//
-//			System.out.println(batch);
-//		}
+		ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+		CompletableFuture<Void> future = CompletableFuture.completedFuture(null);
 
 
-
-
-		//
-		List<Integer> idsTest = Arrays.asList(ids.get(0), ids.get(1));
-		List<CompletableFuture<Void>> futures = new ArrayList<>();
-		for (Integer id : idsTest) {
-			CompletableFuture<Void> voidCompletableFuture = CompletableFuture.runAsync(() -> {
-				try {
-					if (!isFetchHistoricalMatchesForId(id)) {
-						fetchHistoricalMatchesForId(id);
-					} else {
-						log.info("Historical matches for id: {} already fetched", id);
-					}
-				} catch (Exception e) {
-					log.error("Error fetching historical matches for id: {}", id, e);
-				}
-			});
-			futures.add(voidCompletableFuture);
+		for (List<Integer> batch : batches) {
+			future = future.thenCompose( previous-> processBatchWithDelay(batch, executorService));
 		}
-		// Run asynchronously without waiting for completion
-		CompletableFuture
-				.allOf(futures.toArray(new CompletableFuture[0]));
+
+		future.whenComplete((result, throwable) -> executorService.shutdown());
 	}
+
+	private CompletionStage<Void> processBatchWithDelay(List<Integer> batch, ScheduledExecutorService executorService) {
+		CompletableFuture<Void> batchFuture = new CompletableFuture<>();
+
+
+		executorService.schedule(() -> {
+					log.info("----------------------------------------------------------------------------------------------------------");
+					log.info("#processBatch - [Processing] batch with size: [{}] in Thread: [{}]", batch.size(), Thread.currentThread().getName());
+
+					List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+					for (Integer innerBatch : batch) {
+
+						CompletableFuture<Void> voidCompletableFuture = CompletableFuture.runAsync(() -> {
+							try {
+								if (!isFetchHistoricalMatchesForId(innerBatch)) {
+									fetchHistoricalMatchesForId(innerBatch);
+								} else {
+									log.info("Historical events for id: {} already fetched", innerBatch);
+								}
+							} catch (Exception e) {
+								log.error("Error fetching historical event for id: {}", innerBatch, e);
+							}
+						});
+						futures.add(voidCompletableFuture);
+					}
+
+					CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).whenComplete((res, ex) -> {
+						log.info("----------------------------------------------------------------------------------------------------------");
+						batchFuture.complete(null);
+					});
+				},
+				DELAY_BETWEEN_BATCHES_MS,
+				TimeUnit.MILLISECONDS);
+
+
+		return batchFuture;
+	}
+
+
+
+	private List<List<Integer>> createBatches(List<Integer> ids, int batchSize) {
+		log.info("#createBatches - [Creating] batches for ids with size: [{}] in Thread: [{}]", ids.size(), Thread.currentThread().getName());
+		List<List<Integer>> batches = new ArrayList<>();
+
+		for (int i = 0; i < ids.size(); i += batchSize) {
+			int end = Math.min(ids.size(), i + batchSize);
+			batches.add(new ArrayList<>(ids.subList(i, end)));
+		}
+
+		return batches;
+	}
+
 
 	/**
 	 * // TODO: Check if the team with id needs to be fetched or not
@@ -238,7 +272,7 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 	}
 
 
-	private void fetchHistoricalMatchesForId(Integer id) {
+	private void fetchHistoricalMatchesForId(Integer id) throws InterruptedException {
 		// TODO:
 		// Caching Strategies for APIs: https://medium.com/@satyendra.jaiswal/caching-strategies-for-apis-improving-performance-and-reducing-load-1d4bd2df2b44
 		Instant start = Instant.now();
@@ -249,20 +283,20 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 		boolean isLast = true;
 		boolean isNext = true;
 
-//		int timesTestForLast = 0;
-//		int timesTestForNext = 0;
+		int timesTestForLast = 0;
+		int timesTestForNext = 0;
 
 		List<SofaScheduledEventsResponse> sofaScheduledEventsResponses = new ArrayList<>();
 
 		while (true) {
 			if (isLast) {
-//
+
 //				Thread.sleep(500);
 //				timesTestForLast++;
-
-/*				if (timesTestForLast > 5) {
-					isLast = false;
-				}*/
+//
+//				if (timesTestForLast > 5) {
+//					isLast = false;
+//				}
 				SofaScheduledEventsResponse sofaScheduledEventsResponseLast = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
 						SCHEDULED_EVENT_TEAM_LAST, SofaScheduledEventsResponse.class, Arrays.asList(id, initLast));
 				if (sofaScheduledEventsResponseLast.getHasNextPage()) {
@@ -276,12 +310,12 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 
 			if (isNext) {
 
-//				Thread.sleep(500);
-//				timesTestForNext++;
-//
-//				if (timesTestForNext > 2) {
-//					isNext = false;
-//				}
+				Thread.sleep(500);
+				timesTestForNext++;
+
+				if (timesTestForNext > 2) {
+					isNext = false;
+				}
 				SofaScheduledEventsResponse sofaScheduledEventsResponseNext = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
 						SCHEDULED_EVENT_TEAM_NEXT, SofaScheduledEventsResponse.class, Arrays.asList(id, intNext));
 

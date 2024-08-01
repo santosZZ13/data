@@ -31,36 +31,43 @@ public class ScheduledEventsEntityConverter {
 
 
 		ScheduledEventsCommonResponse.UniqueTournament uniqueTournamentResponse = tournamentResponse.getUniqueTournament();
-		ScheduledEventsCommonResponse.Category categoryUniQueTournamentResponse = uniqueTournamentResponse.getCategory();
-		ScheduledEventsCommonResponse.SportResponse sportResponseUniQueTournament = categoryUniQueTournamentResponse.getSport();
-		ScheduledEventsCommonResponse.Country countryUniQueTournament = categoryUniQueTournamentResponse.getCountry();
-		Integer categoryUniQueTournamentId = categoryUniQueTournamentResponse.getId();
-		String categoryUniQueTournamentFlag = categoryUniQueTournamentResponse.getFlag();
+		ScheduledEventsCommonEntity.UniqueTournament uniqueTournament = null;
 
-		ScheduledEventsCommonEntity.Sport sportCategoryUniQueTournament = fromSportResponse(sportResponseUniQueTournament);
-		ScheduledEventsCommonEntity.Country countryCategoryUniQueTournament = fromCountryResponse(countryUniQueTournament);
+		if (uniqueTournamentResponse != null) {
+			ScheduledEventsCommonResponse.Category categoryUniQueTournamentResponse = uniqueTournamentResponse.getCategory();
+			Integer categoryUniQueTournamentId = categoryUniQueTournamentResponse.getId();
+			String categoryUniQueTournamentFlag = categoryUniQueTournamentResponse.getFlag();
 
-		ScheduledEventsCommonEntity.Category categoryUniQueTournament = ScheduledEventsCommonEntity.Category
-				.builder()
-				.id(categoryUniQueTournamentId)
-				.name(categoryUniQueTournamentResponse.getName())
-				.slug(categoryUniQueTournamentResponse.getSlug())
-				.sport(sportCategoryUniQueTournament)
-				.country(countryCategoryUniQueTournament)
-				.flag(categoryUniQueTournamentFlag)
-				.build();
+			ScheduledEventsCommonResponse.SportResponse sportResponseUniQueTournament = categoryUniQueTournamentResponse.getSport();
+			ScheduledEventsCommonResponse.Country countryUniQueTournament = categoryUniQueTournamentResponse.getCountry();
 
-		ScheduledEventsCommonEntity.UniqueTournament uniqueTournament = ScheduledEventsCommonEntity.UniqueTournament.builder()
-				.name(uniqueTournamentResponse.getName())
-				.slug(uniqueTournamentResponse.getSlug())
-				.category(categoryUniQueTournament)
-				.userCount(uniqueTournamentResponse.getUserCount())
-				.crowdsourcingEnabled(uniqueTournamentResponse.getCrowdsourcingEnabled())
-				.hasPerformanceGraphFeature(uniqueTournamentResponse.getHasPerformanceGraphFeature())
-				.id(uniqueTournamentResponse.getId())
-				.hasEventPlayerStatistics(uniqueTournamentResponse.getHasEventPlayerStatistics())
-				.displayInverseHomeAwayTeams(uniqueTournamentResponse.getDisplayInverseHomeAwayTeams())
-				.build();
+
+			ScheduledEventsCommonEntity.Sport sportCategoryUniQueTournament = fromSportResponse(sportResponseUniQueTournament);
+			ScheduledEventsCommonEntity.Country countryCategoryUniQueTournament = fromCountryResponse(countryUniQueTournament);
+
+			ScheduledEventsCommonEntity.Category categoryUniQueTournament = ScheduledEventsCommonEntity.Category
+					.builder()
+					.id(categoryUniQueTournamentId)
+					.name(categoryUniQueTournamentResponse.getName())
+					.slug(categoryUniQueTournamentResponse.getSlug())
+					.sport(sportCategoryUniQueTournament)
+					.country(countryCategoryUniQueTournament)
+					.flag(categoryUniQueTournamentFlag)
+					.build();
+
+			uniqueTournament = ScheduledEventsCommonEntity.UniqueTournament.builder()
+					.name(uniqueTournamentResponse.getName())
+					.slug(uniqueTournamentResponse.getSlug())
+					.category(categoryUniQueTournament)
+					.userCount(uniqueTournamentResponse.getUserCount())
+					.crowdsourcingEnabled(uniqueTournamentResponse.getCrowdsourcingEnabled())
+					.hasPerformanceGraphFeature(uniqueTournamentResponse.getHasPerformanceGraphFeature())
+					.id(uniqueTournamentResponse.getId())
+					.hasEventPlayerStatistics(uniqueTournamentResponse.getHasEventPlayerStatistics())
+					.displayInverseHomeAwayTeams(uniqueTournamentResponse.getDisplayInverseHomeAwayTeams())
+					.build();
+		}
+
 
 
 		return ScheduledEventsCommonEntity.TournamentEntity

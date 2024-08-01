@@ -5,4 +5,5 @@ import org.data.sofa.dto.SofaScheduledEventByDateDTO;
 
 public interface ScheduledEventsService {
 	GenericResponseWrapper getAllScheduleEventsByDate(SofaScheduledEventByDateDTO.Request request);
+	GenericResponseWrapper fetchId(Integer id);
 }
