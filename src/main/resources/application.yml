@@ -35,23 +35,11 @@ spring:
 
 connection:
   eightxbet:
-    url: https://vd001eyxibmdmwe45iij-api.fwefhu.app
+    url: https://001xm4z27x2jy1u-api.pj51m7rx.com
     headers:
-      sec-ch-ua: Not/A)Brand";v="8", "Chromium";v="126", "Google Chrome";v="126"
-      currency: nVND
-      browser: Chrome 126.0.0.0
-      appType: 2
-      accept-language: en-us
-      sec-ch-ua-mobile: ?0
-      time-zone: GMT+07:00
-      screen: 933x911
-      User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/
-      Accept: application/json, text/plain, */*
+      User-Agent: Mozilla/5.0
       Referer: https://8xbet00.cc/
-      device: mobile
-      x-checksum: cd7e3f9d82770141b3dd7f9d2b70190aa2eb7a86dcb3d37150619e7f0b760fe1
-      x-uuid: 4fcb9c0e69be8f554c48b43980cf0bfe
-      sec-ch-ua-platform: Windows
+      x-checksum: 13d730b032dda17d6a440904f27560d7df77cd0b20e56a78153be8ade717e129
 
   sofasocre:
     url: https://www.sofascore.com/api/v1

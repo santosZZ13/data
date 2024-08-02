@@ -44,37 +44,10 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 
 	@Override
 	public GenericResponseWrapper getAllScheduleEventsByDate(Request request) {
-
-//		SofaScheduledEventsResponse sofaScheduledEventsResponse = sapService.restSofaScoreGet(SCHEDULED_EVENTS + request.getDate(), SofaScheduledEventsResponse.class);
-//		SofaScheduledEventsResponse sofaInverseScheduledEventsResponse = sapService.restSofaScoreGet(SCHEDULED_EVENTS
-//				+ request.getDate() + SCHEDULED_EVENTS_INVERSE, SofaScheduledEventsResponse.class);
-//
-//		String date = request.getDate();
-//		LocalDateTime requestDate = TimeUtil.convertStringToLocalDateTime(date);
-//
-//		List<EventDetail> eventDetails = getEventDetails(sofaScheduledEventsResponse, sofaInverseScheduledEventsResponse, requestDate);
-//
-//
-//		List<EventResponse> eventResponses = new ArrayList<>();
-//		eventResponses.addAll(sofaScheduledEventsResponse.getEvents());
-//		eventResponses.addAll(sofaInverseScheduledEventsResponse.getEvents());
-//		scheduledEventsRepository.saveEvents(eventResponses);
-//
-//		return GenericResponseWrapper
-//				.builder()
-//				.code("")
-//				.msg("")
-//				.data(Response.builder()
-//						.eventDetails(eventDetails)
-//						.build())
-//				.build();
-
 		//TODO:
 		// check data if exist in redis.
 		// if exist return data from redis.
 		// if not exist, fetch data from sap and save to redis.
-
-		Optional<HistoryFetchEventEntity> byIdTeam = historyFetchEventEntityRepository.findByTeamId(3398);
 
 		CompletableFuture<SofaScheduledEventsResponse> sofaScheduledEventsResponseFuture =
 				CompletableFuture.supplyAsync(() -> {
@@ -82,14 +55,13 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 					return sapService.restSofaScoreGet(SCHEDULED_EVENTS + request.getDate(), SofaScheduledEventsResponse.class);
 				});
 
-
 		CompletableFuture<SofaScheduledEventsResponse> sofaInverseScheduledEventsResponseFuture =
 				CompletableFuture.supplyAsync(() -> {
 					log.info("#getAllScheduleEventsByDate - fetching inverse scheduled events for date: [{}] in [Thread: {}]", request.getDate(), Thread.currentThread().getName());
 					return sapService.restSofaScoreGet(SCHEDULED_EVENTS + request.getDate() + SCHEDULED_EVENTS_INVERSE, SofaScheduledEventsResponse.class);
 				});
 
-		List<EventDetail> eventDetailsList = sofaScheduledEventsResponseFuture
+		return sofaScheduledEventsResponseFuture
 				.thenCombine(sofaInverseScheduledEventsResponseFuture, (sofaScheduledEventsResponse, sofaInverseScheduledEventsResponse) -> {
 					//TODO:
 					// cache sofaScheduledEventsResponseFuture and sofaInverseScheduledEventsResponseFuture to redis
@@ -101,36 +73,54 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 					log.info("#getAllScheduleEventsByDate - eventDetails size: [{}]", eventDetails.size());
 					return eventDetails;
 				})
-				// get ids from eventDetails and return
 				.thenApply(eventDetails -> {
-					List<Integer> ids = eventDetails.stream()
-							.flatMap(eventDetail -> {
-								Integer idTeamHome = eventDetail.getHomeDetails().getIdTeam();
-								Integer idTeamAway = eventDetail.getAwayDetails().getIdTeam();
-								return Stream.of(idTeamHome, idTeamAway);
-							})
-//							.distinct()
-							.toList();
-//					List<Integer> idsTest = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
-					CompletableFuture.runAsync(() -> fetchHistoricalMatches(ids));
-					return eventDetails;
+
+					List<Integer> ids = getIdForFetchEventHistory(eventDetails);
+
+					if (ids.isEmpty()) {
+						log.info("#getAllScheduleEventsByDate - No ids to fetch historical events");
+					} else {
+						CompletableFuture.runAsync(() -> fetchHistoricalMatches(ids));
+					}
+
+					return Response.builder()
+							.eventDetails(eventDetails)
+							.build();
 				})
+				.thenApply(response -> GenericResponseWrapper
+						.builder()
+						.code("")
+						.msg("")
+						.data(response)
+						.build())
 				.join();
-
-
-		// return
-		Response response = Response.builder()
-				.eventDetails(eventDetailsList)
-				.build();
-
-
-		return GenericResponseWrapper
-				.builder()
-				.code("")
-				.msg("")
-				.data(response)
-				.build();
 	}
+
+	private List<Integer> getIdForFetchEventHistory(List<EventDetail> eventDetails) {
+		List<Integer> ids = eventDetails.stream()
+				.flatMap(eventDetail -> {
+					Integer idTeamHome = eventDetail.getHomeDetails().getIdTeam();
+					Integer idTeamAway = eventDetail.getAwayDetails().getIdTeam();
+					return Stream.of(idTeamHome, idTeamAway);
+				})
+//							.distinct()
+				.toList();
+		ids.subList(0, 10);
+
+
+		List<Integer> historyFetchEvents = historyFetchEventEntityRepository.findAll().stream()
+				.map(HistoryFetchEventEntity::getTeamId).toList();
+
+		List<Integer> idsToFetch = new ArrayList<>();
+		for (Integer id : ids) {
+			if (!historyFetchEvents.contains(id)) {
+				idsToFetch.add(id);
+			}
+		}
+
+		return idsToFetch;
+	}
+
 
 	@Override
 	public GenericResponseWrapper fetchId(Integer id) {
@@ -196,22 +186,20 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 		ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 		CompletableFuture<Void> future = CompletableFuture.completedFuture(null);
 
-
 		for (List<Integer> batch : batches) {
-			future = future.thenCompose( previous-> processBatchWithDelay(batch, executorService));
+			future = future.thenCompose(previous -> processBatchWithDelay(batch, executorService));
 		}
 
 		future.whenComplete((result, throwable) -> executorService.shutdown());
 	}
 
 	private CompletionStage<Void> processBatchWithDelay(List<Integer> batch, ScheduledExecutorService executorService) {
-		CompletableFuture<Void> batchFuture = new CompletableFuture<>();
 
+		CompletableFuture<Void> batchFuture = new CompletableFuture<>();
 
 		executorService.schedule(() -> {
 					log.info("----------------------------------------------------------------------------------------------------------");
-					log.info("#processBatch - [Processing] batch with size: [{}] in Thread: [{}]", batch.size(), Thread.currentThread().getName());
-
+					log.info("#processBatch - [Processing] batch with size: [{}] - {} in Thread: [{}]", batch.size(), batch, Thread.currentThread().getName());
 					List<CompletableFuture<Void>> futures = new ArrayList<>();
 
 					for (Integer innerBatch : batch) {
@@ -241,7 +229,6 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 
 		return batchFuture;
 	}
-
 
 
 	private List<List<Integer>> createBatches(List<Integer> ids, int batchSize) {
@@ -288,7 +275,7 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 
 		List<SofaScheduledEventsResponse> sofaScheduledEventsResponses = new ArrayList<>();
 
-		while (true) {
+		do {
 			if (isLast) {
 
 //				Thread.sleep(500);
@@ -310,12 +297,13 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 
 			if (isNext) {
 
-				Thread.sleep(500);
-				timesTestForNext++;
+//				Thread.sleep(500);
+//				timesTestForNext++;
+//
+//				if (timesTestForNext > 2) {
+//					isNext = false;
+//				}
 
-				if (timesTestForNext > 2) {
-					isNext = false;
-				}
 				SofaScheduledEventsResponse sofaScheduledEventsResponseNext = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
 						SCHEDULED_EVENT_TEAM_NEXT, SofaScheduledEventsResponse.class, Arrays.asList(id, intNext));
 
@@ -328,10 +316,11 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 				}
 			}
 
-			if (!isLast && !isNext) {
-				break;
-			}
-		}
+		} while (isLast || isNext);
+
+
+
+
 		List<EventResponse> eventResponses = new ArrayList<>();
 
 		// sum of events
@@ -344,7 +333,7 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 				.map(sofaScheduledEventsResponse -> sofaScheduledEventsResponse.getEvents().size())
 				.reduce(Integer::sum);
 
-		totalEvents.ifPresent(totalEvent -> log.info("Total events for id: {} is: {}", id, totalEvents.get()));
+		totalEvents.ifPresent(totalEvent -> log.info("#fetchHistoricalMatchesForId - [Total] events for id: {} is: {}", id, totalEvents.get()));
 
 		saveEventBatch(eventResponses, id);
 		long timeElapses = TimeUtil.calculateTimeElapsed(start, Instant.now());

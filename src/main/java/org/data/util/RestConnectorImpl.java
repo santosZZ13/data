@@ -60,7 +60,7 @@ public class RestConnectorImpl implements RestConnector {
 		HttpEntity<?> entity = new HttpEntity<>(httpHeaders);
 
 		return restTemplate.exchange(
-				buildUrl(url, requestPath, queryParams),
+				"https://001xm4z27x2jy1u-api.pj51m7rx.com/product/business/v2/sport/prematch/category",
 				HttpMethod.GET,
 				entity,
 				responseType,
