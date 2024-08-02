@@ -37,8 +37,8 @@ connection:
   eightxbet:
     url: https://001xm4z27x2jy1u-api.pj51m7rx.com
     headers:
-      User-Agent: Mozilla/5.0
-      Referer: https://8xbet00.cc/
+      user-Agent: Mozilla/5.0
+      referer: https://8xbet00.cc/
       x-checksum: 13d730b032dda17d6a440904f27560d7df77cd0b20e56a78153be8ade717e129
 
   sofasocre:

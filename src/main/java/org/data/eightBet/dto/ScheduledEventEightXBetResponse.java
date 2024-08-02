@@ -12,7 +12,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ScheduledEventInPlayEightXBetResponse {
+public class ScheduledEventEightXBetResponse {
 	private String msg;
 	private int code;
 	private Data data;

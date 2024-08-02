@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static org.data.eightBet.dto.ScheduledEventInPlayEightXBetResponse.*;
+import static org.data.eightBet.dto.ScheduledEventEightXBetResponse.*;
 import static org.data.persistent.entity.EventsEightXBetEntity.*;
 
 public class TournamentEightXBetConverter {

@@ -11,6 +11,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -47,22 +48,14 @@ public class RestConnectorImpl implements RestConnector {
 
 	@Override
 	public <T> T restGet(ConnectionProperties.Host host, String requestPath, Map<String, ?> queryParams, Class<T> responseType) {
-
 		ConnectionProperties.ServerConnection connectionPropertiesHost = connectionProperties.getHost(host);
-		Map<String, String> headers = connectionPropertiesHost.getHeaders();
 		String url = connectionPropertiesHost.getUrl();
-
-
-		HttpHeaders httpHeaders = new HttpHeaders();
-		headers.forEach(httpHeaders::set);
-
-
-		HttpEntity<?> entity = new HttpEntity<>(httpHeaders);
+		HttpEntity<?> httpEntity = buildEntity(connectionPropertiesHost.getHeaders());
 
 		return restTemplate.exchange(
-				"https://001xm4z27x2jy1u-api.pj51m7rx.com/product/business/v2/sport/prematch/category",
+				buildUrl(url, requestPath),
 				HttpMethod.GET,
-				entity,
+				httpEntity,
 				responseType,
 				queryParams
 		).getBody();
@@ -105,9 +98,20 @@ public class RestConnectorImpl implements RestConnector {
 		return url + sb;
 	}
 
-	private String buildUrl(String url, String requestPath, Map<String, ?> queryParams) {
-		UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(url + requestPath);
-		queryParams.forEach(uriComponentsBuilder::queryParam);
-		return uriComponentsBuilder.toUriString();
+	private HttpEntity<?> buildEntity(Map<String, String> headers) {
+		HttpHeaders httpHeaders = new HttpHeaders();
+		headers.forEach(httpHeaders::set);
+		return new HttpEntity<>(httpHeaders);
+	}
+
+	private String buildUrl(String url, String requestPath) {
+		return UriComponentsBuilder
+				.fromHttpUrl(url + requestPath)
+				.queryParam("sid", "{sid}")
+				.queryParam("sort", "{sort}")
+				.queryParam("inplay", "{inplay}")
+				.queryParam("date", "{date}")
+				.encode()
+				.toUriString();
 	}
 }

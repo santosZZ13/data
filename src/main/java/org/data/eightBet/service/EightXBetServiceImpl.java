@@ -1,29 +1,37 @@
 package org.data.eightBet.service;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.data.common.exception.ApiException;
 import org.data.eightBet.dto.EventsByDateDTO;
-import org.data.eightBet.dto.ScheduledEventInPlayEightXBetResponse;
+import org.data.eightBet.dto.ScheduledEventEightXBetResponse;
 import org.data.eightBet.dto.EventInPlayDTO;
-import org.data.eightBet.dto.ScheduledEventInPlayEightXBetResponse.MatchResponse;
-import org.data.eightBet.dto.ScheduledEventInPlayEightXBetResponse.TournamentResponse;
+import org.data.eightBet.dto.ScheduledEventEightXBetResponse.MatchResponse;
+import org.data.eightBet.dto.ScheduledEventEightXBetResponse.TournamentResponse;
 import org.data.eightBet.repository.EightXBetRepository;
 import org.data.persistent.entity.EventsEightXBetEntity;
 import org.data.service.sap.SapService;
 import org.data.common.model.GenericResponseWrapper;
+import org.data.sofa.dto.ScheduledEventsCommonResponse;
+import org.data.sofa.dto.SofaScheduledEventByDateDTO;
+import org.data.sofa.dto.SofaScheduledEventsResponse;
 import org.data.util.TimeUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 import static org.data.eightBet.dto.EventDTO.*;
-import static org.data.eightBet.dto.ScheduledEventInPlayEightXBetResponse.*;
+import static org.data.eightBet.dto.ScheduledEventEightXBetResponse.*;
+import static org.data.sofa.dto.SofaScheduledEventByDateDTO.SCHEDULED_EVENTS;
+import static org.data.sofa.dto.SofaScheduledEventByDateDTO.SCHEDULED_EVENTS_INVERSE;
 
 
 @Service
 @AllArgsConstructor
+@Log4j2
 public class EightXBetServiceImpl implements EightXBetService {
 
 	private final SapService sapService;
@@ -32,11 +40,11 @@ public class EightXBetServiceImpl implements EightXBetService {
 	@Override
 	public GenericResponseWrapper getScheduledEventInPlay() {
 
-		ScheduledEventInPlayEightXBetResponse scheduledEventInPlayEightXBetResponse = sapService.restEightXBetGet(EventInPlayDTO.EIGHT_X_BET,
+		ScheduledEventEightXBetResponse scheduledEventEightXBetResponse = sapService.restEightXBetGet(EventInPlayDTO.EIGHT_X_BET,
 				EventInPlayDTO.queryParams(),
-				ScheduledEventInPlayEightXBetResponse.class);
+				ScheduledEventEightXBetResponse.class);
 
-		Data data = scheduledEventInPlayEightXBetResponse.getData();
+		Data data = scheduledEventEightXBetResponse.getData();
 
 		if (Objects.isNull(data.getTournaments())) {
 			throw new ApiException("Errors", "", "No data found for scheduled events in play");
@@ -59,29 +67,70 @@ public class EightXBetServiceImpl implements EightXBetService {
 
 	@Override
 	public GenericResponseWrapper getEventsByDate(String date) {
-		ScheduledEventInPlayEightXBetResponse scheduledEventInPlayEightXBetResponse = sapService.restEightXBetGet(EventsByDateDTO.GET_EVENTS_BY_DATE,
-				EventsByDateDTO.queryParams(),
-				ScheduledEventInPlayEightXBetResponse.class);
 
-		Data data = scheduledEventInPlayEightXBetResponse.getData();
+		CompletableFuture<ScheduledEventEightXBetResponse> EightXBetEventResponseFuture =
+				CompletableFuture.supplyAsync(() -> {
+					log.info("#getEventsByDate - fetching [EightXBet events] for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
+					return sapService.restEightXBetGet(EventsByDateDTO.GET_EVENTS_BY_DATE,
+							EventsByDateDTO.queryParams(),
+							ScheduledEventEightXBetResponse.class);
+				});
 
-		if (!Objects.isNull(data.getTournaments())) {
-			EventsByDateDTO.Response response = populateScheduledEventByDateResponseToDTOToDisplay(data.getTournaments(), date);
-			// save to db
-			// handle in another thread.
-			if (!data.getTournaments().isEmpty()) {
-				eightXBetRepository.saveTournamentResponse(data.getTournaments());
-			}
-			return GenericResponseWrapper
-					.builder()
-					.code("")
-					.msg("")
-					.data(response)
-					.build();
-		} else {
-			throw new ApiException("Errors", "", "No data found for scheduled events in play");
-		}
+
+		CompletableFuture<SofaScheduledEventsResponse> sofaEventsResponseFuture =
+				CompletableFuture.supplyAsync(() -> {
+					log.info("#getEventsByDate - fetching [Sofa events] for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
+					return sapService.restSofaScoreGet(SCHEDULED_EVENTS + date, SofaScheduledEventsResponse.class);
+				});
+
+		CompletableFuture<SofaScheduledEventsResponse> sofaInverseEventsResponseFuture =
+				CompletableFuture.supplyAsync(() -> {
+					log.info("#getEventsByDate - fetching [Inverse events events] for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
+					return sapService.restSofaScoreGet(SCHEDULED_EVENTS + date + SCHEDULED_EVENTS_INVERSE, SofaScheduledEventsResponse.class);
+				});
+
+		// Combine sofaEventsResponseFuture and sofaInverseEventsResponseFuture. After that, combine the result with EightXBetEventResponseFuture
+		 sofaEventsResponseFuture.thenCombineAsync(sofaInverseEventsResponseFuture, (sofaEventsResponse, sofaInverseEventsResponse) -> {
+
+			 List<SofaScheduledEventsResponse.EventResponse> events = sofaEventsResponse.getEvents();
+			 List<SofaScheduledEventsResponse.EventResponse> inverseEvents = sofaInverseEventsResponse.getEvents();
+			 events.addAll(inverseEvents);
+
+
+			 for (SofaScheduledEventsResponse.EventResponse event : events) {
+
+
+			 }
+
+
+
+
+			 return sofaEventsResponse;
+		})
+
+
+
+
+
+//		Data data = scheduledEventInPlayEightXBetResponseCompletableFuture.getData();
+//		EventsByDateDTO.Response response = populateScheduledEventByDateResponseToDTOToDisplay(data.getTournaments(), date);
+
+
+//		if (!data.getTournaments().isEmpty()) {
+//			eightXBetRepository.saveTournamentResponse(data.getTournaments());
+//		}
+
+
+		return GenericResponseWrapper
+				.builder()
+				.code("")
+				.msg("")
+				.data(response)
+				.build();
+
 	}
+
+
 
 	@Override
 	@Transactional
@@ -89,11 +138,11 @@ public class EightXBetServiceImpl implements EightXBetService {
 
 //		eightXBetRepository.updateInplayEvent();
 
-		ScheduledEventInPlayEightXBetResponse scheduledEventInPlayEightXBetResponse = sapService.restEightXBetGet(EventsByDateDTO.GET_EVENTS_BY_DATE,
+		ScheduledEventEightXBetResponse scheduledEventEightXBetResponse = sapService.restEightXBetGet(EventsByDateDTO.GET_EVENTS_BY_DATE,
 				EventsByDateDTO.queryParams(),
-				ScheduledEventInPlayEightXBetResponse.class);
+				ScheduledEventEightXBetResponse.class);
 
-		Data data = scheduledEventInPlayEightXBetResponse.getData();
+		Data data = scheduledEventEightXBetResponse.getData();
 		List<TournamentResponse> tournaments = data.getTournaments();
 
 		List<Integer> iidEventEntities = new ArrayList<>();

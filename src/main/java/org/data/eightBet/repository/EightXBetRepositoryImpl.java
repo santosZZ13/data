@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static org.data.eightBet.dto.ScheduledEventInPlayEightXBetResponse.*;
+import static org.data.eightBet.dto.ScheduledEventEightXBetResponse.*;
 
 @Repository
 @AllArgsConstructor

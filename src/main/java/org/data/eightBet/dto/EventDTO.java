@@ -32,5 +32,24 @@ public interface EventDTO {
 		private String awayName;
 		private String slug;
 		private LocalDateTime kickoffTime;
+		private SofaEvent sofaEvent;
+	}
+
+	@Builder
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	class SofaEvent {
+		private Team home;
+		private Team away;
+	}
+
+	@Builder
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	class Team {
+		private Integer idTeam;
+		private String name;
 	}
 }
