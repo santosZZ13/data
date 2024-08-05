@@ -1,52 +1,18 @@
 package org.data.eightBet.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-@Builder
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class ScheduledEventEightXBetResponse {
-	private String msg;
-	private int code;
-	private Data data;
-
+public interface EightXBetCommonResponse {
 	@Builder
 	@lombok.Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	public static class Data {
-		private List<TournamentResponse> tournaments;
-	}
-
-	@Builder
-	@lombok.Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	public static class TournamentResponse {
-		private Integer sid;
-		private Integer tid;
-		private Integer cid;
-		private String name;
-		private Boolean favorite;
-		private Integer priority;
-		private Integer count;
-		private List<MatchResponse> matches;
-	}
-
-	@Builder
-	@lombok.Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	public static class MatchResponse {
+	class EightXBetMatchResponse {
 		private Integer sid;
 		private Integer cid;
 		private Integer tid;
@@ -65,14 +31,14 @@ public class ScheduledEventEightXBetResponse {
 		private String scoreId;
 		private String tnName;
 		private Integer tnPriority;
-		private TeamResponse home;
-		private TeamResponse away;
-		private RoundResponse round;
-		private MarketInfoResponse marketInfo;
-		private MidsResponse mids;
-		private List<GiftResponse> gifs;
-		private List<VideoResponse> videos;
-		private List<AnchorResponse> anchors;
+		private EightXBetTeamResponse home;
+		private EightXBetTeamResponse away;
+		private EightXBetRoundResponse round;
+		private EightXBetMarketInfoResponse marketInfo;
+		private EightXBetMidsResponse mids;
+		private List<EightXBetGiftResponse> gifs;
+		private List<EightXBetVideoResponse> videos;
+		private List<EightXBetAnchorResponse> anchors;
 		private String name;
 		private long kickoffTime;
 
@@ -92,7 +58,7 @@ public class ScheduledEventEightXBetResponse {
 	@lombok.Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	public static class VideoResponse {
+	class EightXBetVideoResponse {
 		private String source;
 		private String type;
 		private String info;
@@ -102,7 +68,7 @@ public class ScheduledEventEightXBetResponse {
 	@lombok.Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	public static class GiftResponse {
+	class EightXBetGiftResponse {
 		private String source;
 		private String type;
 		private String info;
@@ -112,19 +78,19 @@ public class ScheduledEventEightXBetResponse {
 	@lombok.Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	public static class TeamResponse {
+	class EightXBetTeamResponse {
 		private Integer id;
 		private Integer cid;
 		private String name;
 		@Nullable
-		private JerseyResponse jersey;
+		private EightXBetCommonResponse.EightXBetJerseyResponse jersey;
 	}
 
 	@Builder
 	@lombok.Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	public static class JerseyResponse {
+	class EightXBetJerseyResponse {
 		private String base;
 		private String sleeve;
 		private String style;
@@ -139,7 +105,7 @@ public class ScheduledEventEightXBetResponse {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	@Nullable
-	public static class RoundResponse {
+	class EightXBetRoundResponse {
 		@Nullable
 		private String roundType;
 		@Nullable
@@ -157,7 +123,7 @@ public class ScheduledEventEightXBetResponse {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	@Nullable
-	public static class MarketInfoResponse {
+	class EightXBetMarketInfoResponse {
 		@Nullable
 		private Boolean cr;
 		@Nullable
@@ -178,7 +144,7 @@ public class ScheduledEventEightXBetResponse {
 	@lombok.Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	public static class MidsResponse {
+	class EightXBetMidsResponse {
 		@Nullable
 		private Integer fmid;
 		@Nullable
@@ -198,7 +164,7 @@ public class ScheduledEventEightXBetResponse {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	@Nullable
-	public static class AnchorResponse {
+	class EightXBetAnchorResponse {
 		private String houseId;
 		private Integer liveStatus;
 		private Integer visitHistory;
@@ -215,4 +181,6 @@ public class ScheduledEventEightXBetResponse {
 		private String languageType;
 		private List<String> vendors;
 	}
+
+
 }

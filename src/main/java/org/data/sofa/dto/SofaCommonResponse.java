@@ -1,12 +1,10 @@
 package org.data.sofa.dto;
 
 import lombok.*;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public interface ScheduledEventsCommonResponse {
+public interface SofaCommonResponse {
 	@Builder
 	@Data
 	@AllArgsConstructor
@@ -14,8 +12,8 @@ public interface ScheduledEventsCommonResponse {
 	class TournamentResponse {
 		private String name;
 		private String slug;
-		private ScheduledEventsCommonResponse.Category category;
-		private ScheduledEventsCommonResponse.UniqueTournament uniqueTournament;
+		private SofaCommonResponse.Category category;
+		private SofaCommonResponse.UniqueTournament uniqueTournament;
 		private Integer priority;
 		private Boolean isGroup;
 		private Boolean isLive;
@@ -32,7 +30,7 @@ public interface ScheduledEventsCommonResponse {
 		private String slug;
 		private String primaryColorHex;
 		private String secondaryColorHex;
-		private ScheduledEventsCommonResponse.Category category;
+		private SofaCommonResponse.Category category;
 		private Integer userCount;
 		private Boolean crowdsourcingEnabled;
 		private Boolean hasPerformanceGraphFeature;
@@ -49,9 +47,9 @@ public interface ScheduledEventsCommonResponse {
 	class Category {
 		private String name;
 		private String slug;
-		private ScheduledEventsCommonResponse.SportResponse sport;
+		private SofaCommonResponse.SportResponse sport;
 		private Integer id;
-		private ScheduledEventsCommonResponse.Country country;
+		private SofaCommonResponse.Country country;
 		private String flag;
 		private String alpha2;
 	}
@@ -95,8 +93,8 @@ public interface ScheduledEventsCommonResponse {
 	@NoArgsConstructor
 	@ToString
 	class FieldTranslations {
-		private ScheduledEventsCommonResponse.Translations nameTranslation;
-		private ScheduledEventsCommonResponse.Translations shortNameTranslation;
+		private SofaCommonResponse.Translations nameTranslation;
+		private SofaCommonResponse.Translations shortNameTranslation;
 	}
 
 	@Builder
@@ -151,10 +149,10 @@ public interface ScheduledEventsCommonResponse {
 		private Boolean national;
 		private Integer type;
 		private Integer id;
-		private ScheduledEventsCommonResponse.Country country;
+		private SofaCommonResponse.Country country;
 		private List<TeamResponse> subTeamResponses;
-		private ScheduledEventsCommonResponse.TeamColors teamColors;
-		private ScheduledEventsCommonResponse.FieldTranslations fieldTranslations;
+		private SofaCommonResponse.TeamColors teamColors;
+		private SofaCommonResponse.FieldTranslations fieldTranslations;
 	}
 
 

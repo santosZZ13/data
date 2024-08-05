@@ -38,4 +38,10 @@ public class TimeUtil {
 	public static String convertIntoXet(String date) {
 		return date.replace("-", "");
 	}
+
+	public static boolean isEqual(LocalDateTime kickoffTime, LocalDateTime kickOffMatch) {
+		return kickoffTime.getYear() == kickOffMatch.getYear() && kickoffTime.getMonthValue() == kickOffMatch.getMonthValue()
+				&& kickoffTime.getDayOfMonth() == kickOffMatch.getDayOfMonth() && kickoffTime.getHour() == kickOffMatch.getHour()
+				&& kickoffTime.getMinute() == kickOffMatch.getMinute();
+	}
 }

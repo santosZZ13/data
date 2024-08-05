@@ -1,15 +1,13 @@
 package org.data.sofa.repository;
 
-import jdk.jfr.Event;
 import lombok.AllArgsConstructor;
-import org.data.sofa.dto.ScheduledEventsCommonResponse;
-import org.data.sofa.dto.SofaScheduledEventsResponse;
+import org.data.sofa.dto.SofaCommonResponse;
 import org.data.sofa.dto.ScheduledEventsResponseConverter;
 import org.data.persistent.common.ScheduledEventsCommonEntity;
 import org.data.persistent.entity.ScheduledEventsSofaScoreEntity;
 import org.data.persistent.common.ScheduledEventsEntityConverter;
 import org.data.persistent.repository.ScheduledEventMongoRepository;
-import org.data.sofa.dto.SofaScheduledEventsResponse.EventResponse;
+import org.data.sofa.dto.SofaEventsResponse.EventResponse;
 import org.data.sofa.repository.impl.ScheduledEventsRepository;
 import org.data.util.TimeUtil;
 import org.springframework.data.domain.Page;
@@ -47,18 +45,18 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 
 		eventResponses.forEach(eventResponse -> {
 
-			ScheduledEventsCommonResponse.TournamentResponse tournamentResponse = eventResponse.getTournament();
-			ScheduledEventsCommonResponse.SeasonResponse seasonResponse = eventResponse.getSeason();
-			ScheduledEventsCommonResponse.RoundInfo roundInfoResponse = eventResponse.getRoundInfo();
+			SofaCommonResponse.TournamentResponse tournamentResponse = eventResponse.getTournament();
+			SofaCommonResponse.SeasonResponse seasonResponse = eventResponse.getSeason();
+			SofaCommonResponse.RoundInfo roundInfoResponse = eventResponse.getRoundInfo();
 			String customIdResponse = eventResponse.getCustomId();
-			ScheduledEventsCommonResponse.Status statusResponse = eventResponse.getStatus();
+			SofaCommonResponse.Status statusResponse = eventResponse.getStatus();
 			Integer winnerCodeResponse = eventResponse.getWinnerCode();
-			ScheduledEventsCommonResponse.TeamResponse homeTeamResponseResponse = eventResponse.getHomeTeam();
-			ScheduledEventsCommonResponse.TeamResponse awayTeamResponseResponse = eventResponse.getAwayTeam();
-			ScheduledEventsCommonResponse.Score homeScoreResponse = eventResponse.getHomeScore();
-			ScheduledEventsCommonResponse.Score awayScoreResponse = eventResponse.getAwayScore();
-			ScheduledEventsCommonResponse.Time timeResponse = eventResponse.getTime();
-			ScheduledEventsCommonResponse.Changes changesResponse = eventResponse.getChanges();
+			SofaCommonResponse.TeamResponse homeTeamResponseResponse = eventResponse.getHomeTeam();
+			SofaCommonResponse.TeamResponse awayTeamResponseResponse = eventResponse.getAwayTeam();
+			SofaCommonResponse.Score homeScoreResponse = eventResponse.getHomeScore();
+			SofaCommonResponse.Score awayScoreResponse = eventResponse.getAwayScore();
+			SofaCommonResponse.Time timeResponse = eventResponse.getTime();
+			SofaCommonResponse.Changes changesResponse = eventResponse.getChanges();
 			Boolean hasGlobalHighlightsResponse = eventResponse.getHasGlobalHighlights();
 			Boolean hasEventPlayerStatisticsResponse = eventResponse.getHasEventPlayerStatistics();
 			Boolean hasEventPlayerHeatMapResponse = eventResponse.getHasEventPlayerHeatMap();
@@ -126,16 +124,16 @@ public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository 
 
 		for (int i = 0; i < scheduledEventsEntities.size(); i++) {
 			ScheduledEventsSofaScoreEntity scheduledEventsSofaScoreEntity = scheduledEventsEntities.get(i);
-			ScheduledEventsCommonResponse.TournamentResponse tournamentResponse = ScheduledEventsResponseConverter.fromTournamentEntity(scheduledEventsSofaScoreEntity.getTournament());
-			ScheduledEventsCommonResponse.SeasonResponse seasonResponse = ScheduledEventsResponseConverter.fromSesSeasonEntity(scheduledEventsSofaScoreEntity.getSeason());
-			ScheduledEventsCommonResponse.Status statusResponse = ScheduledEventsResponseConverter.fromStatusEntity(scheduledEventsSofaScoreEntity.getStatus());
-			ScheduledEventsCommonResponse.TeamResponse homeTeamResponse = ScheduledEventsResponseConverter.fromTeamEntity(scheduledEventsSofaScoreEntity.getHomeTeam());
-			ScheduledEventsCommonResponse.TeamResponse awayTeamResponse = ScheduledEventsResponseConverter.fromTeamEntity(scheduledEventsSofaScoreEntity.getAwayTeam());
-			ScheduledEventsCommonResponse.Score homeScoreResponse = ScheduledEventsResponseConverter.fromScoreResponse(scheduledEventsSofaScoreEntity.getHomeScore());
-			ScheduledEventsCommonResponse.Score awayScoreResponse = ScheduledEventsResponseConverter.fromScoreResponse(scheduledEventsSofaScoreEntity.getAwayScore());
-			ScheduledEventsCommonResponse.Time timeResponse = ScheduledEventsResponseConverter.fromTimeResponse(scheduledEventsSofaScoreEntity.getTime());
-			ScheduledEventsCommonResponse.Changes changesResponse = ScheduledEventsResponseConverter.fromChangesResponse(scheduledEventsSofaScoreEntity.getChanges());
-			ScheduledEventsCommonResponse.RoundInfo roundInfoResponse = ScheduledEventsResponseConverter.fromRoundInfoResponse(scheduledEventsSofaScoreEntity.getRoundInfo());
+			SofaCommonResponse.TournamentResponse tournamentResponse = ScheduledEventsResponseConverter.fromTournamentEntity(scheduledEventsSofaScoreEntity.getTournament());
+			SofaCommonResponse.SeasonResponse seasonResponse = ScheduledEventsResponseConverter.fromSesSeasonEntity(scheduledEventsSofaScoreEntity.getSeason());
+			SofaCommonResponse.Status statusResponse = ScheduledEventsResponseConverter.fromStatusEntity(scheduledEventsSofaScoreEntity.getStatus());
+			SofaCommonResponse.TeamResponse homeTeamResponse = ScheduledEventsResponseConverter.fromTeamEntity(scheduledEventsSofaScoreEntity.getHomeTeam());
+			SofaCommonResponse.TeamResponse awayTeamResponse = ScheduledEventsResponseConverter.fromTeamEntity(scheduledEventsSofaScoreEntity.getAwayTeam());
+			SofaCommonResponse.Score homeScoreResponse = ScheduledEventsResponseConverter.fromScoreResponse(scheduledEventsSofaScoreEntity.getHomeScore());
+			SofaCommonResponse.Score awayScoreResponse = ScheduledEventsResponseConverter.fromScoreResponse(scheduledEventsSofaScoreEntity.getAwayScore());
+			SofaCommonResponse.Time timeResponse = ScheduledEventsResponseConverter.fromTimeResponse(scheduledEventsSofaScoreEntity.getTime());
+			SofaCommonResponse.Changes changesResponse = ScheduledEventsResponseConverter.fromChangesResponse(scheduledEventsSofaScoreEntity.getChanges());
+			SofaCommonResponse.RoundInfo roundInfoResponse = ScheduledEventsResponseConverter.fromRoundInfoResponse(scheduledEventsSofaScoreEntity.getRoundInfo());
 			EventResponse eventResponse = EventResponse.builder()
 					.tournament(tournamentResponse)
 					.season(seasonResponse)

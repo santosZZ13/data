@@ -1,5 +1,6 @@
 package org.data.eightBet.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,8 +27,11 @@ public interface EventsByDateDTO {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class Response {
+		@JsonProperty("total_tournaments")
 		private Integer tntSize;
+		@JsonProperty("total_matches")
 		private Integer matchSize;
-		private List<EventDTO.TournamentDTO> tournamentDto;
+		@JsonProperty("tournaments")
+		private List<EightXBetEventDTO.EightXBetTournamentDTO> eightXBetTournamentDto;
 	}
 }

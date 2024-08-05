@@ -2,6 +2,7 @@ package org.data.eightBet.repository;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.data.eightBet.dto.EightXBetCommonResponse;
 import org.data.persistent.entity.EventsEightXBetEntity;
 import org.data.persistent.projection.EventsEightXBetProjection;
 import org.data.persistent.repository.ScheduledEventsEightXBetMongoRepository;
@@ -14,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static org.data.eightBet.dto.ScheduledEventEightXBetResponse.*;
+import static org.data.eightBet.dto.EightXBetEventsResponse.*;
 
 @Repository
 @AllArgsConstructor
@@ -41,7 +42,7 @@ public class EightXBetRepositoryImpl implements EightXBetRepository {
 	}
 
 	@Override
-	public List<EventsEightXBetEntity> saveTournamentResponse(List<TournamentResponse> tournamentResponses) {
+	public List<EventsEightXBetEntity> saveTournamentResponse(List<EightXBetTournamentResponse> tournamentResponses) {
 
 		List<EventsEightXBetEntity> scheduledEventsEightXBetEntities = new ArrayList<>();
 		List<Integer> iIds = scheduledEventsEightXBetMongoRepository.findAllByIId()
@@ -49,9 +50,9 @@ public class EightXBetRepositoryImpl implements EightXBetRepository {
 				.map(EventsEightXBetProjection::getIId)
 				.toList();
 
-		for (TournamentResponse tournamentResponse : tournamentResponses) {
-			List<MatchResponse> matchesResponses = tournamentResponse.getMatches();
-			for (MatchResponse matchesResponse : matchesResponses) {
+		for (EightXBetTournamentResponse tournamentResponse : tournamentResponses) {
+			List<EightXBetCommonResponse.EightXBetMatchResponse> matchesResponses = tournamentResponse.getMatches();
+			for (EightXBetCommonResponse.EightXBetMatchResponse matchesResponse : matchesResponses) {
 				if (!iIds.contains(matchesResponse.getIid())) {
 					log.info("Detected new match with iid: {}", matchesResponse);
 					EventsEightXBetEntity eventsEightXBetEntity = populateScheduledEventsEightXBetEntity(tournamentResponse, matchesResponse);
@@ -71,9 +72,9 @@ public class EightXBetRepositoryImpl implements EightXBetRepository {
 	}
 
 	@Override
-	public void saveMatchesMap(Map<TournamentResponse, MatchResponse> tournamentMatchResponseMap) {
+	public void saveMatchesMap(Map<EightXBetTournamentResponse, EightXBetCommonResponse.EightXBetMatchResponse> tournamentMatchResponseMap) {
 		List<EventsEightXBetEntity> eventsEightXBetEntities = new ArrayList<>();
-		for (Map.Entry<TournamentResponse, MatchResponse> entry : tournamentMatchResponseMap.entrySet()) {
+		for (Map.Entry<EightXBetTournamentResponse, EightXBetCommonResponse.EightXBetMatchResponse> entry : tournamentMatchResponseMap.entrySet()) {
 			EventsEightXBetEntity eventsEightXBetEntity = populateScheduledEventsEightXBetEntity(entry.getKey(), entry.getValue());
 			eventsEightXBetEntities.add(eventsEightXBetEntity);
 		}
@@ -81,12 +82,12 @@ public class EightXBetRepositoryImpl implements EightXBetRepository {
 	}
 
 	@Override
-	public void saveMatch(TournamentResponse tournament, MatchResponse match) {
+	public void saveMatch(EightXBetTournamentResponse tournament, EightXBetCommonResponse.EightXBetMatchResponse match) {
 		EventsEightXBetEntity eventsEightXBetEntity = populateScheduledEventsEightXBetEntity(tournament, match);
 		scheduledEventsEightXBetMongoRepository.save(eventsEightXBetEntity);
 	}
 
-	private EventsEightXBetEntity populateScheduledEventsEightXBetEntity(TournamentResponse tournamentResponse, MatchResponse matchesResponse) {
+	private EventsEightXBetEntity populateScheduledEventsEightXBetEntity(EightXBetTournamentResponse tournamentResponse, EightXBetCommonResponse.EightXBetMatchResponse matchesResponse) {
 		return EventsEightXBetEntity
 				.builder()
 				.sId(matchesResponse.getSid())

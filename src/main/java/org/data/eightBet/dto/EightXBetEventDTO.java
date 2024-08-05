@@ -1,5 +1,6 @@
 package org.data.eightBet.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,16 +9,16 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface EventDTO {
+public interface EightXBetEventDTO {
 
 	@Builder
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	class TournamentDTO {
+	class EightXBetTournamentDTO {
 		private String tntName;
 		private Integer count;
-		private List<MatchDTO> matches;
+		private List<EightXBetMatchDTO> matches;
 	}
 
 
@@ -25,14 +26,15 @@ public interface EventDTO {
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	class MatchDTO {
+	class EightXBetMatchDTO {
 		private Integer iid;
 		private Boolean inPlay;
 		private String homeName;
 		private String awayName;
 		private String slug;
 		private LocalDateTime kickoffTime;
-		private SofaEvent sofaEvent;
+		@JsonProperty("sofa_detail")
+		private SofaEvent sofaDetail;
 	}
 
 	@Builder
@@ -40,8 +42,10 @@ public interface EventDTO {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class SofaEvent {
-		private Team team1;
-		private Team team2;
+		@JsonProperty("team_1")
+		private Team firstTeam;
+		@JsonProperty("team_2")
+		private Team secondTeam;
 	}
 
 	@Builder
@@ -49,7 +53,7 @@ public interface EventDTO {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class Team {
-		private Integer idTeam;
+		private Integer id;
 		private String name;
 	}
 }

@@ -1,9 +1,7 @@
 package org.data.sofa.repository.impl;
 
-import jdk.jfr.Event;
-import org.data.sofa.dto.SofaScheduledEventsResponse;
 import org.data.persistent.entity.ScheduledEventsSofaScoreEntity;
-import org.data.sofa.dto.SofaScheduledEventsResponse.EventResponse;
+import org.data.sofa.dto.SofaEventsResponse.EventResponse;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;

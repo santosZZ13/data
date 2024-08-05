@@ -1,41 +1,18 @@
 package org.data.sofa.dto;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
-public interface SofaScheduledEventByDateDTO {
-
-	String SCHEDULED_EVENTS = "/sport/football/scheduled-events/";
-	String SCHEDULED_EVENTS_INVERSE = "/inverse";
-
-	String SCHEDULED_EVENT_TEAM_LAST = "/team/{}/events/last/{}";
-	String SCHEDULED_EVENT_TEAM_NEXT = "/team/{}/events/next/{}";
-
-
+public interface SofaEventsDTO {
 	@Builder
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	class Request {
-		String date;
-	}
-
-	@Builder
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	class Response {
-		private List<EventDetail> eventDetails;
-	}
-
-
-	@Builder
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	class EventDetail {
+	class EventDTO {
 		private String tntName;
 		private String seasonName;
 		private Integer round;

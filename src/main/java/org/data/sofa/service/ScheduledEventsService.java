@@ -1,9 +1,9 @@
 package org.data.sofa.service;
 
 import org.data.common.model.GenericResponseWrapper;
-import org.data.sofa.dto.SofaScheduledEventByDateDTO;
+import org.data.sofa.dto.SofaEventsByDateDTO;
 
 public interface ScheduledEventsService {
-	GenericResponseWrapper getAllScheduleEventsByDate(SofaScheduledEventByDateDTO.Request request);
+	GenericResponseWrapper getAllScheduleEventsByDate(SofaEventsByDateDTO.Request request);
 	GenericResponseWrapper fetchId(Integer id);
 }

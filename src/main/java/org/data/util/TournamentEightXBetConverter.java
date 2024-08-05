@@ -1,24 +1,26 @@
 package org.data.util;
 
 
+import org.data.eightBet.dto.EightXBetCommonResponse;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static org.data.eightBet.dto.ScheduledEventEightXBetResponse.*;
+import static org.data.eightBet.dto.EightXBetEventsResponse.*;
 import static org.data.persistent.entity.EventsEightXBetEntity.*;
 
 public class TournamentEightXBetConverter {
-	public static TeamEntity convertToTeamEntity(TeamResponse teamResponse) {
+	public static TeamEntity convertToTeamEntity(EightXBetCommonResponse.EightXBetTeamResponse eightXBetTeamResponse) {
 		return TeamEntity.builder()
-				.id(teamResponse.getId())
-				.cid(teamResponse.getCid())
-				.name(teamResponse.getName())
-				.jerseyEntity(Objects.isNull(teamResponse.getJersey()) ? null : convertToJerseyEntity(teamResponse.getJersey()))
+				.id(eightXBetTeamResponse.getId())
+				.cid(eightXBetTeamResponse.getCid())
+				.name(eightXBetTeamResponse.getName())
+				.jerseyEntity(Objects.isNull(eightXBetTeamResponse.getJersey()) ? null : convertToJerseyEntity(eightXBetTeamResponse.getJersey()))
 				.build();
 	}
 
-	private static JerseyEntity convertToJerseyEntity(JerseyResponse jerseyResponse) {
+	private static JerseyEntity convertToJerseyEntity(EightXBetCommonResponse.EightXBetJerseyResponse jerseyResponse) {
 		return Objects.isNull(jerseyResponse) ? null : JerseyEntity.builder()
 				.base(jerseyResponse.getBase())
 				.sleeve(jerseyResponse.getSleeve())
@@ -29,7 +31,7 @@ public class TournamentEightXBetConverter {
 				.build();
 	}
 
-	public static RoundEntity convertToRoundEntity(RoundResponse roundResponse) {
+	public static RoundEntity convertToRoundEntity(EightXBetCommonResponse.EightXBetRoundResponse roundResponse) {
 		return Objects.isNull(roundResponse) ? null : RoundEntity.builder()
 				.roundType(roundResponse.getRoundType())
 				.roundName(roundResponse.getRoundName())
@@ -39,7 +41,7 @@ public class TournamentEightXBetConverter {
 				.build();
 	}
 
-	public static MarketInfoEntity convertToMarketInfoEntity(MarketInfoResponse marketInfoResponse) {
+	public static MarketInfoEntity convertToMarketInfoEntity(EightXBetCommonResponse.EightXBetMarketInfoResponse marketInfoResponse) {
 		return Objects.isNull(marketInfoResponse) ? null : MarketInfoEntity.builder()
 				.cr(marketInfoResponse.getCr())
 				.ot(marketInfoResponse.getOt())
@@ -51,7 +53,7 @@ public class TournamentEightXBetConverter {
 				.build();
 	}
 
-	public static MidsEntity convertToMidsEntity(MidsResponse midsResponse) {
+	public static MidsEntity convertToMidsEntity(EightXBetCommonResponse.EightXBetMidsResponse midsResponse) {
 		return Objects.isNull(midsResponse) ? null : MidsEntity.builder()
 				.fmid(midsResponse.getFmid())
 				.bmid(midsResponse.getBmid())
@@ -62,7 +64,7 @@ public class TournamentEightXBetConverter {
 				.build();
 	}
 
-	public static List<AnchorEntity> convertToAnchorEntity(List<AnchorResponse> anchorResponses) {
+	public static List<AnchorEntity> convertToAnchorEntity(List<EightXBetCommonResponse.EightXBetAnchorResponse> anchorResponses) {
 		return Objects.isNull(anchorResponses) ? null : anchorResponses.stream()
 				.map(anchorResponse -> AnchorEntity.builder()
 						.houseId(anchorResponse.getHouseId())
@@ -86,7 +88,7 @@ public class TournamentEightXBetConverter {
 
 	}
 
-	public static List<GiftEntity> convertToGiftEntity(List<GiftResponse> gifs) {
+	public static List<GiftEntity> convertToGiftEntity(List<EightXBetCommonResponse.EightXBetGiftResponse> gifs) {
 
 		return Objects.isNull(gifs) ? null : gifs.stream()
 				.map(giftResponse -> GiftEntity.builder()
@@ -97,7 +99,7 @@ public class TournamentEightXBetConverter {
 				.collect(Collectors.toList());
 	}
 
-	public static List<VideoEntity> convertToVideoEntity(List<VideoResponse> videos) {
+	public static List<VideoEntity> convertToVideoEntity(List<EightXBetCommonResponse.EightXBetVideoResponse> videos) {
 		return videos.stream()
 				.map(video -> VideoEntity.builder()
 						.info(video.getInfo())

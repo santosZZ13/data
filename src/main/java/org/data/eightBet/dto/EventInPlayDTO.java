@@ -30,7 +30,7 @@ public interface EventInPlayDTO {
 	class Response {
 		private Integer tntSize;
 		private Integer matchSize;
-		private List<EventDTO.TournamentDTO> tournamentDto;
+		private List<EightXBetEventDTO.EightXBetTournamentDTO> eightXBetTournamentDto;
 	}
 
 }

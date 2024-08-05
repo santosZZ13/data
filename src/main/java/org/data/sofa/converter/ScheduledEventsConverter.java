@@ -1,13 +1,13 @@
 package org.data.sofa.converter;
 
-import org.data.sofa.dto.ScheduledEventsCommonResponse;
+import org.data.sofa.dto.SofaCommonResponse;
 import org.data.persistent.common.ScheduledEventsCommonEntity;
 
 import java.util.Objects;
 
 public class ScheduledEventsConverter {
 
-	public static ScheduledEventsCommonEntity.Sport fromSportScheduledEventsCommonResponse(ScheduledEventsCommonResponse.SportResponse sportResponse) {
+	public static ScheduledEventsCommonEntity.Sport fromSportScheduledEventsCommonResponse(SofaCommonResponse.SportResponse sportResponse) {
 		return ScheduledEventsCommonEntity.Sport.builder()
 				.id(Objects.isNull(sportResponse) ? null : sportResponse.getId())
 				.name(Objects.isNull(sportResponse) ? null : sportResponse.getName())
@@ -15,7 +15,7 @@ public class ScheduledEventsConverter {
 				.build();
 	}
 
-	public static ScheduledEventsCommonEntity.Country fromCountryScheduledEventsCommonResponse(ScheduledEventsCommonResponse.Country countryResponse) {
+	public static ScheduledEventsCommonEntity.Country fromCountryScheduledEventsCommonResponse(SofaCommonResponse.Country countryResponse) {
 		return ScheduledEventsCommonEntity.Country.builder()
 				.alpha2(Objects.isNull(countryResponse) ? null : countryResponse.getAlpha2())
 				.alpha3(Objects.isNull(countryResponse) ? null : countryResponse.getAlpha3())
@@ -23,7 +23,7 @@ public class ScheduledEventsConverter {
 				.build();
 	}
 
-	public static ScheduledEventsCommonEntity.TeamColors fromTeamColorsScheduledEventsCommonResponse(ScheduledEventsCommonResponse.TeamColors teamColorsResponse) {
+	public static ScheduledEventsCommonEntity.TeamColors fromTeamColorsScheduledEventsCommonResponse(SofaCommonResponse.TeamColors teamColorsResponse) {
 		return ScheduledEventsCommonEntity.TeamColors.builder()
 				.primary(Objects.isNull(teamColorsResponse) ? null : teamColorsResponse.getPrimary())
 				.secondary(Objects.isNull(teamColorsResponse) ? null : teamColorsResponse.getSecondary())

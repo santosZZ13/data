@@ -1,6 +1,5 @@
 package org.data.sofa.service.impl;
 
-import jdk.jfr.Event;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.data.config.FetchEventScheduler;
@@ -9,8 +8,9 @@ import org.data.persistent.repository.HistoryFetchEventEntityRepository;
 import org.data.properties.ConnectionProperties;
 import org.data.service.sap.SapService;
 import org.data.common.model.GenericResponseWrapper;
-import org.data.sofa.dto.ScheduledEventsCommonResponse;
-import org.data.sofa.dto.SofaScheduledEventsResponse;
+import org.data.sofa.dto.SofaCommonResponse;
+import org.data.sofa.dto.SofaEventsDTO;
+import org.data.sofa.dto.SofaEventsResponse;
 import org.data.sofa.repository.impl.ScheduledEventsRepository;
 import org.data.sofa.service.ScheduledEventsService;
 import org.data.util.RestConnector;
@@ -25,8 +25,8 @@ import java.util.concurrent.*;
 import java.util.stream.Stream;
 
 
-import static org.data.sofa.dto.SofaScheduledEventByDateDTO.*;
-import static org.data.sofa.dto.SofaScheduledEventsResponse.*;
+import static org.data.sofa.dto.SofaEventsByDateDTO.*;
+import static org.data.sofa.dto.SofaEventsResponse.*;
 
 @Service
 @AllArgsConstructor
@@ -49,16 +49,16 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 		// if exist return data from redis.
 		// if not exist, fetch data from sap and save to redis.
 
-		CompletableFuture<SofaScheduledEventsResponse> sofaScheduledEventsResponseFuture =
+		CompletableFuture<SofaEventsResponse> sofaScheduledEventsResponseFuture =
 				CompletableFuture.supplyAsync(() -> {
 					log.info("#getAllScheduleEventsByDate - fetching scheduled events for date: [{}] in [Thread: {}]", request.getDate(), Thread.currentThread().getName());
-					return sapService.restSofaScoreGet(SCHEDULED_EVENTS + request.getDate(), SofaScheduledEventsResponse.class);
+					return sapService.restSofaScoreGet(SCHEDULED_EVENTS + request.getDate(), SofaEventsResponse.class);
 				});
 
-		CompletableFuture<SofaScheduledEventsResponse> sofaInverseScheduledEventsResponseFuture =
+		CompletableFuture<SofaEventsResponse> sofaInverseScheduledEventsResponseFuture =
 				CompletableFuture.supplyAsync(() -> {
 					log.info("#getAllScheduleEventsByDate - fetching inverse scheduled events for date: [{}] in [Thread: {}]", request.getDate(), Thread.currentThread().getName());
-					return sapService.restSofaScoreGet(SCHEDULED_EVENTS + request.getDate() + SCHEDULED_EVENTS_INVERSE, SofaScheduledEventsResponse.class);
+					return sapService.restSofaScoreGet(SCHEDULED_EVENTS + request.getDate() + SCHEDULED_EVENTS_INVERSE, SofaEventsResponse.class);
 				});
 
 		return sofaScheduledEventsResponseFuture
@@ -68,8 +68,8 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 
 					String date = request.getDate();
 					LocalDateTime requestDate = TimeUtil.convertStringToLocalDateTime(date);
-					List<EventDetail> eventDetails = getEventDetails(sofaScheduledEventsResponse, sofaInverseScheduledEventsResponse, requestDate);
-					eventDetails.sort(Comparator.comparing(EventDetail::getKickOffMatch));
+					List<SofaEventsDTO.EventDTO> eventDetails = getEventDetails(sofaScheduledEventsResponse, sofaInverseScheduledEventsResponse, requestDate);
+					eventDetails.sort(Comparator.comparing(SofaEventsDTO.EventDTO::getKickOffMatch));
 					log.info("#getAllScheduleEventsByDate - eventDetails size: [{}]", eventDetails.size());
 					return eventDetails;
 				})
@@ -84,7 +84,7 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 					}
 
 					return Response.builder()
-							.eventDetails(eventDetails)
+							.eventDTOS(eventDetails)
 							.build();
 				})
 				.thenApply(response -> GenericResponseWrapper
@@ -96,7 +96,7 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 				.join();
 	}
 
-	private List<Integer> getIdForFetchEventHistory(List<EventDetail> eventDetails) {
+	private List<Integer> getIdForFetchEventHistory(List<SofaEventsDTO.EventDTO> eventDetails) {
 		List<Integer> ids = eventDetails.stream()
 				.flatMap(eventDetail -> {
 					Integer idTeamHome = eventDetail.getHomeDetails().getIdTeam();
@@ -127,13 +127,13 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 		return null;
 	}
 
-	private @NotNull List<EventDetail> getEventDetails(SofaScheduledEventsResponse sofaScheduledEventsResponse,
-													   SofaScheduledEventsResponse sofaInverseScheduledEventsResponse,
+	private @NotNull List<SofaEventsDTO.EventDTO> getEventDetails(SofaEventsResponse sofaEventsResponse,
+													   SofaEventsResponse sofaInverseScheduledEventsResponse,
 													   LocalDateTime requestDate) {
 
-		List<EventResponse> sofaScheduledEventsResponseEventResponses = sofaScheduledEventsResponse.getEvents();
+		List<EventResponse> sofaScheduledEventsResponseEventResponses = sofaEventsResponse.getEvents();
 		List<EventResponse> sofaInverseScheduledEventsResponseEventResponses = sofaInverseScheduledEventsResponse.getEvents();
-		List<EventDetail> eventDetails = new ArrayList<>();
+		List<SofaEventsDTO.EventDTO> eventDetails = new ArrayList<>();
 
 		getEventDetailsByDate(requestDate, sofaScheduledEventsResponseEventResponses, eventDetails);
 		getEventDetailsByDate(requestDate, sofaInverseScheduledEventsResponseEventResponses, eventDetails);
@@ -142,35 +142,35 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 
 	private void getEventDetailsByDate(LocalDateTime requestDate,
 									   List<EventResponse> sofaScheduledEventsResponseEventResponses,
-									   List<EventDetail> eventDetails) {
+									   List<SofaEventsDTO.EventDTO> eventDetails) {
 		for (EventResponse responseEventResponse : sofaScheduledEventsResponseEventResponses) {
 			LocalDateTime responseDate = TimeUtil.convertUnixTimestampToLocalDateTime(responseEventResponse.getStartTimestamp());
 			if (responseDate.getDayOfMonth() == requestDate.getDayOfMonth() &&
 					responseDate.getMonth() == requestDate.getMonth() &&
 					responseDate.getYear() == requestDate.getYear()) {
-				EventDetail eventDetail = populatedToEventDetail(responseEventResponse);
+				SofaEventsDTO.EventDTO eventDetail = populatedToEventDetail(responseEventResponse);
 				eventDetails.add(eventDetail);
 			}
 		}
 	}
 
 
-	private EventDetail populatedToEventDetail(EventResponse eventResponse) {
+	private SofaEventsDTO.EventDTO populatedToEventDetail(EventResponse eventResponse) {
 
-		ScheduledEventsCommonResponse.Score homeScoreResponse = eventResponse.getHomeScore();
-		ScheduledEventsCommonResponse.Score eventResponseAwayScore = eventResponse.getAwayScore();
+		SofaCommonResponse.Score homeScoreResponse = eventResponse.getHomeScore();
+		SofaCommonResponse.Score eventResponseAwayScore = eventResponse.getAwayScore();
 
-		return EventDetail.builder()
+		return SofaEventsDTO.EventDTO.builder()
 				.id(eventResponse.getId())
 				.tntName(eventResponse.getTournament().getName())
 				.seasonName(Objects.isNull(eventResponse.getSeason()) ? null : eventResponse.getSeason().getName())
 				.round(Objects.isNull(eventResponse.getRoundInfo()) ? null : eventResponse.getRoundInfo().getRound())
 				.status(Objects.isNull(eventResponse.getStatus()) ? null : eventResponse.getStatus().getDescription())
-				.homeDetails(TeamDetails.builder()
+				.homeDetails(SofaEventsDTO.TeamDetails.builder()
 						.idTeam(eventResponse.getHomeTeam().getId())
 						.name(eventResponse.getHomeTeam().getName())
 						.build())
-				.awayDetails(TeamDetails.builder()
+				.awayDetails(SofaEventsDTO.TeamDetails.builder()
 						.idTeam(eventResponse.getAwayTeam().getId())
 						.name(eventResponse.getAwayTeam().getName())
 						.build())
@@ -273,7 +273,7 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 		int timesTestForLast = 0;
 		int timesTestForNext = 0;
 
-		List<SofaScheduledEventsResponse> sofaScheduledEventsResponses = new ArrayList<>();
+		List<SofaEventsResponse> sofaEventsRespons = new ArrayList<>();
 
 		do {
 			if (isLast) {
@@ -284,13 +284,13 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 //				if (timesTestForLast > 5) {
 //					isLast = false;
 //				}
-				SofaScheduledEventsResponse sofaScheduledEventsResponseLast = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
-						SCHEDULED_EVENT_TEAM_LAST, SofaScheduledEventsResponse.class, Arrays.asList(id, initLast));
-				if (sofaScheduledEventsResponseLast.getHasNextPage()) {
+				SofaEventsResponse sofaEventsResponseLast = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
+						SCHEDULED_EVENT_TEAM_LAST, SofaEventsResponse.class, Arrays.asList(id, initLast));
+				if (sofaEventsResponseLast.getHasNextPage()) {
 					initLast++;
-					sofaScheduledEventsResponses.add(sofaScheduledEventsResponseLast);
+					sofaEventsRespons.add(sofaEventsResponseLast);
 				} else {
-					sofaScheduledEventsResponses.add(sofaScheduledEventsResponseLast);
+					sofaEventsRespons.add(sofaEventsResponseLast);
 					isLast = false;
 				}
 			}
@@ -304,14 +304,14 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 //					isNext = false;
 //				}
 
-				SofaScheduledEventsResponse sofaScheduledEventsResponseNext = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
-						SCHEDULED_EVENT_TEAM_NEXT, SofaScheduledEventsResponse.class, Arrays.asList(id, intNext));
+				SofaEventsResponse sofaEventsResponseNext = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
+						SCHEDULED_EVENT_TEAM_NEXT, SofaEventsResponse.class, Arrays.asList(id, intNext));
 
-				if (sofaScheduledEventsResponseNext.getHasNextPage()) {
-					sofaScheduledEventsResponses.add(sofaScheduledEventsResponseNext);
+				if (sofaEventsResponseNext.getHasNextPage()) {
+					sofaEventsRespons.add(sofaEventsResponseNext);
 					intNext++;
 				} else {
-					sofaScheduledEventsResponses.add(sofaScheduledEventsResponseNext);
+					sofaEventsRespons.add(sofaEventsResponseNext);
 					isNext = false;
 				}
 			}
@@ -324,7 +324,7 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 		List<EventResponse> eventResponses = new ArrayList<>();
 
 		// sum of events
-		Optional<Integer> totalEvents = sofaScheduledEventsResponses
+		Optional<Integer> totalEvents = sofaEventsRespons
 				.stream()
 				.map(sofaScheduledEventsResponse -> {
 					eventResponses.addAll(sofaScheduledEventsResponse.getEvents());

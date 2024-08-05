@@ -1,16 +1,16 @@
 package org.data.persistent.common;
 
-import org.data.sofa.dto.ScheduledEventsCommonResponse;
+import org.data.sofa.dto.SofaCommonResponse;
 import org.data.util.TimeUtil;
 
 import java.util.Objects;
 
 public class ScheduledEventsEntityConverter {
-	public static ScheduledEventsCommonEntity.TournamentEntity fromTournamentResponse(ScheduledEventsCommonResponse.TournamentResponse tournamentResponse) {
+	public static ScheduledEventsCommonEntity.TournamentEntity fromTournamentResponse(SofaCommonResponse.TournamentResponse tournamentResponse) {
 
-		ScheduledEventsCommonResponse.Category categoryResponse = tournamentResponse.getCategory();
-		ScheduledEventsCommonResponse.SportResponse sportResponse = categoryResponse.getSport();
-		ScheduledEventsCommonResponse.Country countryResponse = categoryResponse.getCountry();
+		SofaCommonResponse.Category categoryResponse = tournamentResponse.getCategory();
+		SofaCommonResponse.SportResponse sportResponse = categoryResponse.getSport();
+		SofaCommonResponse.Country countryResponse = categoryResponse.getCountry();
 		String flagResponse = categoryResponse.getFlag();
 		Integer idResponse = categoryResponse.getId();
 
@@ -30,16 +30,16 @@ public class ScheduledEventsEntityConverter {
 				.build();
 
 
-		ScheduledEventsCommonResponse.UniqueTournament uniqueTournamentResponse = tournamentResponse.getUniqueTournament();
+		SofaCommonResponse.UniqueTournament uniqueTournamentResponse = tournamentResponse.getUniqueTournament();
 		ScheduledEventsCommonEntity.UniqueTournament uniqueTournament = null;
 
 		if (uniqueTournamentResponse != null) {
-			ScheduledEventsCommonResponse.Category categoryUniQueTournamentResponse = uniqueTournamentResponse.getCategory();
+			SofaCommonResponse.Category categoryUniQueTournamentResponse = uniqueTournamentResponse.getCategory();
 			Integer categoryUniQueTournamentId = categoryUniQueTournamentResponse.getId();
 			String categoryUniQueTournamentFlag = categoryUniQueTournamentResponse.getFlag();
 
-			ScheduledEventsCommonResponse.SportResponse sportResponseUniQueTournament = categoryUniQueTournamentResponse.getSport();
-			ScheduledEventsCommonResponse.Country countryUniQueTournament = categoryUniQueTournamentResponse.getCountry();
+			SofaCommonResponse.SportResponse sportResponseUniQueTournament = categoryUniQueTournamentResponse.getSport();
+			SofaCommonResponse.Country countryUniQueTournament = categoryUniQueTournamentResponse.getCountry();
 
 
 			ScheduledEventsCommonEntity.Sport sportCategoryUniQueTournament = fromSportResponse(sportResponseUniQueTournament);
@@ -81,7 +81,7 @@ public class ScheduledEventsEntityConverter {
 				.build();
 	}
 
-	public static ScheduledEventsCommonEntity.SeasonEntity fromSesSeasonResponse(ScheduledEventsCommonResponse.SeasonResponse seasonResponse) {
+	public static ScheduledEventsCommonEntity.SeasonEntity fromSesSeasonResponse(SofaCommonResponse.SeasonResponse seasonResponse) {
 		return Objects.isNull(seasonResponse) ? null : ScheduledEventsCommonEntity.SeasonEntity.builder()
 				.name(seasonResponse.getName())
 				.year(seasonResponse.getYear())
@@ -90,7 +90,7 @@ public class ScheduledEventsEntityConverter {
 				.build();
 	}
 
-	public static ScheduledEventsCommonEntity.StatusEntity fromStatusResponse(ScheduledEventsCommonResponse.Status statusResponse) {
+	public static ScheduledEventsCommonEntity.StatusEntity fromStatusResponse(SofaCommonResponse.Status statusResponse) {
 		return Objects.isNull(statusResponse) ? null : ScheduledEventsCommonEntity.StatusEntity.builder()
 				.code(statusResponse.getCode())
 				.description(statusResponse.getDescription())
@@ -99,11 +99,11 @@ public class ScheduledEventsEntityConverter {
 
 	}
 
-	public static ScheduledEventsCommonEntity.TeamEntity fromTeamResponse(ScheduledEventsCommonResponse.TeamResponse teamResponse) {
-		ScheduledEventsCommonResponse.SportResponse sportResponse = teamResponse.getSportResponse();
-		ScheduledEventsCommonResponse.Country country = teamResponse.getCountry();
-		ScheduledEventsCommonResponse.TeamColors teamColors = teamResponse.getTeamColors();
-		ScheduledEventsCommonResponse.FieldTranslations fieldTranslations = teamResponse.getFieldTranslations();
+	public static ScheduledEventsCommonEntity.TeamEntity fromTeamResponse(SofaCommonResponse.TeamResponse teamResponse) {
+		SofaCommonResponse.SportResponse sportResponse = teamResponse.getSportResponse();
+		SofaCommonResponse.Country country = teamResponse.getCountry();
+		SofaCommonResponse.TeamColors teamColors = teamResponse.getTeamColors();
+		SofaCommonResponse.FieldTranslations fieldTranslations = teamResponse.getFieldTranslations();
 
 
 		ScheduledEventsCommonEntity.TeamEntity teamEntity = ScheduledEventsCommonEntity.TeamEntity.builder()
@@ -126,8 +126,8 @@ public class ScheduledEventsEntityConverter {
 			teamEntity.setFieldTranslations(null);
 		} else {
 
-			ScheduledEventsCommonResponse.Translations nameTranslation = fieldTranslations.getNameTranslation();
-			ScheduledEventsCommonResponse.Translations shortNameTranslation = fieldTranslations.getShortNameTranslation();
+			SofaCommonResponse.Translations nameTranslation = fieldTranslations.getNameTranslation();
+			SofaCommonResponse.Translations shortNameTranslation = fieldTranslations.getShortNameTranslation();
 			ScheduledEventsCommonEntity.FieldTranslations.FieldTranslationsBuilder fieldTranslationsBuilder = ScheduledEventsCommonEntity.FieldTranslations.builder();
 
 
@@ -157,7 +157,7 @@ public class ScheduledEventsEntityConverter {
 		return teamEntity;
 	}
 
-	public static ScheduledEventsCommonEntity.RoundInfoEntity fromRoundInfoResponse(ScheduledEventsCommonResponse.RoundInfo roundInfoResponse) {
+	public static ScheduledEventsCommonEntity.RoundInfoEntity fromRoundInfoResponse(SofaCommonResponse.RoundInfo roundInfoResponse) {
 		return Objects.isNull(roundInfoResponse) ? null : ScheduledEventsCommonEntity.RoundInfoEntity.builder()
 				.round(roundInfoResponse.getRound())
 				.name(roundInfoResponse.getName())
@@ -165,7 +165,7 @@ public class ScheduledEventsEntityConverter {
 				.build();
 	}
 
-	public static ScheduledEventsCommonEntity.Sport fromSportResponse(ScheduledEventsCommonResponse.SportResponse sportResponse) {
+	public static ScheduledEventsCommonEntity.Sport fromSportResponse(SofaCommonResponse.SportResponse sportResponse) {
 		return ScheduledEventsCommonEntity.Sport.builder()
 				.id(Objects.isNull(sportResponse) ? null : sportResponse.getId())
 				.name(Objects.isNull(sportResponse) ? null : sportResponse.getName())
@@ -174,7 +174,7 @@ public class ScheduledEventsEntityConverter {
 	}
 
 
-	public static ScheduledEventsCommonEntity.Country fromCountryResponse(ScheduledEventsCommonResponse.Country countryResponse) {
+	public static ScheduledEventsCommonEntity.Country fromCountryResponse(SofaCommonResponse.Country countryResponse) {
 		return ScheduledEventsCommonEntity.Country.builder()
 				.alpha2(Objects.isNull(countryResponse) ? null : countryResponse.getAlpha2())
 				.alpha3(Objects.isNull(countryResponse) ? null : countryResponse.getAlpha3())
@@ -183,7 +183,7 @@ public class ScheduledEventsEntityConverter {
 	}
 
 
-	public static ScheduledEventsCommonEntity.TeamColors fromTeamColorsResponse(ScheduledEventsCommonResponse.TeamColors teamColorsResponse) {
+	public static ScheduledEventsCommonEntity.TeamColors fromTeamColorsResponse(SofaCommonResponse.TeamColors teamColorsResponse) {
 		return ScheduledEventsCommonEntity.TeamColors.builder()
 				.primary(Objects.isNull(teamColorsResponse) ? null : teamColorsResponse.getPrimary())
 				.secondary(Objects.isNull(teamColorsResponse) ? null : teamColorsResponse.getSecondary())
@@ -191,7 +191,7 @@ public class ScheduledEventsEntityConverter {
 				.build();
 	}
 
-	public static ScheduledEventsCommonEntity.ScoreEntity fromScoreResponse(ScheduledEventsCommonResponse.Score scoreResponse) {
+	public static ScheduledEventsCommonEntity.ScoreEntity fromScoreResponse(SofaCommonResponse.Score scoreResponse) {
 		return ScheduledEventsCommonEntity.ScoreEntity.builder()
 				.current(scoreResponse.getCurrent())
 				.display(scoreResponse.getDisplay())
@@ -201,7 +201,7 @@ public class ScheduledEventsEntityConverter {
 				.build();
 	}
 
-	public static ScheduledEventsCommonEntity.TimeEntity fromTimeResponse(ScheduledEventsCommonResponse.Time timeResponse) {
+	public static ScheduledEventsCommonEntity.TimeEntity fromTimeResponse(SofaCommonResponse.Time timeResponse) {
 		return ScheduledEventsCommonEntity.TimeEntity.builder()
 				.injuryTime1(timeResponse.getInjuryTime1())
 				.injuryTime2(timeResponse.getInjuryTime2())
@@ -209,7 +209,7 @@ public class ScheduledEventsEntityConverter {
 				.build();
 	}
 
-	public static ScheduledEventsCommonEntity.ChangesEntity fromChangesResponse(ScheduledEventsCommonResponse.Changes changesResponse) {
+	public static ScheduledEventsCommonEntity.ChangesEntity fromChangesResponse(SofaCommonResponse.Changes changesResponse) {
 		return ScheduledEventsCommonEntity.ChangesEntity.builder()
 				.changeTimestamp(Objects.isNull(changesResponse.getChangeTimestamp()) ? null : TimeUtil.convertUnixTimestampToLocalDateTime(changesResponse.getChangeTimestamp()))
 				.changes(changesResponse.getChanges())
