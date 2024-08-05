@@ -40,8 +40,8 @@ public interface EventDTO {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class SofaEvent {
-		private Team home;
-		private Team away;
+		private Team team1;
+		private Team team2;
 	}
 
 	@Builder

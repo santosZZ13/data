@@ -100,7 +100,14 @@ public class RestConnectorImpl implements RestConnector {
 
 	private HttpEntity<?> buildEntity(Map<String, String> headers) {
 		HttpHeaders httpHeaders = new HttpHeaders();
-		headers.forEach(httpHeaders::set);
+//		headers.forEach(httpHeaders::set);
+
+		httpHeaders.add("User-Agent", "Mozilla/5.0");
+		httpHeaders.add("Referer", "https://8xbet00.cc/");
+		httpHeaders.add("X-checksum", "13d730b032dda17d6a440904f27560d7df77cd0b20e56a78153be8ade717e129");
+		httpHeaders.add("Cookie", "_cfuvid=z6NLQRvcNNxBocPXfmnJzf0sOGDMWjzgJaycuctJy4c-1722655062489-0.0.1.1-604800000");
+
+
 		return new HttpEntity<>(httpHeaders);
 	}
 

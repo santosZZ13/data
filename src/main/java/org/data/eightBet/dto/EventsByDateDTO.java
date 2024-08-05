@@ -13,7 +13,7 @@ public interface EventsByDateDTO {
 	Integer S_ID = 1;
 	String SORT = "tournament";
 	Boolean IN_PLAY = false;
-	String date = "todayAndAll";
+	String date = "20240803";
 
 	static Map<String, Object> queryParams() {
 		return Map.of("sid", S_ID,

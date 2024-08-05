@@ -33,4 +33,9 @@ public class TimeUtil {
 	public static long calculateTimeElapsed(Instant start, Instant finish) {
 		return Duration.between(start, finish).toMillis();
 	}
+
+	// convert 2024-08-03 -> 20240803
+	public static String convertIntoXet(String date) {
+		return date.replace("-", "");
+	}
 }
