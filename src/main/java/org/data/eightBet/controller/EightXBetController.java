@@ -17,7 +17,7 @@ public class EightXBetController {
 		return eightXBetService.getScheduledEventInPlay();
 	}
 
-	@GetMapping("/api/eightXBet/events")
+	@GetMapping("/api/data-service/ex/events")
 	public GenericResponseWrapper getEventsByDate(@RequestParam String date) {
 		return eightXBetService.getEventsByDate(date);
 	}

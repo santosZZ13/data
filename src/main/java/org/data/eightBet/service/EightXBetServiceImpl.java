@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
+import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -39,6 +40,12 @@ import static org.data.sofa.dto.SofaEventsByDateDTO.SCHEDULED_EVENTS_INVERSE;
 @AllArgsConstructor
 @Log4j2
 public class EightXBetServiceImpl implements EightXBetService {
+
+	private static final Map<String, String> TRANSLITERATION_MAP = new HashMap<>();
+
+	static {
+		TRANSLITERATION_MAP.put("kobenhavn", "copenhagen");
+	}
 
 	private final SapService sapService;
 	private final EightXBetRepository eightXBetRepository;
@@ -87,10 +94,6 @@ public class EightXBetServiceImpl implements EightXBetService {
 						throw new ApiException("Errors", "", "Error occurred while reading json file");
 					}
 					return eightXBetEventsResponse;
-//					log.info("#getEventsByDate - fetching [EightXBet events] for date: [{}] in [Thread: {}]", TimeUtil.convertIntoXet(date), Thread.currentThread().getName());
-//					return sapService.restEightXBetGet(EventsByDateDTO.GET_EVENTS_BY_DATE,
-//							EventsByDateDTO.queryParams(),
-//							ScheduledEventEightXBetResponse.class);
 				});
 
 
@@ -236,37 +239,132 @@ public class EightXBetServiceImpl implements EightXBetService {
 
 	private void processSofaEvent(EightXBetMatchDTO eightXBetMatchDTO, List<SofaEventsDTO.EventDTO> eventDTOS) {
 
-		String eightXBetNameHome = preHandleNameTeam(eightXBetMatchDTO.getHomeName());
-		String eightXBetAwayName = preHandleNameTeam(eightXBetMatchDTO.getAwayName());
+		String eightXBetNameHome = eightXBetMatchDTO.getHomeName();
+		String eightXBetAwayName = eightXBetMatchDTO.getAwayName();
 		LocalDateTime kickoffTime = eightXBetMatchDTO.getKickoffTime();
 
+		boolean isEqualNameFirst;
+		boolean isEqualNameSecond;
+
 		for (SofaEventsDTO.EventDTO eventDTO : eventDTOS) {
-			String sofaNameHome = preHandleNameTeam(eventDTO.getHomeDetails().getName());
-			String sofaAwayName = preHandleNameTeam(eventDTO.getAwayDetails().getName());
+			isEqualNameFirst = false;
+			isEqualNameSecond = false;
+
+			String sofaNameHome = eventDTO.getHomeDetails().getName();
+			String sofaAwayName = eventDTO.getAwayDetails().getName();
 			LocalDateTime kickOffMatch = eventDTO.getKickOffMatch();
 
-			if (Objects.equals(eightXBetNameHome, sofaNameHome) || Objects.equals(eightXBetAwayName, sofaNameHome)) {
-
+			if (areTeamNamesEqual(eightXBetNameHome, sofaNameHome) || areTeamNamesEqual(eightXBetAwayName, sofaNameHome)) {
 				if (TimeUtil.isEqual(kickoffTime, kickOffMatch)) {
-					Team firstTeam = Team.builder()
-							.name(sofaNameHome)
-							.build();
-
-					Team secondTeam = Team.builder()
-							.name(sofaAwayName)
-							.build();
-
-					SofaEvent sofaEvent = SofaEvent.builder()
-							.firstTeam(firstTeam)
-							.secondTeam(secondTeam)
-							.build();
-
-					eightXBetMatchDTO.setSofaDetail(sofaEvent);
+					isEqualNameFirst = true;
 				}
+			}
+
+			if (areTeamNamesEqual(eightXBetNameHome, sofaAwayName) || areTeamNamesEqual(eightXBetAwayName, sofaAwayName)) {
+				if (TimeUtil.isEqual(kickoffTime, kickOffMatch)) {
+					isEqualNameSecond = true;
+				}
+			}
+
+			if (isEqualNameFirst && isEqualNameSecond) {
+				Team firstTeam = Team.builder()
+						.name(eventDTO.getHomeDetails().getName())
+						.build();
+				Team secondTeam = Team.builder()
+						.name(eventDTO.getAwayDetails().getName())
+						.build();
+				SofaEvent sofaEvent = SofaEvent.builder()
+						.firstTeam(firstTeam)
+						.secondTeam(secondTeam)
+						.build();
+				eightXBetMatchDTO.setSofaDetail(sofaEvent);
+				break;
 			}
 		}
 	}
 
+	public String normalizeTeamName(String name) {
+		// Convert to lower case
+		name = name.toLowerCase();
+		// Remove special characters and accents
+		name = Normalizer.normalize(name, Normalizer.Form.NFD);
+		name = name.replaceAll("\\p{InCombiningDiacriticalMarks}", "");
+		name = name.replaceAll("ø", "o");
+		name = name.replaceAll("å", "a");
+		// Remove common suffixes
+		name = name.replaceAll("\\b(fc|bk|ksv|eh|ff|il|tf|us|de|sk|fk)\\b", "");
+		// Remove extra spaces
+		name = name.replaceAll("\\s+", " ").trim();
+		return name;
+	}
+
+	private String applyTransliteration(String name) {
+		String[] words = name.split(" ");
+		StringBuilder transliteratedName = new StringBuilder();
+
+		for (String word : words) {
+			if (TRANSLITERATION_MAP.containsKey(word)) {
+				transliteratedName.append(TRANSLITERATION_MAP.get(word)).append(" ");
+			} else {
+				transliteratedName.append(word).append(" ");
+			}
+		}
+
+		return transliteratedName.toString().trim();
+	}
+
+
+	private boolean areTeamNamesEqual(String nameFirst, String nameSecond) {
+		// Stage 1:
+		String appliedTransliterationFirst = applyTransliteration(normalizeTeamName(nameFirst));
+		String appliedTransliterationSecond = applyTransliteration(normalizeTeamName(nameSecond));
+		if (appliedTransliterationFirst.equals(appliedTransliterationSecond)) {
+			return true;
+		}
+
+		// Stage 2: "eif" and "Ekenas IF"
+		List<String> splitTeamFirst = Arrays.stream(appliedTransliterationFirst.split(" ")).toList();
+		List<String> splitTeamSecond = Arrays.stream(appliedTransliterationSecond.split(" ")).toList();
+
+		if (splitTeamFirst.size() > splitTeamSecond.size()) {
+			String first = splitTeamFirst.get(0);
+			String second = splitTeamFirst.get(1);
+			String fullName;
+			if (first.length() > second.length()) {
+				fullName = first.charAt(0) + second;
+			} else {
+				fullName = second.charAt(0) + first;
+			}
+
+			if (fullName.equals(splitTeamSecond.get(0))) {
+				return true;
+			}
+		} else if (splitTeamFirst.size() < splitTeamSecond.size()) {
+
+			String first = splitTeamSecond.get(0);
+			String second = splitTeamSecond.get(1);
+			String fullName;
+			if (first.length() > second.length()) {
+				fullName = first.charAt(0) + second;
+			} else {
+				fullName = second.charAt(0) + first;
+			}
+
+			if (fullName.equals(splitTeamFirst.get(0))) {
+				return true;
+			}
+		}
+
+		// Stage 3: Feyenoord Rotterdam vs feyenoord
+		List<String> appliedFirst = Arrays.stream(appliedTransliterationFirst.split(" ")).toList();
+		List<String> appliedSecond = Arrays.stream(appliedTransliterationSecond.split(" ")).toList();
+		for (String ele : appliedFirst) {
+			if (appliedSecond.contains(ele)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	@Override
 	@Transactional
