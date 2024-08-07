@@ -3,13 +3,10 @@ package org.data.eightBet.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.collections4.MultiValuedMap;
-import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.data.common.exception.ApiException;
 import org.data.eightBet.dto.EightXBetCommonResponse;
 import org.data.eightBet.dto.EventsByDateDTO;
 import org.data.eightBet.dto.EightXBetEventsResponse;
-import org.data.eightBet.dto.EventInPlayDTO;
 import org.data.eightBet.dto.EightXBetEventsResponse.EightXBetTournamentResponse;
 import org.data.eightBet.repository.EightXBetRepository;
 import org.data.persistent.entity.EventsEightXBetEntity;
@@ -25,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
-import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -34,6 +30,7 @@ import static org.data.eightBet.dto.EightXBetEventDTO.*;
 import static org.data.eightBet.dto.EightXBetEventsResponse.*;
 import static org.data.sofa.dto.SofaEventsByDateDTO.SCHEDULED_EVENTS;
 import static org.data.sofa.dto.SofaEventsByDateDTO.SCHEDULED_EVENTS_INVERSE;
+import static org.data.util.TeamUtils.areTeamNamesEqual;
 
 
 @Service
@@ -41,11 +38,7 @@ import static org.data.sofa.dto.SofaEventsByDateDTO.SCHEDULED_EVENTS_INVERSE;
 @Log4j2
 public class EightXBetServiceImpl implements EightXBetService {
 
-	private static final Map<String, String> TRANSLITERATION_MAP = new HashMap<>();
 
-	static {
-		TRANSLITERATION_MAP.put("kobenhavn", "copenhagen");
-	}
 
 	private final SapService sapService;
 	private final EightXBetRepository eightXBetRepository;
@@ -119,10 +112,11 @@ public class EightXBetServiceImpl implements EightXBetService {
 				})
 				.thenCombine(eightXBetEventResponseFuture, (eventDTOS, eightXBetEventResponse) -> {
 					Data data = eightXBetEventResponse.getData();
-					EventsByDateDTO.Response response = null;
 					if (!data.getTournaments().isEmpty()) {
 
-						Map<Integer, List<EightXBetTournamentDTO>> eightXBetTournamentDTOMap = convertToEightXBetTournamentDTO(data.getTournaments());
+						Map<Integer, List<EightXBetTournamentDTO>> eightXBetTournamentDTOMap = convertToEightXBetTournamentDTO(data.getTournaments(),
+								TimeUtil.convertStringToLocalDateTime(date));
+
 						Map.Entry<Integer, List<EightXBetTournamentDTO>> eightXBetTournamentDTOEntry = eightXBetTournamentDTOMap
 								.entrySet()
 								.iterator()
@@ -158,45 +152,10 @@ public class EightXBetServiceImpl implements EightXBetService {
 				.join();
 	}
 
-	/**
-	 * Convert EightXBetTournamentResponse to EightXBetTournamentDTO
-	 *
-	 * @param eightXBetTournamentResponses List of EightXBetTournamentResponse
-	 * @return Map<Integer, List < EightXBetTournamentDTO>>
-	 */
-	private @NotNull @Unmodifiable Map<Integer, List<EightXBetTournamentDTO>> convertToEightXBetTournamentDTO(@NotNull List<EightXBetTournamentResponse> eightXBetTournamentResponses) {
-		List<EightXBetTournamentDTO> eightXBetTournamentDTOS = new ArrayList<>();
-		int totalMatches = 0;
 
-		for (EightXBetTournamentResponse eightXBetTournamentResponse : eightXBetTournamentResponses) {
-
-			String name = eightXBetTournamentResponse.getName();
-			List<EightXBetMatchDTO> eightXBetMatchDTOS = new ArrayList<>();
-
-			for (EightXBetCommonResponse.EightXBetMatchResponse eightXBetMatchRsp : eightXBetTournamentResponse.getMatches()) {
-
-				EightXBetMatchDTO eightXBetMatchDTO = buildEightXBetMatchDTO(eightXBetMatchRsp);
-				eightXBetMatchDTOS.add(eightXBetMatchDTO);
-				totalMatches++;
-			}
-
-			EightXBetTournamentDTO eightXBetTournamentDTO = EightXBetTournamentDTO
-					.builder()
-					.tntName(name)
-					.count(eightXBetMatchDTOS.size())
-					.matches(eightXBetMatchDTOS)
-					.build();
-
-			eightXBetTournamentDTOS.add(eightXBetTournamentDTO);
-
-		}
-		return Map.of(totalMatches, eightXBetTournamentDTOS);
-	}
-
-
-	public void getEventDTOByDate(List<SofaEventsResponse.EventResponse> eventResponses,
-								  List<SofaEventsDTO.EventDTO> eventDTOS,
-								  LocalDateTime requestDate) {
+	private void getEventDTOByDate(List<SofaEventsResponse.EventResponse> eventResponses,
+								   List<SofaEventsDTO.EventDTO> eventDTOS,
+								   LocalDateTime requestDate) {
 		for (SofaEventsResponse.EventResponse responseEventResponse : eventResponses) {
 			LocalDateTime responseDate = TimeUtil.convertUnixTimestampToLocalDateTime(responseEventResponse.getStartTimestamp());
 			if (responseDate.getDayOfMonth() == requestDate.getDayOfMonth() &&
@@ -283,88 +242,7 @@ public class EightXBetServiceImpl implements EightXBetService {
 		}
 	}
 
-	public String normalizeTeamName(String name) {
-		// Convert to lower case
-		name = name.toLowerCase();
-		// Remove special characters and accents
-		name = Normalizer.normalize(name, Normalizer.Form.NFD);
-		name = name.replaceAll("\\p{InCombiningDiacriticalMarks}", "");
-		name = name.replaceAll("ø", "o");
-		name = name.replaceAll("å", "a");
-		// Remove common suffixes
-		name = name.replaceAll("\\b(fc|bk|ksv|eh|ff|il|tf|us|de|sk|fk)\\b", "");
-		// Remove extra spaces
-		name = name.replaceAll("\\s+", " ").trim();
-		return name;
-	}
 
-	private String applyTransliteration(String name) {
-		String[] words = name.split(" ");
-		StringBuilder transliteratedName = new StringBuilder();
-
-		for (String word : words) {
-			if (TRANSLITERATION_MAP.containsKey(word)) {
-				transliteratedName.append(TRANSLITERATION_MAP.get(word)).append(" ");
-			} else {
-				transliteratedName.append(word).append(" ");
-			}
-		}
-
-		return transliteratedName.toString().trim();
-	}
-
-
-	private boolean areTeamNamesEqual(String nameFirst, String nameSecond) {
-		// Stage 1:
-		String appliedTransliterationFirst = applyTransliteration(normalizeTeamName(nameFirst));
-		String appliedTransliterationSecond = applyTransliteration(normalizeTeamName(nameSecond));
-		if (appliedTransliterationFirst.equals(appliedTransliterationSecond)) {
-			return true;
-		}
-
-		// Stage 2: "eif" and "Ekenas IF"
-		List<String> splitTeamFirst = Arrays.stream(appliedTransliterationFirst.split(" ")).toList();
-		List<String> splitTeamSecond = Arrays.stream(appliedTransliterationSecond.split(" ")).toList();
-
-		if (splitTeamFirst.size() > splitTeamSecond.size()) {
-			String first = splitTeamFirst.get(0);
-			String second = splitTeamFirst.get(1);
-			String fullName;
-			if (first.length() > second.length()) {
-				fullName = first.charAt(0) + second;
-			} else {
-				fullName = second.charAt(0) + first;
-			}
-
-			if (fullName.equals(splitTeamSecond.get(0))) {
-				return true;
-			}
-		} else if (splitTeamFirst.size() < splitTeamSecond.size()) {
-
-			String first = splitTeamSecond.get(0);
-			String second = splitTeamSecond.get(1);
-			String fullName;
-			if (first.length() > second.length()) {
-				fullName = first.charAt(0) + second;
-			} else {
-				fullName = second.charAt(0) + first;
-			}
-
-			if (fullName.equals(splitTeamFirst.get(0))) {
-				return true;
-			}
-		}
-
-		// Stage 3: Feyenoord Rotterdam vs feyenoord
-		List<String> appliedFirst = Arrays.stream(appliedTransliterationFirst.split(" ")).toList();
-		List<String> appliedSecond = Arrays.stream(appliedTransliterationSecond.split(" ")).toList();
-		for (String ele : appliedFirst) {
-			if (appliedSecond.contains(ele)) {
-				return true;
-			}
-		}
-		return false;
-	}
 
 	@Override
 	@Transactional
@@ -414,24 +292,34 @@ public class EightXBetServiceImpl implements EightXBetService {
 				.build();
 	}
 
-	private EventsByDateDTO.Response populateScheduledEventByDateResponseToDTOToDisplay(List<EightXBetTournamentResponse> tournamentResponses, String date) {
 
-		LocalDateTime localDateTimeRequest = TimeUtil.convertStringToLocalDateTime(date);
+	/**
+	 * Convert EightXBetTournamentResponse to EightXBetTournamentDTO
+	 *
+	 * @param eightXBetTournamentResponses List of EightXBetTournamentResponse
+	 * @return Map<Integer, List < EightXBetTournamentDTO>>
+	 */
+	private @NotNull @Unmodifiable Map<Integer, List<EightXBetTournamentDTO>> convertToEightXBetTournamentDTO(@NotNull List<EightXBetTournamentResponse> eightXBetTournamentResponses,
+																											  LocalDateTime requestDate) {
 		List<EightXBetTournamentDTO> eightXBetTournamentDTOS = new ArrayList<>();
-		int mtSize = 0;
+		int totalMatches = 0;
 
-		for (EightXBetTournamentResponse tournamentResponse : tournamentResponses) {
+		for (EightXBetTournamentResponse eightXBetTournamentResponse : eightXBetTournamentResponses) {
 
-			List<EightXBetCommonResponse.EightXBetMatchResponse> matchesResponse = tournamentResponse.getMatches();
+			String name = eightXBetTournamentResponse.getName();
 			List<EightXBetMatchDTO> eightXBetMatchDTOS = new ArrayList<>();
-			String tournamentResponseName = tournamentResponse.getName();
 
-			for (EightXBetCommonResponse.EightXBetMatchResponse matchResponse : matchesResponse) {
-				long kickoffTimeResponse = matchResponse.getKickoffTime();
-				LocalDateTime localDateTimeResponse = TimeUtil.convertUnixTimestampToLocalDateTime(kickoffTimeResponse);
-				if (localDateTimeRequest.getDayOfMonth() == localDateTimeResponse.getDayOfMonth()) {
-					EightXBetMatchDTO eightXBetMatchDTO = buildEightXBetMatchDTO(matchResponse);
-					mtSize++;
+			for (EightXBetCommonResponse.EightXBetMatchResponse eightXBetMatchRsp : eightXBetTournamentResponse.getMatches()) {
+				if (!Objects.isNull(requestDate)) {
+					LocalDateTime localDateTimeResponse = TimeUtil.convertUnixTimestampToLocalDateTime(eightXBetMatchRsp.getKickoffTime());
+					if (requestDate.getDayOfMonth() == localDateTimeResponse.getDayOfMonth()) {
+						EightXBetMatchDTO eightXBetMatchDTO = buildEightXBetMatchDTO(eightXBetMatchRsp);
+						totalMatches++;
+						eightXBetMatchDTOS.add(eightXBetMatchDTO);
+					}
+				} else {
+					EightXBetMatchDTO eightXBetMatchDTO = buildEightXBetMatchDTO(eightXBetMatchRsp);
+					totalMatches++;
 					eightXBetMatchDTOS.add(eightXBetMatchDTO);
 				}
 			}
@@ -439,20 +327,15 @@ public class EightXBetServiceImpl implements EightXBetService {
 			if (!eightXBetMatchDTOS.isEmpty()) {
 				EightXBetTournamentDTO eightXBetTournamentDTO = EightXBetTournamentDTO
 						.builder()
-						.tntName(tournamentResponseName)
-						.matches(eightXBetMatchDTOS)
+						.tntName(name)
 						.count(eightXBetMatchDTOS.size())
+						.matches(eightXBetMatchDTOS)
 						.build();
+
 				eightXBetTournamentDTOS.add(eightXBetTournamentDTO);
 			}
 		}
-		return EventsByDateDTO
-				.Response
-				.builder()
-				.eightXBetTournamentDto(eightXBetTournamentDTOS)
-				.tntSize(eightXBetTournamentDTOS.size())
-				.matchSize(mtSize)
-				.build();
+		return Map.of(totalMatches, eightXBetTournamentDTOS);
 	}
 
 
