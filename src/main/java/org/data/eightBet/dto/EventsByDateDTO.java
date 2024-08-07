@@ -22,11 +22,27 @@ public interface EventsByDateDTO {
 				"inplay", IN_PLAY,
 				"date", date);
 	}
+
 	@Builder
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class Response {
+		@JsonProperty("total_matches")
+		private Integer totalMatches;
+		@JsonProperty("total_tournaments")
+		private Integer totalTournaments;
+		@JsonProperty("tournament_found")
+		private TournamentDTO tournamentsFirst;
+		@JsonProperty("tournament_no_found")
+		private TournamentDTO tournamentsSecond;
+	}
+
+	@Builder
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	class TournamentDTO {
 		@JsonProperty("total_tournaments")
 		private Integer tntSize;
 		@JsonProperty("total_matches")

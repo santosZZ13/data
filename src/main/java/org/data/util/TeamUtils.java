@@ -90,6 +90,7 @@ public class TeamUtils {
 		name = name.replaceAll("\\p{InCombiningDiacriticalMarks}", "");
 		name = name.replaceAll("ø", "o");
 		name = name.replaceAll("å", "a");
+		name = name.replaceAll("-", " ");
 		// Remove common suffixes
 		name = name.replaceAll("\\b(fc|bk|ksv|eh|ff|il|tf|us|de|sk|fk)\\b", "");
 		// Remove extra spaces

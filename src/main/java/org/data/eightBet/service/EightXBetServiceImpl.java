@@ -39,7 +39,6 @@ import static org.data.util.TeamUtils.areTeamNamesEqual;
 public class EightXBetServiceImpl implements EightXBetService {
 
 
-
 	private final SapService sapService;
 	private final EightXBetRepository eightXBetRepository;
 
@@ -111,6 +110,7 @@ public class EightXBetServiceImpl implements EightXBetService {
 					return eventDTOS;
 				})
 				.thenCombine(eightXBetEventResponseFuture, (eventDTOS, eightXBetEventResponse) -> {
+
 					Data data = eightXBetEventResponse.getData();
 					if (!data.getTournaments().isEmpty()) {
 
@@ -122,18 +122,69 @@ public class EightXBetServiceImpl implements EightXBetService {
 								.iterator()
 								.next();
 
+						List<EightXBetTournamentDTO> tournamentDTOFist = new ArrayList<>();
+						List<EightXBetTournamentDTO> tournamentDTOSecond = new ArrayList<>();
+						int totalMatchesFirst = 0;
+						int totalMatchesSecond = 0;
+
 						for (EightXBetTournamentDTO eightXBetTournamentDTO : eightXBetTournamentDTOEntry.getValue()) {
+
+							List<EightXBetMatchDTO> eightXBetMatchDTOSFirst = new ArrayList<>();
+							List<EightXBetMatchDTO> eightXBetMatchDTOSSecond = new ArrayList<>();
+
 							for (EightXBetMatchDTO eightXBetMatchDTO : eightXBetTournamentDTO.getMatches()) {
-								processSofaEvent(eightXBetMatchDTO, eventDTOS);
+								SofaEventsDTO.EventDTO eventDTO = CheckEightXBetMatcInEventDTO(eightXBetMatchDTO, eventDTOS);
+								if (!Objects.isNull(eventDTO)) {
+									SofaEvent sofaEvent = buildSofaEvent(eventDTO);
+									eightXBetMatchDTO.setSofaDetail(sofaEvent);
+									eightXBetMatchDTOSFirst.add(eightXBetMatchDTO);
+									totalMatchesFirst++;
+								} else {
+									eightXBetMatchDTOSSecond.add(eightXBetMatchDTO);
+									totalMatchesSecond++;
+								}
+							}
+
+							if (!eightXBetMatchDTOSFirst.isEmpty()) {
+								EightXBetTournamentDTO eightXBetTournamentDTOFirst = EightXBetTournamentDTO
+										.builder()
+										.tntName(eightXBetTournamentDTO.getTntName())
+										.count(eightXBetMatchDTOSFirst.size())
+										.matches(eightXBetMatchDTOSFirst)
+										.build();
+								tournamentDTOFist.add(eightXBetTournamentDTOFirst);
+							}
+
+							if (!eightXBetMatchDTOSSecond.isEmpty()) {
+								EightXBetTournamentDTO eightXBetTournamentDTOSecond = EightXBetTournamentDTO
+										.builder()
+										.tntName(eightXBetTournamentDTO.getTntName())
+										.count(eightXBetMatchDTOSSecond.size())
+										.matches(eightXBetMatchDTOSSecond)
+										.build();
+								tournamentDTOSecond.add(eightXBetTournamentDTOSecond);
 							}
 						}
+
+						EventsByDateDTO.TournamentDTO tournamentFirst = EventsByDateDTO.TournamentDTO.builder()
+								.eightXBetTournamentDto(tournamentDTOFist)
+								.matchSize(totalMatchesFirst)
+								.tntSize(tournamentDTOFist.size())
+								.build();
+
+						EventsByDateDTO.TournamentDTO tournamentSecond = EventsByDateDTO.TournamentDTO.builder()
+								.eightXBetTournamentDto(tournamentDTOSecond)
+								.matchSize(totalMatchesSecond)
+								.tntSize(tournamentDTOSecond.size())
+								.build();
 
 						return EventsByDateDTO
 								.Response
 								.builder()
-								.eightXBetTournamentDto(eightXBetTournamentDTOEntry.getValue())
-								.tntSize(eightXBetTournamentDTOEntry.getValue().size())
-								.matchSize(eightXBetTournamentDTOEntry.getKey())
+								.totalMatches(eightXBetTournamentDTOEntry.getKey())
+								.totalTournaments(eightXBetTournamentDTOEntry.getValue().size())
+								.tournamentsFirst(tournamentFirst)
+								.tournamentsSecond(tournamentSecond)
 								.build();
 					}
 					return null;
@@ -152,6 +203,21 @@ public class EightXBetServiceImpl implements EightXBetService {
 				.join();
 	}
 
+
+	private SofaEvent buildSofaEvent(SofaEventsDTO.@NotNull EventDTO eventDTO) {
+		Team firstTeam = Team.builder()
+				.id(eventDTO.getHomeDetails().getIdTeam())
+				.name(eventDTO.getHomeDetails().getName())
+				.build();
+		Team secondTeam = Team.builder()
+				.id(eventDTO.getAwayDetails().getIdTeam())
+				.name(eventDTO.getAwayDetails().getName())
+				.build();
+		return SofaEvent.builder()
+				.firstTeam(firstTeam)
+				.secondTeam(secondTeam)
+				.build();
+	}
 
 	private void getEventDTOByDate(List<SofaEventsResponse.EventResponse> eventResponses,
 								   List<SofaEventsDTO.EventDTO> eventDTOS,
@@ -190,13 +256,8 @@ public class EightXBetServiceImpl implements EightXBetService {
 				.build();
 	}
 
-	private String preHandleNameTeam(String name) {
-		return name.replaceAll("[^\\p{ASCII}]", "")
-				.toLowerCase();
-	}
 
-
-	private void processSofaEvent(EightXBetMatchDTO eightXBetMatchDTO, List<SofaEventsDTO.EventDTO> eventDTOS) {
+	private SofaEventsDTO.EventDTO CheckEightXBetMatcInEventDTO(EightXBetMatchDTO eightXBetMatchDTO, List<SofaEventsDTO.EventDTO> eventDTOS) {
 
 		String eightXBetNameHome = eightXBetMatchDTO.getHomeName();
 		String eightXBetAwayName = eightXBetMatchDTO.getAwayName();
@@ -226,22 +287,11 @@ public class EightXBetServiceImpl implements EightXBetService {
 			}
 
 			if (isEqualNameFirst && isEqualNameSecond) {
-				Team firstTeam = Team.builder()
-						.name(eventDTO.getHomeDetails().getName())
-						.build();
-				Team secondTeam = Team.builder()
-						.name(eventDTO.getAwayDetails().getName())
-						.build();
-				SofaEvent sofaEvent = SofaEvent.builder()
-						.firstTeam(firstTeam)
-						.secondTeam(secondTeam)
-						.build();
-				eightXBetMatchDTO.setSofaDetail(sofaEvent);
-				break;
+				return eventDTO;
 			}
 		}
+		return null;
 	}
-
 
 
 	@Override

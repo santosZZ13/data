@@ -1,16 +1,23 @@
 package org.data;
 
 import lombok.AllArgsConstructor;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.core.RedisKeyValueAdapter;
+import org.springframework.data.redis.core.RedisTemplate;
+
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 
 @SpringBootApplication
 @AllArgsConstructor
-public class App {
+public class App implements CommandLineRunner {
 
 
+	private final RedisTemplate<Object, Object> redisTemplate;
 //	public static class LoggingInterceptor implements ClientHttpRequestInterceptor {
 //		@Override
 //		public @NotNull ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws IOException {
@@ -21,7 +28,6 @@ public class App {
 //			return response;
 //		}
 //	}
-
 	public static void main(String[] args) throws IOException {
 		SpringApplication.run(App.class, args);
 //		RestTemplate restTemplate = new RestTemplate();
@@ -59,5 +65,14 @@ public class App {
 //			System.err.println("Response body: " + e.getResponseBodyAsString());
 //			System.out.println(e.getMessage());
 //		}
+	}
+
+	@Override
+	public void run(String... args) throws Exception {
+		redisTemplate.opsForValue().set("test", "Java", 5, TimeUnit.SECONDS);
+		System.out.println(redisTemplate.opsForValue().get("Hello"));
+		redisTemplate.execute((RedisCallback<? extends Object>)  connection ->  {
+			connection.hashCommands().hSet()
+		})
 	}
 }
