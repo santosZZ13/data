@@ -10,6 +10,7 @@ import org.data.eightBet.dto.EightXBetEventsResponse;
 import org.data.eightBet.dto.EightXBetEventsResponse.EightXBetTournamentResponse;
 import org.data.eightBet.repository.EightXBetRepository;
 import org.data.persistent.entity.EventsEightXBetEntity;
+import org.data.service.fetch.FetchSofaEvent;
 import org.data.service.sap.SapService;
 import org.data.common.model.GenericResponseWrapper;
 import org.data.sofa.dto.SofaCommonResponse;
@@ -18,11 +19,9 @@ import org.data.sofa.dto.SofaEventsResponse;
 import org.data.util.TimeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
 import java.time.LocalDateTime;
@@ -44,6 +43,7 @@ public class EightXBetServiceImpl implements EightXBetService {
 	private final SapService sapService;
 	private final EightXBetRepository eightXBetRepository;
 	private final RedisTemplate<String, Object> redisTemplate;
+	private final FetchSofaEvent fetchSofaEvent;
 
 	@Override
 	public GenericResponseWrapper getScheduledEventInPlay() {
@@ -157,8 +157,9 @@ public class EightXBetServiceImpl implements EightXBetService {
 								.iterator()
 								.next();
 
-						List<EightXBetTournamentDTO> tournamentDTOFist = new ArrayList<>();
-						List<EightXBetTournamentDTO> tournamentDTOSecond = new ArrayList<>();
+						List<Integer> idsForSofaToFetch = new ArrayList<>();
+						List<EightXBetTournamentDTO> tournamentDtoWithId = new ArrayList<>();
+						List<EightXBetTournamentDTO> tournamentDTOWithNoId = new ArrayList<>();
 						int totalMatchesFirst = 0;
 						int totalMatchesSecond = 0;
 
@@ -170,6 +171,8 @@ public class EightXBetServiceImpl implements EightXBetService {
 							for (EightXBetMatchDTO eightXBetMatchDTO : eightXBetTournamentDTO.getMatches()) {
 								SofaEventsDTO.EventDTO eventDTO = CheckEightXBetMatcInEventDTO(eightXBetMatchDTO, eventDTOS);
 								if (!Objects.isNull(eventDTO)) {
+									idsForSofaToFetch.add(eventDTO.getHomeDetails().getIdTeam());
+									idsForSofaToFetch.add(eventDTO.getAwayDetails().getIdTeam());
 									SofaEvent sofaEvent = buildSofaEvent(eventDTO);
 									eightXBetMatchDTO.setSofaDetail(sofaEvent);
 									eightXBetMatchDTOSFirst.add(eightXBetMatchDTO);
@@ -180,6 +183,8 @@ public class EightXBetServiceImpl implements EightXBetService {
 								}
 							}
 
+
+
 							if (!eightXBetMatchDTOSFirst.isEmpty()) {
 								EightXBetTournamentDTO eightXBetTournamentDTOFirst = EightXBetTournamentDTO
 										.builder()
@@ -187,7 +192,7 @@ public class EightXBetServiceImpl implements EightXBetService {
 										.count(eightXBetMatchDTOSFirst.size())
 										.matches(eightXBetMatchDTOSFirst)
 										.build();
-								tournamentDTOFist.add(eightXBetTournamentDTOFirst);
+								tournamentDtoWithId.add(eightXBetTournamentDTOFirst);
 							}
 
 							if (!eightXBetMatchDTOSSecond.isEmpty()) {
@@ -197,20 +202,22 @@ public class EightXBetServiceImpl implements EightXBetService {
 										.count(eightXBetMatchDTOSSecond.size())
 										.matches(eightXBetMatchDTOSSecond)
 										.build();
-								tournamentDTOSecond.add(eightXBetTournamentDTOSecond);
+								tournamentDTOWithNoId.add(eightXBetTournamentDTOSecond);
 							}
 						}
 
+						CompletableFuture.runAsync(() -> fetchSofaEvent.fetchHistoricalMatches(idsForSofaToFetch));
+
 						EventsByDateDTO.TournamentDTO tournamentFirst = EventsByDateDTO.TournamentDTO.builder()
-								.eightXBetTournamentDto(tournamentDTOFist)
+								.eightXBetTournamentDto(tournamentDtoWithId)
 								.matchSize(totalMatchesFirst)
-								.tntSize(tournamentDTOFist.size())
+								.tntSize(tournamentDtoWithId.size())
 								.build();
 
 						EventsByDateDTO.TournamentDTO tournamentSecond = EventsByDateDTO.TournamentDTO.builder()
-								.eightXBetTournamentDto(tournamentDTOSecond)
+								.eightXBetTournamentDto(tournamentDTOWithNoId)
 								.matchSize(totalMatchesSecond)
-								.tntSize(tournamentDTOSecond.size())
+								.tntSize(tournamentDTOWithNoId.size())
 								.build();
 
 						return EventsByDateDTO

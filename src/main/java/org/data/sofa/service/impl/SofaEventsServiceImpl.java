@@ -5,21 +5,20 @@ import lombok.extern.log4j.Log4j2;
 import org.data.config.FetchEventScheduler;
 import org.data.persistent.entity.HistoryFetchEventEntity;
 import org.data.persistent.repository.HistoryFetchEventEntityRepository;
-import org.data.properties.ConnectionProperties;
-import org.data.service.fetch.FetchSofaEvent;
+import org.data.service.fetch.FetchSofaEventImpl;
 import org.data.service.sap.SapService;
 import org.data.common.model.GenericResponseWrapper;
+import org.data.sofa.dto.GetSofaEventHistoryDTO;
 import org.data.sofa.dto.SofaCommonResponse;
 import org.data.sofa.dto.SofaEventsDTO;
 import org.data.sofa.dto.SofaEventsResponse;
-import org.data.sofa.repository.impl.ScheduledEventsRepository;
-import org.data.sofa.service.ScheduledEventsService;
+import org.data.sofa.repository.impl.SofaEventsTemplateRepository;
+import org.data.sofa.service.SofaEventsService;
 import org.data.util.RestConnector;
 import org.data.util.TimeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.*;
@@ -32,15 +31,15 @@ import static org.data.sofa.dto.SofaEventsResponse.*;
 @Service
 @AllArgsConstructor
 @Log4j2
-public class ScheduledEventsServiceImpl implements ScheduledEventsService {
+public class SofaEventsServiceImpl implements SofaEventsService {
 
 
 	private final SapService sapService;
 	private final RestConnector restConnector;
 	private final FetchEventScheduler fetchEventScheduler;
-	private final FetchSofaEvent fetchSofaEvent;
+	private final FetchSofaEventImpl fetchSofaEventImpl;
 	private final HistoryFetchEventEntityRepository historyFetchEventEntityRepository;
-
+	private final SofaEventsTemplateRepository sofaEventsTemplateRepository;
 
 	@Override
 	public GenericResponseWrapper getAllScheduleEventsByDate(Request request) {
@@ -80,7 +79,7 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 					if (ids.isEmpty()) {
 						log.info("#getAllScheduleEventsByDate - No ids to fetch historical events");
 					} else {
-						CompletableFuture.runAsync(() -> fetchSofaEvent.fetchHistoricalMatches(ids));
+						CompletableFuture.runAsync(() -> fetchSofaEventImpl.fetchHistoricalMatches(ids));
 					}
 
 					return Response.builder()
@@ -127,9 +126,30 @@ public class ScheduledEventsServiceImpl implements ScheduledEventsService {
 		return null;
 	}
 
+	@Override
+	public GenericResponseWrapper getHistoryFromTeamId(Integer teamId) {
+		List<GetSofaEventHistoryDTO.HistoryScore> historyScore = sofaEventsTemplateRepository.getHistoryScore(teamId);
+		historyScore.forEach(hs -> {
+			if (hs.getHomeScore().isScoreEmpty()) {
+				hs.setHomeScore(null);
+			}
+			if (hs.getAgainstScore().isScoreEmpty()) {
+				hs.setAgainstScore(null);
+			}
+		});
+		return GenericResponseWrapper.builder()
+				.code("")
+				.msg("")
+				.data(GetSofaEventHistoryDTO.Response.builder()
+						.historyScores(historyScore)
+						.totalMatches(historyScore.size())
+						.build())
+				.build();
+	}
+
 	private @NotNull List<SofaEventsDTO.EventDTO> getEventDetails(SofaEventsResponse sofaEventsResponse,
-													   SofaEventsResponse sofaInverseScheduledEventsResponse,
-													   LocalDateTime requestDate) {
+																  SofaEventsResponse sofaInverseScheduledEventsResponse,
+																  LocalDateTime requestDate) {
 
 		List<EventResponse> sofaScheduledEventsResponseEventResponses = sofaEventsResponse.getEvents();
 		List<EventResponse> sofaInverseScheduledEventsResponseEventResponses = sofaInverseScheduledEventsResponse.getEvents();

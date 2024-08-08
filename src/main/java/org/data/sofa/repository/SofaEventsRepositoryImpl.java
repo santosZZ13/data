@@ -8,7 +8,7 @@ import org.data.persistent.entity.ScheduledEventsSofaScoreEntity;
 import org.data.persistent.common.ScheduledEventsEntityConverter;
 import org.data.persistent.repository.ScheduledEventMongoRepository;
 import org.data.sofa.dto.SofaEventsResponse.EventResponse;
-import org.data.sofa.repository.impl.ScheduledEventsRepository;
+import org.data.sofa.repository.impl.SofaEventsRepository;
 import org.data.util.TimeUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,7 +23,7 @@ import static org.data.util.TimeUtil.convertUnixTimestampToLocalDateTime;
 
 @Repository
 @AllArgsConstructor
-public class ScheduledEventsRepositoryImpl implements ScheduledEventsRepository {
+public class SofaEventsRepositoryImpl implements SofaEventsRepository {
 
 	private final ScheduledEventMongoRepository scheduledEventMongoRepository;
 
