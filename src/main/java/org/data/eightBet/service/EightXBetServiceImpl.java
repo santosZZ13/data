@@ -18,8 +18,11 @@ import org.data.sofa.dto.SofaEventsResponse;
 import org.data.util.TimeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
 import java.time.LocalDateTime;
@@ -38,9 +41,9 @@ import static org.data.util.TeamUtils.areTeamNamesEqual;
 @Log4j2
 public class EightXBetServiceImpl implements EightXBetService {
 
-
 	private final SapService sapService;
 	private final EightXBetRepository eightXBetRepository;
+	private final RedisTemplate<String, Object> redisTemplate;
 
 	@Override
 	public GenericResponseWrapper getScheduledEventInPlay() {
@@ -71,6 +74,18 @@ public class EightXBetServiceImpl implements EightXBetService {
 
 	}
 
+//	@Cacheable(value = "sofaEvents", key = "#date")
+//	public SofaEventsResponse getSofaEventsResponse(String date) {
+//		log.info("#getEventsByDate - fetching [Sofa events] for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
+//		return sapService.restSofaScoreGet(SCHEDULED_EVENTS + date, SofaEventsResponse.class);
+//	}
+//
+//	@Cacheable(value = "sofaInverseEvents", key = "#date")
+//	public SofaEventsResponse getSofaInverseEventsResponse(String date) {
+//		log.info("#getEventsByDate - fetching [Inverse events events] for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
+//		return sapService.restSofaScoreGet(SCHEDULED_EVENTS + date + SCHEDULED_EVENTS_INVERSE, SofaEventsResponse.class);
+//	}
+
 	@Override
 	public GenericResponseWrapper getEventsByDate(String date) {
 
@@ -91,17 +106,37 @@ public class EightXBetServiceImpl implements EightXBetService {
 
 		CompletableFuture<SofaEventsResponse> sofaEventsResponseFuture =
 				CompletableFuture.supplyAsync(() -> {
-					log.info("#getEventsByDate - fetching [Sofa events] for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
-					return sapService.restSofaScoreGet(SCHEDULED_EVENTS + date, SofaEventsResponse.class);
+					String cacheKey = "sofaEvents::" + date;
+					SofaEventsResponse cachedResponse = (SofaEventsResponse) redisTemplate.opsForValue().get(cacheKey);
+					if (cachedResponse != null) {
+						log.info("#getEventsByDate - [Found] cached sofa events for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
+						return cachedResponse;
+					} else {
+						log.info("#getEventsByDate - [Fetching] sofa events for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
+						SofaEventsResponse sofaEventsResponse = sapService.restSofaScoreGet(SCHEDULED_EVENTS + date, SofaEventsResponse.class);
+						redisTemplate.opsForValue().set(cacheKey, sofaEventsResponse);
+						return sofaEventsResponse;
+					}
 				});
 
 		CompletableFuture<SofaEventsResponse> sofaInverseEventsResponseFuture =
 				CompletableFuture.supplyAsync(() -> {
-					log.info("#getEventsByDate - fetching [Inverse events events] for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
-					return sapService.restSofaScoreGet(SCHEDULED_EVENTS + date + SCHEDULED_EVENTS_INVERSE, SofaEventsResponse.class);
+
+					String cacheKey = "sofaInverseEvents::" + date;
+					SofaEventsResponse cachedResponse = (SofaEventsResponse) redisTemplate.opsForValue().get(cacheKey);
+					if (cachedResponse != null) {
+						log.info("#getEventsByDate - [Found] cached sofa inverse events for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
+						return cachedResponse;
+					} else {
+						log.info("#getEventsByDate - [Fetching] sofa inverse events for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
+						SofaEventsResponse sofaEventsResponse = sapService.restSofaScoreGet(SCHEDULED_EVENTS + date + SCHEDULED_EVENTS_INVERSE, SofaEventsResponse.class);
+						redisTemplate.opsForValue().set(cacheKey, sofaEventsResponse);
+						return sofaEventsResponse;
+					}
 				});
 
 		return sofaEventsResponseFuture.thenCombineAsync(sofaInverseEventsResponseFuture, (sofaEventsResponse, sofaInverseEventsResponse) -> {
+					log.info("#getEventsByDate - [Merging] {{sofa events}} with {{inverse sofa events}} for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
 					List<SofaEventsDTO.EventDTO> eventDTOS = new ArrayList<>();
 					List<SofaEventsResponse.EventResponse> eventsResponse = sofaEventsResponse.getEvents();
 					List<SofaEventsResponse.EventResponse> eventsInverseResponse = sofaInverseEventsResponse.getEvents();
@@ -110,7 +145,7 @@ public class EightXBetServiceImpl implements EightXBetService {
 					return eventDTOS;
 				})
 				.thenCombine(eightXBetEventResponseFuture, (eventDTOS, eightXBetEventResponse) -> {
-
+					log.info("#getEventsByDate - [Merging]  {{eventDTS}} with {{eightXBetEventResponse}} for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
 					Data data = eightXBetEventResponse.getData();
 					if (!data.getTournaments().isEmpty()) {
 
