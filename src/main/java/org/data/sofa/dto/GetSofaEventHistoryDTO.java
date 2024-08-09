@@ -17,6 +17,9 @@ public interface GetSofaEventHistoryDTO {
 	class Response {
 		@JsonProperty("total_matches")
 		private int totalMatches;
+		@JsonProperty("team_details")
+		private SofaEventsDTO.TeamDetails teamDetails;
+		@JsonProperty("history_scores")
 		private List<HistoryScore> historyScores;
 	}
 
@@ -26,6 +29,7 @@ public interface GetSofaEventHistoryDTO {
 	@NoArgsConstructor
 	class HistoryScore {
 		private String tournamentName;
+		@JsonProperty("against_id")
 		private Integer againstId;
 		private String against;
 		private LocalDateTime time;

@@ -1,5 +1,6 @@
 package org.data.sofa.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,8 +31,10 @@ public interface SofaEventsDTO {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class TeamDetails {
+		@JsonProperty("id")
 		private Integer idTeam;
 		private String name;
+		private String country;
 	}
 
 	@Builder

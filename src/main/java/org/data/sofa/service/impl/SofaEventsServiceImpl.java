@@ -2,16 +2,14 @@ package org.data.sofa.service.impl;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.data.common.exception.ApiException;
 import org.data.config.FetchEventScheduler;
 import org.data.persistent.entity.HistoryFetchEventEntity;
 import org.data.persistent.repository.HistoryFetchEventEntityRepository;
 import org.data.service.fetch.FetchSofaEventImpl;
 import org.data.service.sap.SapService;
 import org.data.common.model.GenericResponseWrapper;
-import org.data.sofa.dto.GetSofaEventHistoryDTO;
-import org.data.sofa.dto.SofaCommonResponse;
-import org.data.sofa.dto.SofaEventsDTO;
-import org.data.sofa.dto.SofaEventsResponse;
+import org.data.sofa.dto.*;
 import org.data.sofa.repository.impl.SofaEventsTemplateRepository;
 import org.data.sofa.service.SofaEventsService;
 import org.data.util.RestConnector;
@@ -32,8 +30,6 @@ import static org.data.sofa.dto.SofaEventsResponse.*;
 @AllArgsConstructor
 @Log4j2
 public class SofaEventsServiceImpl implements SofaEventsService {
-
-
 	private final SapService sapService;
 	private final RestConnector restConnector;
 	private final FetchEventScheduler fetchEventScheduler;
@@ -128,23 +124,39 @@ public class SofaEventsServiceImpl implements SofaEventsService {
 
 	@Override
 	public GenericResponseWrapper getHistoryFromTeamId(Integer teamId) {
-		List<GetSofaEventHistoryDTO.HistoryScore> historyScore = sofaEventsTemplateRepository.getHistoryScore(teamId);
-		historyScore.forEach(hs -> {
-			if (hs.getHomeScore().isScoreEmpty()) {
-				hs.setHomeScore(null);
-			}
-			if (hs.getAgainstScore().isScoreEmpty()) {
-				hs.setAgainstScore(null);
-			}
-		});
-		return GenericResponseWrapper.builder()
-				.code("")
-				.msg("")
-				.data(GetSofaEventHistoryDTO.Response.builder()
-						.historyScores(historyScore)
-						.totalMatches(historyScore.size())
-						.build())
-				.build();
+		try {
+			List<GetSofaEventHistoryDTO.HistoryScore> historyScore = sofaEventsTemplateRepository.getHistoryScore(teamId);
+			SofaEventsDTO.TeamDetails teamDetailsById = sofaEventsTemplateRepository.getTeamDetailsById(teamId);
+			historyScore.forEach(hs -> {
+				if (hs.getHomeScore().isScoreEmpty()) {
+					hs.setHomeScore(null);
+				}
+				if (hs.getAgainstScore().isScoreEmpty()) {
+					hs.setAgainstScore(null);
+				}
+			});
+			return GenericResponseWrapper.builder()
+					.code("")
+					.msg("")
+					.data(GetSofaEventHistoryDTO.Response.builder()
+							.teamDetails(teamDetailsById)
+							.historyScores(historyScore)
+							.totalMatches(historyScore.size())
+							.build())
+					.build();
+		} catch (Exception ex) {
+			throw new ApiException("Failed to get history score", "", ex.getMessage());
+		}
+
+	}
+
+	@Override
+	public GenericResponseWrapper getStatisticsTeamFromTeamId(GetStatisticsEventByIdDto.Request request) {
+		List<GetSofaEventHistoryDTO.HistoryScore> historyScore = sofaEventsTemplateRepository.getHistoryScore(request.getId());
+
+
+
+		return null;
 	}
 
 	private @NotNull List<SofaEventsDTO.EventDTO> getEventDetails(SofaEventsResponse sofaEventsResponse,
@@ -197,11 +209,4 @@ public class SofaEventsServiceImpl implements SofaEventsService {
 				.kickOffMatch(TimeUtil.convertUnixTimestampToLocalDateTime(eventResponse.getStartTimestamp()))
 				.build();
 	}
-
-
-
-
-
-
-
 }

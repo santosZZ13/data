@@ -2,6 +2,7 @@ package org.data.sofa.repository.impl;
 
 import lombok.AllArgsConstructor;
 import org.data.sofa.dto.GetSofaEventHistoryDTO;
+import org.data.sofa.dto.SofaEventsDTO;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.*;
@@ -55,5 +56,24 @@ public class SofaEventsTemplateRepositoryImpl implements SofaEventsTemplateRepos
 
 		AggregationResults<GetSofaEventHistoryDTO.HistoryScore> results = mongoTemplate.aggregate(aggregation, "scheduled_events_sofascore", GetSofaEventHistoryDTO.HistoryScore.class);
 		return results.getMappedResults();
+	}
+
+	@Override
+	public SofaEventsDTO.TeamDetails getTeamDetailsById(Integer id) {
+		MatchOperation matchOperation = Aggregation.match(Criteria.where("homeTeam._id").is(id));
+		ProjectionOperation projectionOperation = Aggregation.project()
+				.and("homeTeam.name").as("name")
+				.and("homeTeam._id").as("idTeam")
+				.and("homeTeam.country.name").as("country");
+
+		Aggregation aggregation = Aggregation.newAggregation(
+				matchOperation,
+				projectionOperation
+		);
+		AggregationResults<SofaEventsDTO.TeamDetails> scheduledEventsSofaScore = mongoTemplate.aggregate(aggregation, "scheduled_events_sofascore", SofaEventsDTO.TeamDetails.class);
+		if (!scheduledEventsSofaScore.getMappedResults().isEmpty()) {
+			return scheduledEventsSofaScore.getMappedResults().get(0);
+		}
+		return null;
 	}
 }
