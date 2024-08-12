@@ -7,6 +7,5 @@ public interface EightXBetService {
 
 	GenericResponseWrapper getEventsByDate(String date);
 
-	GenericResponseWrapper fetchEvents();
 
 }

@@ -11,7 +11,6 @@ public class EightXBetController {
 
 	private final EightXBetService eightXBetService;
 
-
 	@GetMapping("/api/eightXBet/inplay")
 	public GenericResponseWrapper getScheduledEventInPlay() {
 		return eightXBetService.getScheduledEventInPlay();
@@ -20,10 +19,5 @@ public class EightXBetController {
 	@GetMapping("/api/data-service/ex/events")
 	public GenericResponseWrapper getEventsByDate(@RequestParam String date) {
 		return eightXBetService.getEventsByDate(date);
-	}
-
-	@GetMapping("/api/eightXBet/fetchevents")
-	public GenericResponseWrapper fetchEvents() {
-		return eightXBetService.fetchEvents();
 	}
 }

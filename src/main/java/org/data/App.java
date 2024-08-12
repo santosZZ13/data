@@ -2,19 +2,15 @@ package org.data;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.data.test.Role;
+import org.data.persistent.repository.HistoryFetchEventRepository;
 import org.data.test.RoleRepository;
-import org.data.test.Student;
 import org.data.test.StudentRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.data.redis.core.RedisCallback;
-import org.springframework.data.redis.core.RedisKeyValueAdapter;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 
 @SpringBootApplication
@@ -24,6 +20,7 @@ public class App implements CommandLineRunner {
 	private final RedisTemplate<String, Object> redisTemplate;
 	private final StudentRepository studentRepository;
 	private final RoleRepository roleRepository;
+	private final HistoryFetchEventRepository historyFetchEventRepository;
 	//	public static class LoggingInterceptor implements ClientHttpRequestInterceptor {
 //		@Override
 //		public @NotNull ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws IOException {
@@ -74,11 +71,6 @@ public class App implements CommandLineRunner {
 	}
 
 	@Override
-	public void run(String... args) throws Exception {
-		Role adminRole = Role.builder().name("admin").build();
-		Role customerRole = Role.builder().name("customer").build();
-		roleRepository.save(adminRole);
-		roleRepository.save(customerRole);
-		log.info(">>>> Created admin and customer roles...");
+	public void run(String... args) {
 	}
 }

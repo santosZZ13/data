@@ -33,9 +33,9 @@ public interface EventsByDateDTO {
 		@JsonProperty("total_tournaments")
 		private Integer totalTournaments;
 		@JsonProperty("tournament_found")
-		private TournamentDTO tournamentsFirst;
+		private TournamentDTO tournamentsWithId;
 		@JsonProperty("tournament_no_found")
-		private TournamentDTO tournamentsSecond;
+		private TournamentDTO tournamentsWithNoId;
 	}
 
 	@Builder

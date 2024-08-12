@@ -5,7 +5,7 @@ import lombok.extern.log4j.Log4j2;
 import org.data.common.exception.ApiException;
 import org.data.config.FetchEventScheduler;
 import org.data.persistent.entity.HistoryFetchEventEntity;
-import org.data.persistent.repository.HistoryFetchEventEntityRepository;
+import org.data.persistent.repository.HistoryFetchEventRepository;
 import org.data.service.fetch.FetchSofaEvent;
 import org.data.service.fetch.FetchSofaEventImpl;
 import org.data.service.sap.SapService;
@@ -35,7 +35,7 @@ public class SofaEventsServiceImpl implements SofaEventsService {
 	private final RestConnector restConnector;
 	private final FetchEventScheduler fetchEventScheduler;
 	private final FetchSofaEventImpl fetchSofaEventImpl;
-	private final HistoryFetchEventEntityRepository historyFetchEventEntityRepository;
+	private final HistoryFetchEventRepository historyFetchEventRepository;
 	private final SofaEventsTemplateRepository sofaEventsTemplateRepository;
 	public final FetchSofaEvent fetchSofaEvent;
 
@@ -106,7 +106,7 @@ public class SofaEventsServiceImpl implements SofaEventsService {
 		ids.subList(0, 10);
 
 
-		List<Integer> historyFetchEvents = historyFetchEventEntityRepository.findAll().stream()
+		List<Integer> historyFetchEvents = historyFetchEventRepository.findAll().stream()
 				.map(HistoryFetchEventEntity::getTeamId).toList();
 
 		List<Integer> idsToFetch = new ArrayList<>();
@@ -243,7 +243,7 @@ public class SofaEventsServiceImpl implements SofaEventsService {
 
 
 	private Boolean alreadyFetchDataForTeamID(Integer id) {
-		Optional<HistoryFetchEventEntity> byIdTeam = historyFetchEventEntityRepository.findByTeamId(id);
+		Optional<HistoryFetchEventEntity> byIdTeam = historyFetchEventRepository.findByTeamId(id);
 		if (byIdTeam.isPresent()) {
 			return true;
 		}

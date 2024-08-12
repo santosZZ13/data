@@ -1,6 +1,7 @@
 package org.data.persistent.entity;
 
 import lombok.*;
+import org.data.conts.FetchStatus;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -21,6 +22,8 @@ public class HistoryFetchEventEntity {
 	@Field("total")
 	private Integer total;
 	//	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+	@Field("fetch_status")
+	private FetchStatus fetchStatus;
 	@Field("created_date")
 	private LocalDateTime createdDate;
 	@Field("updated_date")

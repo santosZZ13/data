@@ -1,6 +1,10 @@
 server:
   port: 8080
 
+logging:
+  level:
+    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
+
 spring:
   application:
     name: data
@@ -22,8 +26,10 @@ spring:
     type: redis
   data:
     mongodb:
-      uri: mongodb://localhost:27017
+#      NLiXVlvZc7Xk6Z4S
+#      uri: mongodb://localhost:27017
       database: football
+      uri: mongodb+srv://quangnam130520:NLiXVlvZc7Xk6Z4S@cluster0.fwoaemp.mongodb.net/
     redis:
       host: localhost
       port: 6379

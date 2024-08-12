@@ -4,13 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.data.common.exception.ApiException;
+import org.data.conts.FetchStatus;
 import org.data.eightBet.dto.EightXBetCommonResponse;
 import org.data.eightBet.dto.EventsByDateDTO;
 import org.data.eightBet.dto.EightXBetEventsResponse;
 import org.data.eightBet.dto.EightXBetEventsResponse.EightXBetTournamentResponse;
 import org.data.eightBet.repository.EightXBetRepository;
-import org.data.persistent.entity.EventsEightXBetEntity;
 import org.data.service.fetch.FetchSofaEvent;
+import org.data.service.history.HistoryFetchEventService;
 import org.data.service.sap.SapService;
 import org.data.common.model.GenericResponseWrapper;
 import org.data.sofa.dto.SofaCommonResponse;
@@ -18,10 +19,10 @@ import org.data.sofa.dto.SofaEventsDTO;
 import org.data.sofa.dto.SofaEventsResponse;
 import org.data.util.TimeUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.time.LocalDateTime;
@@ -44,6 +45,7 @@ public class EightXBetServiceImpl implements EightXBetService {
 	private final EightXBetRepository eightXBetRepository;
 	private final RedisTemplate<String, Object> redisTemplate;
 	private final FetchSofaEvent fetchSofaEvent;
+	private final HistoryFetchEventService historyFetchEventService;
 
 	@Override
 	public GenericResponseWrapper getScheduledEventInPlay() {
@@ -106,7 +108,7 @@ public class EightXBetServiceImpl implements EightXBetService {
 
 		CompletableFuture<SofaEventsResponse> sofaEventsResponseFuture =
 				CompletableFuture.supplyAsync(() -> {
-					String cacheKey = "sofaEvents::" + date;
+					String cacheKey = "sofaEventsByDate::" + date;
 					SofaEventsResponse cachedResponse = (SofaEventsResponse) redisTemplate.opsForValue().get(cacheKey);
 					if (cachedResponse != null) {
 						log.info("#getEventsByDate - [Found] cached sofa events for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
@@ -122,7 +124,7 @@ public class EightXBetServiceImpl implements EightXBetService {
 		CompletableFuture<SofaEventsResponse> sofaInverseEventsResponseFuture =
 				CompletableFuture.supplyAsync(() -> {
 
-					String cacheKey = "sofaInverseEvents::" + date;
+					String cacheKey = "sofaInverseEventsByDate::" + date;
 					SofaEventsResponse cachedResponse = (SofaEventsResponse) redisTemplate.opsForValue().get(cacheKey);
 					if (cachedResponse != null) {
 						log.info("#getEventsByDate - [Found] cached sofa inverse events for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
@@ -137,12 +139,11 @@ public class EightXBetServiceImpl implements EightXBetService {
 
 		return sofaEventsResponseFuture.thenCombineAsync(sofaInverseEventsResponseFuture, (sofaEventsResponse, sofaInverseEventsResponse) -> {
 					log.info("#getEventsByDate - [Merging] {{sofa events}} with {{inverse sofa events}} for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
-					List<SofaEventsDTO.EventDTO> eventDTOS = new ArrayList<>();
 					List<SofaEventsResponse.EventResponse> eventsResponse = sofaEventsResponse.getEvents();
 					List<SofaEventsResponse.EventResponse> eventsInverseResponse = sofaInverseEventsResponse.getEvents();
 					eventsResponse.addAll(eventsInverseResponse);
-					getEventDTOByDate(eventsResponse, eventDTOS, TimeUtil.convertStringToLocalDateTime(date));
-					return eventDTOS;
+					getEventDTOByDate(eventsResponse, TimeUtil.convertStringToLocalDateTime(date));
+					return getEventDTOByDate(eventsResponse, TimeUtil.convertStringToLocalDateTime(date));
 				})
 				.thenCombine(eightXBetEventResponseFuture, (eventDTOS, eightXBetEventResponse) -> {
 					log.info("#getEventsByDate - [Merging]  {{eventDTS}} with {{eightXBetEventResponse}} for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
@@ -160,13 +161,13 @@ public class EightXBetServiceImpl implements EightXBetService {
 						List<Integer> idsForSofaToFetch = new ArrayList<>();
 						List<EightXBetTournamentDTO> tournamentDtoWithId = new ArrayList<>();
 						List<EightXBetTournamentDTO> tournamentDTOWithNoId = new ArrayList<>();
-						int totalMatchesFirst = 0;
-						int totalMatchesSecond = 0;
+						int totalMatchesWithId = 0;
+						int totalMatchesWitNoId = 0;
 
 						for (EightXBetTournamentDTO eightXBetTournamentDTO : eightXBetTournamentDTOEntry.getValue()) {
 
-							List<EightXBetMatchDTO> eightXBetMatchDTOSFirst = new ArrayList<>();
-							List<EightXBetMatchDTO> eightXBetMatchDTOSSecond = new ArrayList<>();
+							List<EightXBetMatchDTO> eightXBetMatchDtoWithId = new ArrayList<>();
+							List<EightXBetMatchDTO> eightXBetMatchDtoWithNoId = new ArrayList<>();
 
 							for (EightXBetMatchDTO eightXBetMatchDTO : eightXBetTournamentDTO.getMatches()) {
 								SofaEventsDTO.EventDTO eventDTO = CheckEightXBetMatcInEventDTO(eightXBetMatchDTO, eventDTOS);
@@ -175,48 +176,48 @@ public class EightXBetServiceImpl implements EightXBetService {
 									idsForSofaToFetch.add(eventDTO.getAwayDetails().getIdTeam());
 									SofaEvent sofaEvent = buildSofaEvent(eventDTO);
 									eightXBetMatchDTO.setSofaDetail(sofaEvent);
-									eightXBetMatchDTOSFirst.add(eightXBetMatchDTO);
-									totalMatchesFirst++;
+									eightXBetMatchDtoWithId.add(eightXBetMatchDTO);
+									totalMatchesWithId++;
 								} else {
-									eightXBetMatchDTOSSecond.add(eightXBetMatchDTO);
-									totalMatchesSecond++;
+									eightXBetMatchDtoWithNoId.add(eightXBetMatchDTO);
+									totalMatchesWitNoId++;
 								}
 							}
 
 
-
-							if (!eightXBetMatchDTOSFirst.isEmpty()) {
+							if (!eightXBetMatchDtoWithId.isEmpty()) {
 								EightXBetTournamentDTO eightXBetTournamentDTOFirst = EightXBetTournamentDTO
 										.builder()
 										.tntName(eightXBetTournamentDTO.getTntName())
-										.count(eightXBetMatchDTOSFirst.size())
-										.matches(eightXBetMatchDTOSFirst)
+										.count(eightXBetMatchDtoWithId.size())
+										.matches(eightXBetMatchDtoWithId)
 										.build();
 								tournamentDtoWithId.add(eightXBetTournamentDTOFirst);
 							}
 
-							if (!eightXBetMatchDTOSSecond.isEmpty()) {
+							if (!eightXBetMatchDtoWithNoId.isEmpty()) {
 								EightXBetTournamentDTO eightXBetTournamentDTOSecond = EightXBetTournamentDTO
 										.builder()
 										.tntName(eightXBetTournamentDTO.getTntName())
-										.count(eightXBetMatchDTOSSecond.size())
-										.matches(eightXBetMatchDTOSSecond)
+										.count(eightXBetMatchDtoWithNoId.size())
+										.matches(eightXBetMatchDtoWithNoId)
 										.build();
 								tournamentDTOWithNoId.add(eightXBetTournamentDTOSecond);
 							}
 						}
 
-						CompletableFuture.runAsync(() -> fetchSofaEvent.fetchHistoricalMatches(idsForSofaToFetch));
+						processIdsForFetchHistoryEvent(idsForSofaToFetch);
+
 
 						EventsByDateDTO.TournamentDTO tournamentFirst = EventsByDateDTO.TournamentDTO.builder()
 								.eightXBetTournamentDto(tournamentDtoWithId)
-								.matchSize(totalMatchesFirst)
+								.matchSize(totalMatchesWithId)
 								.tntSize(tournamentDtoWithId.size())
 								.build();
 
 						EventsByDateDTO.TournamentDTO tournamentSecond = EventsByDateDTO.TournamentDTO.builder()
 								.eightXBetTournamentDto(tournamentDTOWithNoId)
-								.matchSize(totalMatchesSecond)
+								.matchSize(totalMatchesWitNoId)
 								.tntSize(tournamentDTOWithNoId.size())
 								.build();
 
@@ -225,8 +226,8 @@ public class EightXBetServiceImpl implements EightXBetService {
 								.builder()
 								.totalMatches(eightXBetTournamentDTOEntry.getKey())
 								.totalTournaments(eightXBetTournamentDTOEntry.getValue().size())
-								.tournamentsFirst(tournamentFirst)
-								.tournamentsSecond(tournamentSecond)
+								.tournamentsWithId(tournamentFirst)
+								.tournamentsWithNoId(tournamentSecond)
 								.build();
 					}
 					return null;
@@ -245,6 +246,23 @@ public class EightXBetServiceImpl implements EightXBetService {
 				.join();
 	}
 
+	private void processIdsForFetchHistoryEvent(List<Integer> ids) {
+		CompletableFuture.runAsync(() -> {
+			log.info("#processIdsForFetchHistoryEvent - [Processing] ids for fetch history event in [Thread: {}]", Thread.currentThread().getName());
+			List<Integer> historyFetchEventFetched = historyFetchEventService.getHistoryFetchEventWithStatus(FetchStatus.FETCHED);
+			List<Integer> idsToFetch = new ArrayList<>();
+			for (Integer id : ids) {
+				if (!historyFetchEventFetched.contains(id)) {
+					idsToFetch.add(id);
+				}
+			}
+			if (!idsToFetch.isEmpty()) {
+				historyFetchEventService.saveHistoryEventWithIds(idsToFetch);
+			}
+		});
+	}
+
+
 
 	private SofaEvent buildSofaEvent(SofaEventsDTO.@NotNull EventDTO eventDTO) {
 		Team firstTeam = Team.builder()
@@ -261,18 +279,19 @@ public class EightXBetServiceImpl implements EightXBetService {
 				.build();
 	}
 
-	private void getEventDTOByDate(List<SofaEventsResponse.EventResponse> eventResponses,
-								   List<SofaEventsDTO.EventDTO> eventDTOS,
-								   LocalDateTime requestDate) {
-		for (SofaEventsResponse.EventResponse responseEventResponse : eventResponses) {
-			LocalDateTime responseDate = TimeUtil.convertUnixTimestampToLocalDateTime(responseEventResponse.getStartTimestamp());
+	private List<SofaEventsDTO.EventDTO> getEventDTOByDate(List<SofaEventsResponse.EventResponse> eventResponses,
+														   LocalDateTime requestDate) {
+		List<SofaEventsDTO.EventDTO> sofaEventDto = new ArrayList<>();
+		for (SofaEventsResponse.EventResponse eventResponse : eventResponses) {
+			LocalDateTime responseDate = TimeUtil.convertUnixTimestampToLocalDateTime(eventResponse.getStartTimestamp());
 			if (responseDate.getDayOfMonth() == requestDate.getDayOfMonth() &&
 					responseDate.getMonth() == requestDate.getMonth() &&
 					responseDate.getYear() == requestDate.getYear()) {
-				SofaEventsDTO.EventDTO eventDTO = populatedToEventDTO(responseEventResponse);
-				eventDTOS.add(eventDTO);
+				SofaEventsDTO.EventDTO eventDTO = populatedToEventDTO(eventResponse);
+				sofaEventDto.add(eventDTO);
 			}
 		}
+		return sofaEventDto;
 	}
 
 	public SofaEventsDTO.EventDTO populatedToEventDTO(SofaEventsResponse.EventResponse eventResponse) {
@@ -299,7 +318,7 @@ public class EightXBetServiceImpl implements EightXBetService {
 	}
 
 
-	private SofaEventsDTO.EventDTO CheckEightXBetMatcInEventDTO(EightXBetMatchDTO eightXBetMatchDTO, List<SofaEventsDTO.EventDTO> eventDTOS) {
+	private @Nullable SofaEventsDTO.EventDTO CheckEightXBetMatcInEventDTO(EightXBetMatchDTO eightXBetMatchDTO, List<SofaEventsDTO.EventDTO> eventDTOS) {
 
 		String eightXBetNameHome = eightXBetMatchDTO.getHomeName();
 		String eightXBetAwayName = eightXBetMatchDTO.getAwayName();
@@ -333,55 +352,6 @@ public class EightXBetServiceImpl implements EightXBetService {
 			}
 		}
 		return null;
-	}
-
-
-	@Override
-	@Transactional
-	public GenericResponseWrapper fetchEvents() {
-
-//		eightXBetRepository.updateInplayEvent();
-
-		EightXBetEventsResponse eightXBetEventsResponse = sapService.restEightXBetGet(EventsByDateDTO.GET_EVENTS_BY_DATE,
-				EventsByDateDTO.queryParams(),
-				EightXBetEventsResponse.class);
-
-		Data data = eightXBetEventsResponse.getData();
-		List<EightXBetTournamentResponse> tournaments = data.getTournaments();
-
-		List<Integer> iidEventEntities = new ArrayList<>();
-		Map<EightXBetTournamentResponse, EightXBetCommonResponse.EightXBetMatchResponse> tournamentMatchResponseMap = new LinkedHashMap<>();
-
-		if (!tournaments.isEmpty()) {
-			List<EventsEightXBetEntity> eventsEntities = eightXBetRepository.getAllEventsEntity();
-			eventsEntities.forEach(eventEntity -> iidEventEntities.add(eventEntity.getIId()));
-
-
-			tournaments.forEach(tournament -> {
-				List<EightXBetCommonResponse.EightXBetMatchResponse> matches = tournament.getMatches();
-				matches.forEach(match -> {
-					if (!iidEventEntities.contains(match.getIid())) {
-						tournamentMatchResponseMap.put(tournament, match);
-					}
-				});
-			});
-
-			eightXBetRepository.saveMatchesMap(tournamentMatchResponseMap);
-		}
-
-		Collection<EightXBetCommonResponse.EightXBetMatchResponse> matches = tournamentMatchResponseMap.values();
-		List<EightXBetMatchDTO> eightXBetMatchDTOS = new ArrayList<>();
-		for (EightXBetCommonResponse.EightXBetMatchResponse match : matches) {
-			eightXBetMatchDTOS.add(buildEightXBetMatchDTO(match));
-		}
-
-
-		return GenericResponseWrapper
-				.builder()
-				.code("")
-				.msg("")
-				.data(eightXBetMatchDTOS)
-				.build();
 	}
 
 
