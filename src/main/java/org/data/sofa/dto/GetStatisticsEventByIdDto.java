@@ -32,10 +32,10 @@ public interface GetStatisticsEventByIdDto {
 	@NoArgsConstructor
 	class Statistics {
 		@JsonProperty("total_matches")
-		private Integer totalMatches;
-		private Integer averageGoalPerMach;
-		private Integer averageGoalInFirstHalf;
-		private Integer averageGoalInSecondHalf;
+		private int totalMatches;
+		private float averageGoalPerMach;
+		private float averageGoalInFirstHalf;
+		private float averageGoalInSecondHalf;
 		private ScoreDetail scoreInFirstHalf;
 		private ScoreDetail scoreInSecondHalf;
 
@@ -46,7 +46,7 @@ public interface GetStatisticsEventByIdDto {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class ScoreDetail {
-		private Integer count;
-		private Integer ratio;
+		private int count;
+		private String ratio;
 	}
 }

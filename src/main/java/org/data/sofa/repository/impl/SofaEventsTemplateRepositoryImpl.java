@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -18,7 +19,7 @@ public class SofaEventsTemplateRepositoryImpl implements SofaEventsTemplateRepos
 	private MongoTemplate mongoTemplate;
 
 	@Override
-	public List<GetSofaEventHistoryDTO.HistoryScore> getHistoryScore(Integer teamId) {
+	public List<GetSofaEventHistoryDTO.HistoryScore> getHistoryScore(Integer teamId, LocalDateTime from, LocalDateTime to) {
 
 		MatchOperation matchOperation = Aggregation.match(new Criteria().orOperator(
 				Criteria.where("homeTeam._id").is(teamId),
@@ -46,6 +47,17 @@ public class SofaEventsTemplateRepositoryImpl implements SofaEventsTemplateRepos
 				.andExpression("status.type").as("status")
 				.andExpression("startTimestamp").plus(7 * 3600000).as("time");
 
+		if (from != null) {
+			matchOperation = Aggregation.match(new Criteria().andOperator(
+					Criteria.where("startTimestamp").gte(from)
+			));
+		}
+
+		if (to != null) {
+			matchOperation = Aggregation.match(new Criteria().andOperator(
+					Criteria.where("startTimestamp").lte(to)
+			));
+		}
 
 		Aggregation aggregation = Aggregation.newAggregation(
 				matchOperation,

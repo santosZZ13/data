@@ -2,6 +2,7 @@ package org.data.sofa.controller;
 
 import lombok.AllArgsConstructor;
 import org.data.common.model.GenericResponseWrapper;
+import org.data.sofa.dto.GetStatisticsEventByIdDto;
 import org.data.sofa.dto.SofaEventsByDateDTO;
 import org.data.sofa.service.SofaEventsService;
 import org.springframework.web.bind.annotation.*;
@@ -18,14 +19,19 @@ public class SofaEventsController {
 		return sofaEventsService.getAllScheduleEventsByDate(request);
 	}
 
-	@GetMapping("/api/data-service/sofa/fetch/id")
+	@GetMapping("/api/data-service/sofa/fetch/{id}")
 	public GenericResponseWrapper fetchId(@PathVariable Integer id) {
-		return sofaEventsService.fetchId(id);
+		return sofaEventsService.fetchDataForTeamWithId(id);
 	}
 
 
 	@GetMapping("/api/data-service/sofa/team/{id}")
 	public GenericResponseWrapper getHistory(@PathVariable Integer id) {
 		return sofaEventsService.getHistoryFromTeamId(id);
+	}
+
+	@PostMapping("/api/data-service/sofa/statistics")
+	public GenericResponseWrapper getSofaStatistics(@RequestBody GetStatisticsEventByIdDto.Request request) {
+		return sofaEventsService.getStatisticsTeamFromTeamId(request);
 	}
 }

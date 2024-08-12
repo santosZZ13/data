@@ -1,5 +1,7 @@
 package org.data.util;
 
+import jakarta.validation.constraints.NotNull;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -22,12 +24,15 @@ public class TimeUtil {
 	 * @param date
 	 * @return
 	 */
-	public static LocalDateTime convertStringToLocalDateTime(String date) {
-		if (Objects.equals(date, "today")) {
-			return LocalDateTime.now();
-		} else {
-			return LocalDateTime.parse(date + "T00:00:00");
+	public static LocalDateTime convertStringToLocalDateTime(@NotNull  String date) {
+		if (!Objects.isNull(date)) {
+			if (Objects.equals(date, "today")) {
+				return LocalDateTime.now();
+			} else {
+				return LocalDateTime.parse(date + "T00:00:00");
+			}
 		}
+		return null;
 	}
 
 	public static long calculateTimeElapsed(Instant start, Instant finish) {

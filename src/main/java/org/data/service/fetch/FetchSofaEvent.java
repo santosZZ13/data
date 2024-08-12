@@ -4,4 +4,5 @@ import java.util.List;
 
 public interface FetchSofaEvent {
 	void fetchHistoricalMatches(List<Integer> ids);
+	void fetchHistoricalMatchesForId(Integer id);
 }

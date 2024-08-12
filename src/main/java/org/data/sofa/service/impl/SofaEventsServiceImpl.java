@@ -6,6 +6,7 @@ import org.data.common.exception.ApiException;
 import org.data.config.FetchEventScheduler;
 import org.data.persistent.entity.HistoryFetchEventEntity;
 import org.data.persistent.repository.HistoryFetchEventEntityRepository;
+import org.data.service.fetch.FetchSofaEvent;
 import org.data.service.fetch.FetchSofaEventImpl;
 import org.data.service.sap.SapService;
 import org.data.common.model.GenericResponseWrapper;
@@ -36,6 +37,8 @@ public class SofaEventsServiceImpl implements SofaEventsService {
 	private final FetchSofaEventImpl fetchSofaEventImpl;
 	private final HistoryFetchEventEntityRepository historyFetchEventEntityRepository;
 	private final SofaEventsTemplateRepository sofaEventsTemplateRepository;
+	public final FetchSofaEvent fetchSofaEvent;
+
 
 	@Override
 	public GenericResponseWrapper getAllScheduleEventsByDate(Request request) {
@@ -46,13 +49,13 @@ public class SofaEventsServiceImpl implements SofaEventsService {
 
 		CompletableFuture<SofaEventsResponse> sofaScheduledEventsResponseFuture =
 				CompletableFuture.supplyAsync(() -> {
-					log.info("#getAllScheduleEventsByDate - fetching scheduled events for date: [{}] in [Thread: {}]", request.getDate(), Thread.currentThread().getName());
+					log.info("#getAllScheduleEventsByDate - [Fetching] scheduled events for date: [{}] in [Thread: {}]", request.getDate(), Thread.currentThread().getName());
 					return sapService.restSofaScoreGet(SCHEDULED_EVENTS + request.getDate(), SofaEventsResponse.class);
 				});
 
 		CompletableFuture<SofaEventsResponse> sofaInverseScheduledEventsResponseFuture =
 				CompletableFuture.supplyAsync(() -> {
-					log.info("#getAllScheduleEventsByDate - fetching inverse scheduled events for date: [{}] in [Thread: {}]", request.getDate(), Thread.currentThread().getName());
+					log.info("#getAllScheduleEventsByDate - [Fetching] inverse scheduled events for date: [{}] in [Thread: {}]", request.getDate(), Thread.currentThread().getName());
 					return sapService.restSofaScoreGet(SCHEDULED_EVENTS + request.getDate() + SCHEDULED_EVENTS_INVERSE, SofaEventsResponse.class);
 				});
 
@@ -118,46 +121,135 @@ public class SofaEventsServiceImpl implements SofaEventsService {
 
 
 	@Override
-	public GenericResponseWrapper fetchId(Integer id) {
-		return null;
+	public GenericResponseWrapper fetchDataForTeamWithId(Integer id) {
+		if (!alreadyFetchDataForTeamID(id)) {
+			fetchSofaEvent.fetchHistoricalMatchesForId(id);
+			return GenericResponseWrapper.builder()
+					.code("")
+					.msg("Fetch event history for id: " + id)
+					.data("Success")
+					.build();
+		}
+		return GenericResponseWrapper.builder()
+				.code("")
+				.msg("Fetch event history for id: " + id)
+				.data("Already fetched")
+				.build();
 	}
 
 	@Override
 	public GenericResponseWrapper getHistoryFromTeamId(Integer teamId) {
-		try {
-			List<GetSofaEventHistoryDTO.HistoryScore> historyScore = sofaEventsTemplateRepository.getHistoryScore(teamId);
-			SofaEventsDTO.TeamDetails teamDetailsById = sofaEventsTemplateRepository.getTeamDetailsById(teamId);
-			historyScore.forEach(hs -> {
-				if (hs.getHomeScore().isScoreEmpty()) {
-					hs.setHomeScore(null);
-				}
-				if (hs.getAgainstScore().isScoreEmpty()) {
-					hs.setAgainstScore(null);
-				}
-			});
-			return GenericResponseWrapper.builder()
-					.code("")
-					.msg("")
-					.data(GetSofaEventHistoryDTO.Response.builder()
-							.teamDetails(teamDetailsById)
-							.historyScores(historyScore)
-							.totalMatches(historyScore.size())
-							.build())
-					.build();
-		} catch (Exception ex) {
-			throw new ApiException("Failed to get history score", "", ex.getMessage());
+
+		if (!alreadyFetchDataForTeamID(teamId)) {
+			throw new ApiException("", "History fetch event not found", "");
 		}
+
+		List<GetSofaEventHistoryDTO.HistoryScore> historyScore = sofaEventsTemplateRepository.getHistoryScore(teamId, null, null);
+		SofaEventsDTO.TeamDetails teamDetailsById = sofaEventsTemplateRepository.getTeamDetailsById(teamId);
+		historyScore.forEach(hs -> {
+			if (hs.getHomeScore().isScoreEmpty()) {
+				hs.setHomeScore(null);
+			}
+			if (hs.getAgainstScore().isScoreEmpty()) {
+				hs.setAgainstScore(null);
+			}
+		});
+		return GenericResponseWrapper.builder()
+				.code("")
+				.msg("")
+				.data(GetSofaEventHistoryDTO.Response.builder()
+						.teamDetails(teamDetailsById)
+						.historyScores(historyScore)
+						.totalMatches(historyScore.size())
+						.build())
+				.build();
 
 	}
 
 	@Override
 	public GenericResponseWrapper getStatisticsTeamFromTeamId(GetStatisticsEventByIdDto.Request request) {
-		List<GetSofaEventHistoryDTO.HistoryScore> historyScore = sofaEventsTemplateRepository.getHistoryScore(request.getId());
+		LocalDateTime fromDateRequest = TimeUtil.convertStringToLocalDateTime(request.getFrom());
+		LocalDateTime toRequestRequest = TimeUtil.convertStringToLocalDateTime(request.getTo());
+
+		if (!alreadyFetchDataForTeamID(request.getId())) {
+			throw new ApiException("", "The team with id: " + request.getId() + " does not have historical events", "");
+		}
+
+		List<GetSofaEventHistoryDTO.HistoryScore> historyScores = sofaEventsTemplateRepository.getHistoryScore(request.getId(), fromDateRequest, toRequestRequest);
+
+		int totalMatches = 0;
+		int totalScoreFullTime = 0;
+		int totalScoreFirstHalf = 0;
+		int totalScoreSecondHalf = 0;
+		int hasScoreInFirstHalf = 0;
+		int hasScoreInSecondHalf = 0;
+
+		for (GetSofaEventHistoryDTO.HistoryScore historyScore : historyScores) {
+			if (!historyScore.getStatus().equals("notstarted")) {
+				GetSofaEventHistoryDTO.Score homeScore = historyScore.getHomeScore();
+
+				int normalTimeScore = Objects.isNull(homeScore) || homeScore.isScoreEmpty() || Objects.isNull(homeScore.getNormaltime())
+						? 0 : homeScore.getNormaltime();
+				totalScoreFullTime += normalTimeScore;
+
+				int scoreInFirstHalf = Objects.isNull(homeScore) || homeScore.isScoreEmpty() || Objects.isNull(homeScore.getPeriod1())
+						? 0 : homeScore.getPeriod1();
+				totalScoreFirstHalf += scoreInFirstHalf;
+
+				if (scoreInFirstHalf >= 1) {
+					hasScoreInFirstHalf++;
+				}
+
+				int homeScoreInPeriod2 = Objects.isNull(homeScore) || homeScore.isScoreEmpty() || Objects.isNull(homeScore.getPeriod2())
+						? 0 : homeScore.getPeriod2();
+				if (homeScoreInPeriod2 >= 1) {
+					hasScoreInSecondHalf++;
+				}
+
+				totalScoreSecondHalf += homeScoreInPeriod2;
+				totalMatches++;
+			}
+		}
+
+		float averageGoalPerMach = (float) totalScoreFullTime / (float) totalMatches;
+		float averageGoalInFirstHalf = (float) totalScoreFirstHalf / (float) totalMatches;
+		float averageGoalInSecondHalf = (float) totalScoreSecondHalf / (float) totalMatches;
+		String ratioScoreInFirst = ((float) hasScoreInFirstHalf / (float) totalMatches) * 100 + "%";
+		String ratioScoreInSecond = (float)  hasScoreInSecondHalf / (float) totalMatches * 100 + "%";
 
 
+		GetStatisticsEventByIdDto.Statistics statistics = GetStatisticsEventByIdDto.Statistics.builder()
+				.totalMatches(totalMatches)
+				.averageGoalPerMach(averageGoalPerMach)
+				.averageGoalInFirstHalf(averageGoalInFirstHalf)
+				.averageGoalInSecondHalf(averageGoalInSecondHalf)
+				.scoreInFirstHalf(GetStatisticsEventByIdDto.ScoreDetail.builder()
+						.count(hasScoreInFirstHalf)
+						.ratio(ratioScoreInFirst)
+						.build())
+				.scoreInSecondHalf(GetStatisticsEventByIdDto.ScoreDetail.builder()
+						.count(hasScoreInSecondHalf)
+						.ratio(ratioScoreInSecond)
+						.build())
+				.build();
 
-		return null;
+
+		return GenericResponseWrapper.builder()
+				.code("")
+				.msg("")
+				.data(statistics)
+				.build();
 	}
+
+
+	private Boolean alreadyFetchDataForTeamID(Integer id) {
+		Optional<HistoryFetchEventEntity> byIdTeam = historyFetchEventEntityRepository.findByTeamId(id);
+		if (byIdTeam.isPresent()) {
+			return true;
+		}
+		return false;
+	}
+
 
 	private @NotNull List<SofaEventsDTO.EventDTO> getEventDetails(SofaEventsResponse sofaEventsResponse,
 																  SofaEventsResponse sofaInverseScheduledEventsResponse,

@@ -117,7 +117,7 @@ public class FetchSofaEventImpl implements FetchSofaEvent {
 	}
 
 
-	private void fetchHistoricalMatchesForId(Integer id) throws InterruptedException {
+	public void fetchHistoricalMatchesForId(Integer id)  {
 		// TODO:
 		// Caching Strategies for APIs: https://medium.com/@satyendra.jaiswal/caching-strategies-for-apis-improving-performance-and-reducing-load-1d4bd2df2b44
 		Instant start = Instant.now();
