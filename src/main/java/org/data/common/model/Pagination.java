@@ -1,4 +1,4 @@
-package org.data.sofa.dto;
+package org.data.common.model;
 
 import lombok.Builder;
 import lombok.Data;
@@ -8,7 +8,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @NoArgsConstructor
-public class PaginationDTO {
+public class Pagination {
 
 	@Builder.Default
 	private Integer pageNumber = 1;

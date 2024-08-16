@@ -2,6 +2,7 @@ package org.data.sofa.controller;
 
 import lombok.AllArgsConstructor;
 import org.data.common.model.GenericResponseWrapper;
+import org.data.sofa.dto.GetHistoryFetchEventDto;
 import org.data.sofa.dto.GetStatisticsEventByIdDto;
 import org.data.sofa.dto.SofaEventsByDateDTO;
 import org.data.sofa.service.SofaEventsService;
@@ -33,5 +34,10 @@ public class SofaEventsController {
 	@PostMapping("/api/data-service/sofa/statistics")
 	public GenericResponseWrapper getSofaStatistics(@RequestBody GetStatisticsEventByIdDto.Request request) {
 		return sofaEventsService.getStatisticsTeamFromTeamId(request);
+	}
+
+	@GetMapping("/api/data-service/sofa/fetch/history")
+	public GetHistoryFetchEventDto.Response getHistoryFetchEvent(@RequestBody GetHistoryFetchEventDto.Request request) {
+		return sofaEventsService.getHistoryFetchEvent(request);
 	}
 }

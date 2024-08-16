@@ -301,4 +301,17 @@ public class SofaEventsServiceImpl implements SofaEventsService {
 				.kickOffMatch(TimeUtil.convertUnixTimestampToLocalDateTime(eventResponse.getStartTimestamp()))
 				.build();
 	}
+
+
+	@Override
+	public GetHistoryFetchEventDto.Response getHistoryFetchEvent(GetHistoryFetchEventDto.Request request) {
+
+		Integer pageNumber = request.getPageNumber();
+		Integer pageSize = request.getPageSize();
+		String status = request.getStatus();
+
+		List<HistoryFetchEventEntity> historyFetchEventEntities = historyFetchEventRepository.findAll(pageNumber, pageSize, status);
+
+		return null;
+	}
 }
