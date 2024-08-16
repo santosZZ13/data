@@ -36,7 +36,7 @@ public class SofaEventsController {
 		return sofaEventsService.getStatisticsTeamFromTeamId(request);
 	}
 
-	@GetMapping("/api/data-service/sofa/fetch/history")
+	@PostMapping("/api/data-service/sofa/fetch/history")
 	public GetHistoryFetchEventDto.Response getHistoryFetchEvent(@RequestBody GetHistoryFetchEventDto.Request request) {
 		return sofaEventsService.getHistoryFetchEvent(request);
 	}

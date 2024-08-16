@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import org.data.conts.FetchStatus;
 import org.data.dto.history.HistoryFetchEventDto;
 import org.data.persistent.entity.HistoryFetchEventEntity;
-import org.data.persistent.repository.HistoryFetchEventRepository;
+import org.data.persistent.repository.HistoryFetchEventMongoRepository;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
@@ -17,12 +17,12 @@ import java.util.Optional;
 @AllArgsConstructor
 public class HistoryFetchEventServiceImpl implements HistoryFetchEventService {
 
-	private final HistoryFetchEventRepository historyFetchEventRepository;
+	private final HistoryFetchEventMongoRepository historyFetchEventMongoRepository;
 
 
 	@Override
 	public @Nullable HistoryFetchEventDto getHistoryFetchEventByTeamId(@NotNull Integer idTeam) {
-		Optional<HistoryFetchEventEntity> historyFetchEventByTeamId = historyFetchEventRepository.findByTeamId(idTeam);
+		Optional<HistoryFetchEventEntity> historyFetchEventByTeamId = historyFetchEventMongoRepository.findByTeamId(idTeam);
 		if (historyFetchEventByTeamId.isPresent()) {
 			HistoryFetchEventEntity historyFetchEventEntity = historyFetchEventByTeamId.get();
 			return HistoryFetchEventDto.fromEntity(historyFetchEventEntity);
@@ -32,7 +32,7 @@ public class HistoryFetchEventServiceImpl implements HistoryFetchEventService {
 
 	@Override
 	public List<HistoryFetchEventDto> getAllHistoryFetchEvents() {
-		List<HistoryFetchEventEntity> historyFetchEventEntities = historyFetchEventRepository.findAll();
+		List<HistoryFetchEventEntity> historyFetchEventEntities = historyFetchEventMongoRepository.findAll();
 		return HistoryFetchEventDto.fromEntities(historyFetchEventEntities);
 	}
 
@@ -56,12 +56,12 @@ public class HistoryFetchEventServiceImpl implements HistoryFetchEventService {
 					.build();
 			historyFetchEventEntities.add(historyFetchEventEntity);
 		}
-		historyFetchEventRepository.saveAll(historyFetchEventEntities);
+		historyFetchEventMongoRepository.saveAll(historyFetchEventEntities);
 	}
 
 	@Override
 	public List<Integer> getHistoryFetchEventWithStatus(FetchStatus status) {
-		List<HistoryFetchEventEntity> historyFetchEventEntitiesWithStatusFetched = historyFetchEventRepository.findHistoryFetchEventEntitiesWithStatus(status.name());
+		List<HistoryFetchEventEntity> historyFetchEventEntitiesWithStatusFetched = historyFetchEventMongoRepository.findHistoryFetchEventEntitiesWithStatus(status.name());
 		if (!historyFetchEventEntitiesWithStatusFetched.isEmpty()) {
 			List<Integer> ids = new ArrayList<>();
 			for (HistoryFetchEventEntity historyFetchEventEntity : historyFetchEventEntitiesWithStatusFetched) {

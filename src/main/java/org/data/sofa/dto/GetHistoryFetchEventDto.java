@@ -2,8 +2,9 @@ package org.data.sofa.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.data.common.model.GenericResponseWrapper;
-import org.data.common.model.Pagination;
+import org.data.common.model.PaginationSortDto;
 import org.data.conts.FetchStatus;
 
 import java.time.LocalDateTime;
@@ -11,13 +12,14 @@ import java.time.LocalDateTime;
 
 public interface GetHistoryFetchEventDto {
 	@EqualsAndHashCode(callSuper = true)
-	@Builder
+	@SuperBuilder
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	class Request extends Pagination {
+	class Request extends PaginationSortDto {
 		private String status;
-
+		private String fromDate;
+		private String toDate;
 	}
 
 	@Builder
@@ -30,7 +32,7 @@ public interface GetHistoryFetchEventDto {
 	}
 
 	@EqualsAndHashCode(callSuper = true)
-	@Builder
+	@SuperBuilder
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor

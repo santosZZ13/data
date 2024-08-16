@@ -2,7 +2,7 @@ package org.data;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.data.persistent.repository.HistoryFetchEventRepository;
+import org.data.persistent.repository.HistoryFetchEventMongoRepository;
 import org.data.test.RoleRepository;
 import org.data.test.StudentRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -20,7 +20,7 @@ public class App implements CommandLineRunner {
 	private final RedisTemplate<String, Object> redisTemplate;
 	private final StudentRepository studentRepository;
 	private final RoleRepository roleRepository;
-	private final HistoryFetchEventRepository historyFetchEventRepository;
+	private final HistoryFetchEventMongoRepository historyFetchEventMongoRepository;
 	//	public static class LoggingInterceptor implements ClientHttpRequestInterceptor {
 //		@Override
 //		public @NotNull ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws IOException {

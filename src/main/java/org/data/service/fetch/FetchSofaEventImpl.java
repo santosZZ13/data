@@ -3,7 +3,7 @@ package org.data.service.fetch;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.data.persistent.entity.HistoryFetchEventEntity;
-import org.data.persistent.repository.HistoryFetchEventRepository;
+import org.data.persistent.repository.HistoryFetchEventMongoRepository;
 import org.data.properties.ConnectionProperties;
 import org.data.sofa.dto.SofaEventsResponse;
 import org.data.sofa.repository.impl.SofaEventsRepository;
@@ -27,7 +27,7 @@ import static org.data.sofa.dto.SofaEventsByDateDTO.SCHEDULED_EVENT_TEAM_NEXT;
 @AllArgsConstructor
 public class FetchSofaEventImpl implements FetchSofaEvent {
 
-	private final HistoryFetchEventRepository historyFetchEventRepository;
+	private final HistoryFetchEventMongoRepository historyFetchEventMongoRepository;
 	private final SofaEventsRepository sofaEventsRepository;
 	private final RestConnector restConnector;
 
@@ -109,7 +109,7 @@ public class FetchSofaEventImpl implements FetchSofaEvent {
 	 * @return
 	 */
 	public Boolean isFetchHistoricalMatchesForId(Integer id) {
-		Optional<HistoryFetchEventEntity> byIdTeam = historyFetchEventRepository.findByTeamId(id);
+		Optional<HistoryFetchEventEntity> byIdTeam = historyFetchEventMongoRepository.findByTeamId(id);
 		if (byIdTeam.isPresent()) {
 			return true;
 		}
@@ -207,7 +207,7 @@ public class FetchSofaEventImpl implements FetchSofaEvent {
 				.total(totalEvents)
 				.createdDate(LocalDateTime.now())
 				.build();
-		historyFetchEventRepository.save(historyFetchEventEntity);
+		historyFetchEventMongoRepository.save(historyFetchEventEntity);
 	}
 
 	private void saveEventBatch(List<SofaEventsResponse.EventResponse> eventResponses, Integer idMatch) {
