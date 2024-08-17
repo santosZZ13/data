@@ -1,10 +1,12 @@
 package org.data.sofa.dto;
 
 import lombok.*;
+import lombok.experimental.SuperBuilder;
+import org.data.common.model.BaseResponse;
 
 import java.util.List;
 
-public interface SofaEventsByDateDTO {
+public interface GetSofaEventsByDateDto {
 
 	String SCHEDULED_EVENTS = "/sport/football/scheduled-events/";
 	String SCHEDULED_EVENTS_INVERSE = "/inverse";
@@ -21,14 +23,21 @@ public interface SofaEventsByDateDTO {
 		String date;
 	}
 
+	@EqualsAndHashCode(callSuper = true)
+	@SuperBuilder
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	class Response extends BaseResponse {
+		private GetSofaEventsByDateData data;
+	}
+
 	@Builder
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	class Response {
-		private List<SofaEventsDTO.EventDTO> eventDTOS;
+	class GetSofaEventsByDateData {
+		private List<SofaEventsDto.EventDto> events;
 	}
-
-
 
 }

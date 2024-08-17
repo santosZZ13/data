@@ -19,8 +19,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
 
-import static org.data.sofa.dto.SofaEventsByDateDTO.SCHEDULED_EVENT_TEAM_LAST;
-import static org.data.sofa.dto.SofaEventsByDateDTO.SCHEDULED_EVENT_TEAM_NEXT;
+import static org.data.sofa.dto.GetSofaEventsByDateDto.SCHEDULED_EVENT_TEAM_LAST;
+import static org.data.sofa.dto.GetSofaEventsByDateDto.SCHEDULED_EVENT_TEAM_NEXT;
 
 @Service
 @Log4j2

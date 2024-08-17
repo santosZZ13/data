@@ -10,10 +10,12 @@ import lombok.experimental.SuperBuilder;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class GenericResponseWrapper {
-	private String msg;
-	private String code;
-	private Object data;
-	private String time;
+public class BaseResponse {
+	@Builder.Default
+	private String msg = "Success";
+	@Builder.Default
+	private String code = "200";
+	@Builder.Default
+	private String time = System.currentTimeMillis() + "";
 	private String traceId;
 }

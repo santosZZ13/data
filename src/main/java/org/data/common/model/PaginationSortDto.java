@@ -10,7 +10,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 public class PaginationSortDto {
 	@Builder.Default
-	private Integer pageNumber = 1;
+	private Integer pageNumber = 0;
 
 	@Builder.Default
 	private Integer pageSize = 12;

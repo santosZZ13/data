@@ -1,24 +1,45 @@
 package org.data.sofa.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+import org.data.common.model.BaseResponse;
+import org.data.conts.EventStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface GetSofaEventHistoryDTO {
+public interface GetSofaEventHistoryDto {
 	@Builder
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	class Response {
+	class Request {
+		private int teamId;
+		private EventStatus status;
+		private LocalDateTime from;
+		private LocalDateTime to;
+	}
+
+
+	@EqualsAndHashCode(callSuper = true)
+	@SuperBuilder
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	class Response extends BaseResponse {
+		private GetSofaEventHistoryData data;
+	}
+
+	@Builder
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	class GetSofaEventHistoryData {
 		@JsonProperty("total_matches")
 		private int totalMatches;
 		@JsonProperty("team_details")
-		private SofaEventsDTO.TeamDetails teamDetails;
+		private SofaEventsDto.TeamDetails teamDetails;
 		@JsonProperty("history_scores")
 		private List<HistoryScore> historyScores;
 	}

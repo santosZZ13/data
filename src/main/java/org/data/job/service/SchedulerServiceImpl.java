@@ -1,7 +1,7 @@
 package org.data.job.service;
 
 import lombok.AllArgsConstructor;
-import org.data.common.model.GenericResponseWrapper;
+import org.data.common.model.BaseResponse;
 import org.data.config.FetchEventScheduler;
 import org.data.job.dto.JobDTO;
 import org.data.job.exception.JobAlreadyExistException;
@@ -29,7 +29,7 @@ public class SchedulerServiceImpl implements SchedulerService {
 	private final static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 
 	@Override
-	public GenericResponseWrapper createJob(JobDTO.Request request) {
+	public BaseResponse createJob(JobDTO.Request request) {
 		JobDTO.Job job = request.getJob();
 		String requestPath = job.getRequestPath();
 		String service = job.getService();
@@ -49,8 +49,8 @@ public class SchedulerServiceImpl implements SchedulerService {
 			log.info("----------------------------------------------------------------------------");
 			log.info("#CreateJob Starting Job: {} with URL: {}{}", job.getJobName(), job.getService(), job.getRequestPath());
 
-			GenericResponseWrapper genericResponseWrapper = restConnector.restGet(host.get(), requestPath, GenericResponseWrapper.class);
-			if (genericResponseWrapper == null) {
+			BaseResponse baseResponse = restConnector.restGet(host.get(), requestPath, BaseResponse.class);
+			if (baseResponse == null) {
 				log.error("Failure calling Job: {} with URL: {}{}", job.getJobName(), job.getService(), job.getRequestPath());
 			}
 
@@ -70,29 +70,29 @@ public class SchedulerServiceImpl implements SchedulerService {
 		fetchEventScheduler.addJob(job, schedule);
 
 
-		return GenericResponseWrapper.builder()
+		return BaseResponse.builder()
 				.msg("Job created successfully")
 				.build();
 	}
 
 
 	@Override
-	public GenericResponseWrapper getJobs() {
+	public BaseResponse getJobs() {
 		Map<JobDTO.Job, ScheduledFuture<?>> tasks = fetchEventScheduler.getScheduledTasks();
 		List<JobDTO.Job> jobs = new ArrayList<>();
 		tasks.forEach((job, scheduledFuture) -> {
 			jobs.add(job);
 		});
 
-		return GenericResponseWrapper.builder()
-				.data(jobs)
+		return BaseResponse.builder()
+//				.data(jobs)
 				.build();
 	}
 
 	@Override
-	public GenericResponseWrapper deleteJob(String jobName) {
+	public BaseResponse deleteJob(String jobName) {
 		fetchEventScheduler.removeJob(jobName);
-		return GenericResponseWrapper.builder()
+		return BaseResponse.builder()
 				.msg("Job deleted successfully")
 				.build();
 	}

@@ -1,8 +1,9 @@
 package org.data.sofa.repository.impl;
 
 import lombok.AllArgsConstructor;
-import org.data.sofa.dto.GetSofaEventHistoryDTO;
-import org.data.sofa.dto.SofaEventsDTO;
+import org.data.conts.EventStatus;
+import org.data.sofa.dto.GetSofaEventHistoryDto;
+import org.data.sofa.dto.SofaEventsDto;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.*;
@@ -19,7 +20,7 @@ public class SofaEventsTemplateRepositoryImpl implements SofaEventsTemplateRepos
 	private MongoTemplate mongoTemplate;
 
 	@Override
-	public List<GetSofaEventHistoryDTO.HistoryScore> getHistoryScore(Integer teamId, LocalDateTime from, LocalDateTime to) {
+	public List<GetSofaEventHistoryDto.HistoryScore> getHistoryScore(Integer teamId, EventStatus status, LocalDateTime from, LocalDateTime to) {
 
 		MatchOperation matchOperation = Aggregation.match(new Criteria().orOperator(
 				Criteria.where("homeTeam._id").is(teamId),
@@ -59,6 +60,12 @@ public class SofaEventsTemplateRepositoryImpl implements SofaEventsTemplateRepos
 			));
 		}
 
+		if (status != null) {
+			matchOperation = Aggregation.match(new Criteria().andOperator(
+					Criteria.where("status.type").is(status.getStatus())
+			));
+		}
+
 		Aggregation aggregation = Aggregation.newAggregation(
 				matchOperation,
 				projectionOperation,
@@ -66,12 +73,12 @@ public class SofaEventsTemplateRepositoryImpl implements SofaEventsTemplateRepos
 		);
 
 
-		AggregationResults<GetSofaEventHistoryDTO.HistoryScore> results = mongoTemplate.aggregate(aggregation, "scheduled_events_sofascore", GetSofaEventHistoryDTO.HistoryScore.class);
+		AggregationResults<GetSofaEventHistoryDto.HistoryScore> results = mongoTemplate.aggregate(aggregation, "scheduled_events_sofascore", GetSofaEventHistoryDto.HistoryScore.class);
 		return results.getMappedResults();
 	}
 
 	@Override
-	public SofaEventsDTO.TeamDetails getTeamDetailsById(Integer id) {
+	public SofaEventsDto.TeamDetails getTeamDetailsById(Integer id) {
 		MatchOperation matchOperation = Aggregation.match(Criteria.where("homeTeam._id").is(id));
 		ProjectionOperation projectionOperation = Aggregation.project()
 				.and("homeTeam.name").as("name")
@@ -82,7 +89,7 @@ public class SofaEventsTemplateRepositoryImpl implements SofaEventsTemplateRepos
 				matchOperation,
 				projectionOperation
 		);
-		AggregationResults<SofaEventsDTO.TeamDetails> scheduledEventsSofaScore = mongoTemplate.aggregate(aggregation, "scheduled_events_sofascore", SofaEventsDTO.TeamDetails.class);
+		AggregationResults<SofaEventsDto.TeamDetails> scheduledEventsSofaScore = mongoTemplate.aggregate(aggregation, "scheduled_events_sofascore", SofaEventsDto.TeamDetails.class);
 		if (!scheduledEventsSofaScore.getMappedResults().isEmpty()) {
 			return scheduledEventsSofaScore.getMappedResults().get(0);
 		}

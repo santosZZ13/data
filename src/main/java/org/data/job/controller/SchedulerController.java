@@ -1,7 +1,7 @@
 package org.data.job.controller;
 
 import lombok.AllArgsConstructor;
-import org.data.common.model.GenericResponseWrapper;
+import org.data.common.model.BaseResponse;
 import org.data.job.dto.JobDTO;
 import org.data.job.service.SchedulerService;
 import org.springframework.web.bind.annotation.*;
@@ -16,17 +16,17 @@ public class SchedulerController {
 	private final SchedulerService schedulerService;
 
 	@PostMapping("/api/data-service/scheduler")
-	public GenericResponseWrapper createJob(@RequestBody JobDTO.Request request) {
+	public BaseResponse createJob(@RequestBody JobDTO.Request request) {
 		return schedulerService.createJob(request);
 	}
 
 	@GetMapping("/api/data-service/scheduler")
-	public GenericResponseWrapper getJobs() {
+	public BaseResponse getJobs() {
 		return schedulerService.getJobs();
 	}
 
 	@GetMapping("/api/data-service/scheduler/{jobName}")
-	public GenericResponseWrapper deleteJob(@PathVariable String jobName) {
+	public BaseResponse deleteJob(@PathVariable String jobName) {
 		return schedulerService.deleteJob(jobName);
 	}
 }

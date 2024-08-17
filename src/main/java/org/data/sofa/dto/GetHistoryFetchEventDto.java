@@ -1,13 +1,14 @@
 package org.data.sofa.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.data.common.model.GenericResponseWrapper;
+import org.data.common.model.BaseResponse;
+import org.data.common.model.GenericResponseWithPagination;
 import org.data.common.model.PaginationSortDto;
 import org.data.conts.FetchStatus;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 public interface GetHistoryFetchEventDto {
@@ -22,13 +23,13 @@ public interface GetHistoryFetchEventDto {
 		private String toDate;
 	}
 
-	@Builder
+	@EqualsAndHashCode(callSuper = true)
+	@SuperBuilder
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	class Response {
-		@JsonProperty("data")
-		private HistoryFetchEventDto historyFetchEventDto;
+	class Response extends BaseResponse {
+		private GetHistoryFetchEventData data;
 	}
 
 	@EqualsAndHashCode(callSuper = true)
@@ -36,12 +37,19 @@ public interface GetHistoryFetchEventDto {
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	class HistoryFetchEventDto extends GenericResponseWrapper {
+	class GetHistoryFetchEventData extends GenericResponseWithPagination {
+		private List<HistoryFetchEventDto> history;
+	}
+
+	@Builder
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	class HistoryFetchEventDto {
 		private Integer teamId;
 		private Long timeElapsed;
 		private Integer total;
 		private FetchStatus fetchStatus;
 		private LocalDateTime createdDate;
-		private LocalDateTime updatedDate;
 	}
 }

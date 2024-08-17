@@ -8,12 +8,12 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-public interface SofaEventsDTO {
+public interface SofaEventsDto {
 	@Builder
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	class EventDTO {
+	class EventDto {
 		private String tntName;
 		private String seasonName;
 		private Integer round;

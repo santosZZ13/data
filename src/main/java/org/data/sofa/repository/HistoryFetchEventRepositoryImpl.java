@@ -1,6 +1,8 @@
 package org.data.sofa.repository;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+import org.data.conts.FetchStatus;
 import org.data.persistent.entity.HistoryFetchEventEntity;
 import org.data.persistent.repository.HistoryFetchEventMongoRepository;
 import org.data.sofa.dto.GetHistoryFetchEventDto;
@@ -17,19 +19,15 @@ import java.util.Optional;
 
 @Repository
 @AllArgsConstructor
+@Log4j2
 public class HistoryFetchEventRepositoryImpl implements HistoryFetchEventRepository {
 
 	private final HistoryFetchEventMongoRepository historyFetchEventMongoRepository;
 	private final HistoryFetchEventMapper historyFetchEventMapper;
 
-	@Override
-	public List<GetHistoryFetchEventDto.Response> getHistoryFetchEventByStatus(GetHistoryFetchEventDto.Request request) {
-		return List.of();
-	}
-
 
 	@Override
-	public List<GetHistoryFetchEventDto.HistoryFetchEventDto> findAllByStatusAndStartTimestampBetween(String status, LocalDateTime fromDate, LocalDateTime toDate, PageRequest pageRequest) {
+	public GetHistoryFetchEventDto.GetHistoryFetchEventData findAllByStatusAndStartTimestampBetween(String status, LocalDateTime fromDate, LocalDateTime toDate, PageRequest pageRequest) {
 
 		Page<HistoryFetchEventEntity> historyFetchEventEntitiesResult = historyFetchEventMongoRepository.findByFetchStatusAndCreatedDateGreaterThanEqualAndCreatedDateLessThanEqual(status, fromDate, toDate, pageRequest);
 		List<HistoryFetchEventEntity> content = historyFetchEventEntitiesResult.getContent();
@@ -39,12 +37,44 @@ public class HistoryFetchEventRepositoryImpl implements HistoryFetchEventReposit
 			historyFetchEventDto.add(historyFetchEventMapper.toHistoryFetchEventDto(historyFetchEventEntity));
 		});
 
-
-		return historyFetchEventDto;
+		return GetHistoryFetchEventDto.GetHistoryFetchEventData.builder()
+				.history(historyFetchEventDto)
+				.pageNumber(historyFetchEventEntitiesResult.getNumber())
+				.pageSize(historyFetchEventEntitiesResult.getSize())
+				.totals((int) historyFetchEventEntitiesResult.getTotalElements())
+				.build();
 	}
 
 	@Override
-	public Optional<HistoryFetchEventEntity> findByTeamId(Integer id) {
-		return Optional.empty();
+	public List<Integer> getAllIds() {
+		List<HistoryFetchEventEntity> entities = historyFetchEventMongoRepository.findAll();
+		return entities
+				.stream()
+				.map(HistoryFetchEventEntity::getTeamId)
+				.toList();
+	}
+
+	@Override
+	public boolean isExistByTeamId(Integer eventId) {
+		return historyFetchEventMongoRepository.findByTeamId(eventId).isPresent();
+	}
+
+	@Override
+	public void saveHistoryEventWithIds(List<Integer> ids) {
+		List<Integer> idsExist = getAllIds();
+		List<Integer> idsToFetch = ids.stream()
+				.filter(id -> !idsExist.contains(id))
+				.toList();
+		List<HistoryFetchEventEntity> historyFetchEventEntities = new ArrayList<>();
+
+		for (Integer id : idsToFetch) {
+			HistoryFetchEventEntity historyFetchEventEntity = HistoryFetchEventEntity.builder()
+					.teamId(id)
+					.fetchStatus(FetchStatus.NOT_FETCHED)
+					.createdDate(LocalDateTime.now())
+					.build();
+			historyFetchEventEntities.add(historyFetchEventEntity);
+		}
+		historyFetchEventMongoRepository.saveAll(historyFetchEventEntities);
 	}
 }

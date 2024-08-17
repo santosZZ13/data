@@ -9,10 +9,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface HistoryFetchEventRepository {
-	List<GetHistoryFetchEventDto.Response> getHistoryFetchEventByStatus(GetHistoryFetchEventDto.Request request);
 
-	List<GetHistoryFetchEventDto.HistoryFetchEventDto> findAllByStatusAndStartTimestampBetween(String status, LocalDateTime fromDate, LocalDateTime toDate,
-																				   PageRequest pageRequest);
+	GetHistoryFetchEventDto.GetHistoryFetchEventData findAllByStatusAndStartTimestampBetween(String status, LocalDateTime fromDate, LocalDateTime toDate,
+																							   PageRequest pageRequest);
 
-	Optional<HistoryFetchEventEntity> findByTeamId(Integer id);
+	List<Integer> getAllIds();
+	boolean isExistByTeamId(Integer eventId);
+	void saveHistoryEventWithIds(List<Integer> ids);
 }

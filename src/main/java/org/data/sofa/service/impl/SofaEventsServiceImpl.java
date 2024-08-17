@@ -2,15 +2,15 @@ package org.data.sofa.service.impl;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.data.common.exception.ApiException;
 import org.data.common.model.SortDto;
 import org.data.config.FetchEventScheduler;
-import org.data.persistent.entity.HistoryFetchEventEntity;
 import org.data.service.fetch.FetchSofaEvent;
 import org.data.service.fetch.FetchSofaEventImpl;
 import org.data.service.sap.SapService;
-import org.data.common.model.GenericResponseWrapper;
+import org.data.common.model.BaseResponse;
 import org.data.sofa.dto.*;
+import org.data.sofa.exception.NotFoundEventException;
+import org.data.sofa.mapper.SofaEventMapper;
 import org.data.sofa.repository.impl.HistoryFetchEventRepository;
 import org.data.sofa.repository.impl.SofaEventsTemplateRepository;
 import org.data.sofa.service.SofaEventsService;
@@ -19,6 +19,7 @@ import org.data.util.TimeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -27,7 +28,7 @@ import java.util.concurrent.*;
 import java.util.stream.Stream;
 
 
-import static org.data.sofa.dto.SofaEventsByDateDTO.*;
+import static org.data.sofa.dto.GetSofaEventsByDateDto.*;
 import static org.data.sofa.dto.SofaEventsResponse.*;
 
 @Service
@@ -41,114 +42,100 @@ public class SofaEventsServiceImpl implements SofaEventsService {
 	private final SofaEventsTemplateRepository sofaEventsTemplateRepository;
 	public final FetchSofaEvent fetchSofaEvent;
 	private final HistoryFetchEventRepository historyFetchEventRepository;
+	private final RedisTemplate<String, Object> redisTemplate;
+	private final SofaEventMapper sofaEventMapper;
 
 	@Override
-	public GenericResponseWrapper getAllScheduleEventsByDate(Request request) {
-		//TODO:
-		// check data if exist in redis.
-		// if exist return data from redis.
-		// if not exist, fetch data from sap and save to redis.
-
+	public BaseResponse getAllScheduleEventsByDate(Request request) {
 		CompletableFuture<SofaEventsResponse> sofaScheduledEventsResponseFuture =
 				CompletableFuture.supplyAsync(() -> {
-					log.info("#getAllScheduleEventsByDate - [Fetching] scheduled events for date: [{}] in [Thread: {}]", request.getDate(), Thread.currentThread().getName());
-					return sapService.restSofaScoreGet(SCHEDULED_EVENTS + request.getDate(), SofaEventsResponse.class);
+					final String key = "sofa" + request.getDate();
+					if (Boolean.TRUE.equals(redisTemplate.hasKey(key))) {
+						log.info("#getAllScheduleEventsByDate - [Found] scheduled events for date: [{}] in [Thread: {}]", request.getDate(), Thread.currentThread().getName());
+						return (SofaEventsResponse) redisTemplate.opsForValue().get(key);
+					} else {
+						log.info("#getAllScheduleEventsByDate - [Fetching] scheduled events for date: [{}] in [Thread: {}]", request.getDate(), Thread.currentThread().getName());
+						SofaEventsResponse sofaEventsResponse = sapService.restSofaScoreGet(SCHEDULED_EVENTS + request.getDate(), SofaEventsResponse.class);
+						redisTemplate.opsForValue().set(key, sofaEventsResponse);
+						return sofaEventsResponse;
+					}
 				});
 
 		CompletableFuture<SofaEventsResponse> sofaInverseScheduledEventsResponseFuture =
 				CompletableFuture.supplyAsync(() -> {
-					log.info("#getAllScheduleEventsByDate - [Fetching] inverse scheduled events for date: [{}] in [Thread: {}]", request.getDate(), Thread.currentThread().getName());
-					return sapService.restSofaScoreGet(SCHEDULED_EVENTS + request.getDate() + SCHEDULED_EVENTS_INVERSE, SofaEventsResponse.class);
+					final String key = "sofa" + request.getDate() + "inverse";
+					if (Boolean.TRUE.equals(redisTemplate.hasKey(key))) {
+						log.info("#getAllScheduleEventsByDate - [Found] inverse scheduled events for date: [{}] in [Thread: {}]", request.getDate(), Thread.currentThread().getName());
+						return (SofaEventsResponse) redisTemplate.opsForValue().get(key);
+					} else {
+						log.info("#getAllScheduleEventsByDate - [Fetching] inverse scheduled events for date: [{}] in [Thread: {}]", request.getDate(), Thread.currentThread().getName());
+						SofaEventsResponse sofaEventsResponse = sapService.restSofaScoreGet(SCHEDULED_EVENTS + request.getDate() + SCHEDULED_EVENTS_INVERSE, SofaEventsResponse.class);
+						redisTemplate.opsForValue().set(key, sofaEventsResponse);
+						return sofaEventsResponse;
+					}
 				});
 
 		return sofaScheduledEventsResponseFuture
 				.thenCombine(sofaInverseScheduledEventsResponseFuture, (sofaScheduledEventsResponse, sofaInverseScheduledEventsResponse) -> {
-					//TODO:
-					// cache sofaScheduledEventsResponseFuture and sofaInverseScheduledEventsResponseFuture to redis
-
 					String date = request.getDate();
 					LocalDateTime requestDate = TimeUtil.convertStringToLocalDateTime(date);
-					List<SofaEventsDTO.EventDTO> eventDetails = getEventDetails(sofaScheduledEventsResponse, sofaInverseScheduledEventsResponse, requestDate);
-					eventDetails.sort(Comparator.comparing(SofaEventsDTO.EventDTO::getKickOffMatch));
+					List<SofaEventsDto.EventDto> eventDetails = getEventDetails(sofaScheduledEventsResponse, sofaInverseScheduledEventsResponse, requestDate);
+					eventDetails.sort(Comparator.comparing(SofaEventsDto.EventDto::getKickOffMatch));
 					log.info("#getAllScheduleEventsByDate - eventDetails size: [{}]", eventDetails.size());
 					return eventDetails;
 				})
-				.thenApply(eventDetails -> {
-
-					List<Integer> ids = getIdForFetchEventHistory(eventDetails);
-
-					if (ids.isEmpty()) {
-						log.info("#getAllScheduleEventsByDate - No ids to fetch historical events");
-					} else {
-						CompletableFuture.runAsync(() -> fetchSofaEventImpl.fetchHistoricalMatches(ids));
-					}
-
-					return Response.builder()
-							.eventDTOS(eventDetails)
-							.build();
+				.thenApplyAsync(eventDto -> {
+					CompletableFuture.runAsync(() -> {
+						List<Integer> ids = getIdForFetchEventHistory(eventDto);
+						if (!ids.isEmpty()) {
+							CompletableFuture.runAsync(() -> historyFetchEventRepository.saveHistoryEventWithIds(ids));
+						} else {
+							log.info("#getAllScheduleEventsByDate - No ids to fetch historical events");
+						}
+					});
+					return eventDto;
 				})
-				.thenApply(response -> GenericResponseWrapper
+				.thenApply(eventDto -> GetSofaEventsByDateDto.Response
 						.builder()
-						.code("")
-						.msg("")
-						.data(response)
+						.data(GetSofaEventsByDateDto.GetSofaEventsByDateData.builder()
+								.events(eventDto)
+								.build())
 						.build())
 				.join();
 	}
 
-	private List<Integer> getIdForFetchEventHistory(List<SofaEventsDTO.EventDTO> eventDetails) {
-		List<Integer> ids = eventDetails.stream()
-				.flatMap(eventDetail -> {
-					Integer idTeamHome = eventDetail.getHomeDetails().getIdTeam();
-					Integer idTeamAway = eventDetail.getAwayDetails().getIdTeam();
-					return Stream.of(idTeamHome, idTeamAway);
-				})
-//							.distinct()
-				.toList();
-		ids.subList(0, 10);
-
-
-//		List<Integer> historyFetchEvents = historyFetchEventRepository.findAll().stream()
-//				.map(HistoryFetchEventEntity::getTeamId).toList();
-		List<Integer> historyFetchEvents = null;
-
-		List<Integer> idsToFetch = new ArrayList<>();
-		for (Integer id : ids) {
-			if (!historyFetchEvents.contains(id)) {
-				idsToFetch.add(id);
-			}
-		}
-
-		return idsToFetch;
-	}
-
-
 	@Override
-	public GenericResponseWrapper fetchDataForTeamWithId(Integer id) {
-		if (!alreadyFetchDataForTeamID(id)) {
+	public BaseResponse fetchDataForTeamWithId(Integer id) {
+		if (!historyFetchEventRepository.isExistByTeamId(id)) {
 			fetchSofaEvent.fetchHistoricalMatchesForId(id);
-			return GenericResponseWrapper.builder()
+			return BaseResponse.builder()
 					.code("")
 					.msg("Fetch event history for id: " + id)
-					.data("Success")
+//					.data("Success")
 					.build();
 		}
-		return GenericResponseWrapper.builder()
+		return BaseResponse.builder()
 				.code("")
 				.msg("Fetch event history for id: " + id)
-				.data("Already fetched")
+//				.data("Already fetched")
 				.build();
 	}
 
 	@Override
-	public GenericResponseWrapper getHistoryFromTeamId(Integer teamId) {
+	public GetSofaEventHistoryDto.Response getHistoryEventsFromTeamId(GetSofaEventHistoryDto.Request request) {
 
-		if (!alreadyFetchDataForTeamID(teamId)) {
-			throw new ApiException("", "History fetch event not found", "");
+		int teamId = request.getTeamId();
+
+
+		if (!historyFetchEventRepository.isExistByTeamId(teamId)) {
+			throw new NotFoundEventException("", "History fetch event not found", "");
 		}
 
-		List<GetSofaEventHistoryDTO.HistoryScore> historyScore = sofaEventsTemplateRepository.getHistoryScore(teamId, null, null);
-		SofaEventsDTO.TeamDetails teamDetailsById = sofaEventsTemplateRepository.getTeamDetailsById(teamId);
+		List<GetSofaEventHistoryDto.HistoryScore> historyScore = sofaEventsTemplateRepository
+				.getHistoryScore(teamId, request.getStatus(), request.getFrom(), request.getTo());
+
+		SofaEventsDto.TeamDetails teamDetailsById = sofaEventsTemplateRepository.getTeamDetailsById(teamId);
+
 		historyScore.forEach(hs -> {
 			if (hs.getHomeScore().isScoreEmpty()) {
 				hs.setHomeScore(null);
@@ -157,28 +144,26 @@ public class SofaEventsServiceImpl implements SofaEventsService {
 				hs.setAgainstScore(null);
 			}
 		});
-		return GenericResponseWrapper.builder()
-				.code("")
-				.msg("")
-				.data(GetSofaEventHistoryDTO.Response.builder()
+
+		return GetSofaEventHistoryDto.Response.builder()
+				.data(GetSofaEventHistoryDto.GetSofaEventHistoryData.builder()
 						.teamDetails(teamDetailsById)
 						.historyScores(historyScore)
 						.totalMatches(historyScore.size())
 						.build())
 				.build();
-
 	}
 
 	@Override
-	public GenericResponseWrapper getStatisticsTeamFromTeamId(GetStatisticsEventByIdDto.Request request) {
+	public GetStatisticsEventByIdDto.Response getStatisticsTeamFromTeamId(GetStatisticsEventByIdDto.Request request) {
 		LocalDateTime fromDateRequest = TimeUtil.convertStringToLocalDateTime(request.getFrom());
 		LocalDateTime toRequestRequest = TimeUtil.convertStringToLocalDateTime(request.getTo());
 
-		if (!alreadyFetchDataForTeamID(request.getId())) {
-			throw new ApiException("", "The team with id: " + request.getId() + " does not have historical events", "");
+		if (!historyFetchEventRepository.isExistByTeamId(request.getId())) {
+			throw new NotFoundEventException("", "The team with id: " + request.getId() + " does not have historical events", "");
 		}
 
-		List<GetSofaEventHistoryDTO.HistoryScore> historyScores = sofaEventsTemplateRepository.getHistoryScore(request.getId(), fromDateRequest, toRequestRequest);
+		List<GetSofaEventHistoryDto.HistoryScore> historyScores = sofaEventsTemplateRepository.getHistoryScore(request.getId(), null, fromDateRequest, toRequestRequest);
 
 		int totalMatches = 0;
 		int totalScoreFullTime = 0;
@@ -187,9 +172,9 @@ public class SofaEventsServiceImpl implements SofaEventsService {
 		int hasScoreInFirstHalf = 0;
 		int hasScoreInSecondHalf = 0;
 
-		for (GetSofaEventHistoryDTO.HistoryScore historyScore : historyScores) {
+		for (GetSofaEventHistoryDto.HistoryScore historyScore : historyScores) {
 			if (!historyScore.getStatus().equals("notstarted")) {
-				GetSofaEventHistoryDTO.Score homeScore = historyScore.getHomeScore();
+				GetSofaEventHistoryDto.Score homeScore = historyScore.getHomeScore();
 
 				int normalTimeScore = Objects.isNull(homeScore) || homeScore.isScoreEmpty() || Objects.isNull(homeScore.getNormaltime())
 						? 0 : homeScore.getNormaltime();
@@ -237,93 +222,70 @@ public class SofaEventsServiceImpl implements SofaEventsService {
 				.build();
 
 
-		return GenericResponseWrapper.builder()
-				.code("")
-				.msg("")
-				.data(statistics)
+		return GetStatisticsEventByIdDto.Response.builder()
+				.data(GetStatisticsEventByIdDto.GetStatisticsEventData.builder()
+						.statistics(statistics)
+						.build())
 				.build();
 	}
-
-
-	private Boolean alreadyFetchDataForTeamID(Integer id) {
-		Optional<HistoryFetchEventEntity> byIdTeam = historyFetchEventRepository.findByTeamId(id);
-		if (byIdTeam.isPresent()) {
-			return true;
-		}
-		return false;
-	}
-
-
-	private @NotNull List<SofaEventsDTO.EventDTO> getEventDetails(SofaEventsResponse sofaEventsResponse,
-																  SofaEventsResponse sofaInverseScheduledEventsResponse,
-																  LocalDateTime requestDate) {
-
-		List<EventResponse> sofaScheduledEventsResponseEventResponses = sofaEventsResponse.getEvents();
-		List<EventResponse> sofaInverseScheduledEventsResponseEventResponses = sofaInverseScheduledEventsResponse.getEvents();
-		List<SofaEventsDTO.EventDTO> eventDetails = new ArrayList<>();
-
-		getEventDetailsByDate(requestDate, sofaScheduledEventsResponseEventResponses, eventDetails);
-		getEventDetailsByDate(requestDate, sofaInverseScheduledEventsResponseEventResponses, eventDetails);
-		return eventDetails;
-	}
-
-	private void getEventDetailsByDate(LocalDateTime requestDate,
-									   List<EventResponse> sofaScheduledEventsResponseEventResponses,
-									   List<SofaEventsDTO.EventDTO> eventDetails) {
-		for (EventResponse responseEventResponse : sofaScheduledEventsResponseEventResponses) {
-			LocalDateTime responseDate = TimeUtil.convertUnixTimestampToLocalDateTime(responseEventResponse.getStartTimestamp());
-			if (responseDate.getDayOfMonth() == requestDate.getDayOfMonth() &&
-					responseDate.getMonth() == requestDate.getMonth() &&
-					responseDate.getYear() == requestDate.getYear()) {
-				SofaEventsDTO.EventDTO eventDetail = populatedToEventDetail(responseEventResponse);
-				eventDetails.add(eventDetail);
-			}
-		}
-	}
-
-
-	private SofaEventsDTO.EventDTO populatedToEventDetail(EventResponse eventResponse) {
-
-		SofaCommonResponse.Score homeScoreResponse = eventResponse.getHomeScore();
-		SofaCommonResponse.Score eventResponseAwayScore = eventResponse.getAwayScore();
-
-		return SofaEventsDTO.EventDTO.builder()
-				.id(eventResponse.getId())
-				.tntName(eventResponse.getTournament().getName())
-				.seasonName(Objects.isNull(eventResponse.getSeason()) ? null : eventResponse.getSeason().getName())
-				.round(Objects.isNull(eventResponse.getRoundInfo()) ? null : eventResponse.getRoundInfo().getRound())
-				.status(Objects.isNull(eventResponse.getStatus()) ? null : eventResponse.getStatus().getDescription())
-				.homeDetails(SofaEventsDTO.TeamDetails.builder()
-						.idTeam(eventResponse.getHomeTeam().getId())
-						.name(eventResponse.getHomeTeam().getName())
-						.build())
-				.awayDetails(SofaEventsDTO.TeamDetails.builder()
-						.idTeam(eventResponse.getAwayTeam().getId())
-						.name(eventResponse.getAwayTeam().getName())
-						.build())
-				.kickOffMatch(TimeUtil.convertUnixTimestampToLocalDateTime(eventResponse.getStartTimestamp()))
-				.build();
-	}
-
 
 	@Override
 	public GetHistoryFetchEventDto.Response getHistoryFetchEvent(GetHistoryFetchEventDto.Request request) {
 
-		Integer pageNumber = request.getPagination().getPageNumber();
-		Integer pageSize = request.getPagination().getPageSize();
-		String sortField = request.getSort().getSortField();
-		SortDto.Direction sortDirection = request.getSort().getSortDirection();
+		Integer pageNumber = request.getPageNumber();
+		Integer pageSize = request.getPageSize();
+		String sortField = request.getSortField();
+		SortDto.Direction sortDirection = request.getSortDirection();
 
 		String status = request.getStatus();
 		LocalDateTime fromDate = TimeUtil.convertStringToLocalDateTime(request.getFromDate());
 		LocalDateTime toDate = TimeUtil.convertStringToLocalDateTime(request.getToDate());
 		PageRequest pageRequest = PageRequest
-				.of(pageNumber, pageSize)
-				.withSort(sortDirection.equals(SortDto.Direction.ASC) ? Sort.by(sortField).ascending() : Sort.by(sortField).descending());
+				.of(pageNumber, pageSize);
 
-		historyFetchEventRepository.findAllByStatusAndStartTimestampBetween(status, fromDate, toDate, pageRequest);
+		if (!Objects.isNull(sortField)) {
+			pageRequest.withSort(sortDirection.equals(SortDto.Direction.ASC) ? Sort.by(sortField).ascending() : Sort.by(sortField).descending());
+		}
+
+		GetHistoryFetchEventDto.GetHistoryFetchEventData allByStatusAndStartTimestampBetween = historyFetchEventRepository.findAllByStatusAndStartTimestampBetween(status, fromDate, toDate, pageRequest);
+
+		return GetHistoryFetchEventDto.Response
+				.builder()
+				.data(allByStatusAndStartTimestampBetween)
+				.build();
+	}
 
 
-		return null;
+	private @NotNull List<SofaEventsDto.EventDto> getEventDetails(SofaEventsResponse sofaEventsResponse,
+																  SofaEventsResponse sofaInverseScheduledEventsResponse,
+																  LocalDateTime requestDate) {
+		List<EventResponse> sofaScheduledEventsResponseEventResponses = sofaEventsResponse.getEvents();
+		List<EventResponse> sofaInverseScheduledEventsResponseEventResponses = sofaInverseScheduledEventsResponse.getEvents();
+		sofaScheduledEventsResponseEventResponses.addAll(sofaInverseScheduledEventsResponseEventResponses);
+
+		List<SofaEventsDto.EventDto> eventDetails = new ArrayList<>();
+
+		for (EventResponse responseEventResponse : sofaScheduledEventsResponseEventResponses) {
+			LocalDateTime responseDate = TimeUtil.convertUnixTimestampToLocalDateTime(responseEventResponse.getStartTimestamp());
+			if (responseDate.getDayOfMonth() == requestDate.getDayOfMonth() &&
+					responseDate.getMonth() == requestDate.getMonth() &&
+					responseDate.getYear() == requestDate.getYear()) {
+				SofaEventsDto.EventDto eventDetail = sofaEventMapper.toEventDto(responseEventResponse);
+				eventDetails.add(eventDetail);
+			}
+		}
+		return eventDetails;
+	}
+
+
+	private List<Integer> getIdForFetchEventHistory(List<SofaEventsDto.EventDto> eventDetails) {
+		return eventDetails.stream()
+				.flatMap(eventDetail -> {
+					Integer idTeamHome = eventDetail.getHomeDetails().getIdTeam();
+					Integer idTeamAway = eventDetail.getAwayDetails().getIdTeam();
+					return Stream.of(idTeamHome, idTeamAway);
+				})
+				.distinct()
+				.toList();
 	}
 }

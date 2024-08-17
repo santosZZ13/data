@@ -1,10 +1,9 @@
 package org.data.sofa.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+import org.data.common.model.BaseResponse;
 
 public interface GetStatisticsEventByIdDto {
 
@@ -18,11 +17,20 @@ public interface GetStatisticsEventByIdDto {
 		private String to;
 	}
 
+	@EqualsAndHashCode(callSuper = true)
+	@SuperBuilder
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	class Response extends BaseResponse {
+		private GetStatisticsEventData data;
+	}
+
 	@Builder
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	class Response {
+	class GetStatisticsEventData {
 		private Statistics statistics;
 	}
 

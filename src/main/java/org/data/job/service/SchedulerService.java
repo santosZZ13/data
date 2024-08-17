@@ -1,12 +1,12 @@
 package org.data.job.service;
 
-import org.data.common.model.GenericResponseWrapper;
+import org.data.common.model.BaseResponse;
 import org.data.job.dto.JobDTO;
 
 public interface SchedulerService {
-	GenericResponseWrapper createJob(JobDTO.Request request);
+	BaseResponse createJob(JobDTO.Request request);
 
-	GenericResponseWrapper getJobs();
+	BaseResponse getJobs();
 
-	GenericResponseWrapper deleteJob(String jobName);
+	BaseResponse deleteJob(String jobName);
 }
