@@ -33,7 +33,7 @@ networks:
   data-service-network:
     driver: bridge
 
-#secrets:
+#secrets.yml:
 #    db-password:
 #      file: db/password.txt
 

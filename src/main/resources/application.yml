@@ -29,7 +29,9 @@ spring:
 #      NLiXVlvZc7Xk6Z4S
 #      uri: mongodb://localhost:27017
       database: football
-      uri: mongodb+srv://quangnam130520:NLiXVlvZc7Xk6Z4S@cluster0.fwoaemp.mongodb.net/
+#      uri: mongodb+srv://quangnam130520:NLiXVlvZc7Xk6Z4S@cluster0.fwoaemp.mongodb.net/
+      host: cluster0.fwoaemp.mongodb.net
+
     redis:
       host: redis
       port: 6379

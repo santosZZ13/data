@@ -20,20 +20,20 @@ spec:
           image: quangnam130520/data-service:latest
           ports:
             - containerPort: 8080
-#          env:
-#            - name: SERVER_PORT
-#              value: "8080"
-#            - name: SPRING_PROFILES_ACTIVE
-#              value: "prod"
-#          resources:
-#            requests:
-#              memory: "64Mi"
-#              cpu: "250m"
-#            limits:
-#              memory: "128Mi"
-#              cpu: "500m"
-#          livenessProbe:
-#            httpGet: # HTTP GET request
+        #          env:
+        #            - name: SERVER_PORT
+        #              value: "8080"
+        #            - name: SPRING_PROFILES_ACTIVE
+        #              value: "prod"
+        #          resources:
+        #            requests:
+        #              memory: "64Mi"
+        #              cpu: "250m"
+        #            limits:
+        #              memory: "128Mi"
+        #              cpu: "500m"
+        #          livenessProbe:
+        #            httpGet: # HTTP GET request
         - name: redis
           image: redis:7.4.0
           ports:
@@ -55,3 +55,26 @@ spec:
 #              command:
 #                - redis-cli
 #                - ping
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: data-service
+  labels:
+    app: data-service
+
+spec:
+  selector:
+    app: data-service
+  ports:
+    - protocol: TCP
+      name: app
+      port: 8080
+      targetPort: 8080
+    - protocol: TCP
+      name: redis
+      port: 6379
+      targetPort: 6379
+  type: LoadBalancer

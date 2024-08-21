@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-deployment
+  labels:
+    app: redis-label-app
+
+spec:
+  selector:
+    matchLabels:
+      app: redis
+
+  template:
+    metadata:
+      labels:
+        app: redis
+
+    spec:
+      containers:
+        - name: redis
+          image: redis:alpin
+          ports:
+            - containerPort: 6379
+#          env:
+#            - name: REDIS_PASSWORD
+#              valueFrom:
+#                configMapKeyRef:
+#                  name: data-service-configmap
+#                  key: redis-password
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels:
+    app: redis-label-app
+
+spec:
+  selector:
+    app: redis
+  ports:
+    - protocol: TCP
+      name: redis
+      port: 6379
+      targetPort: 6379
+  type: ClusterIP
