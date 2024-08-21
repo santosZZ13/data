@@ -21,14 +21,18 @@ spec:
           image: redis:alpin
           ports:
             - containerPort: 6379
-#          env:
-#            - name: REDIS_PASSWORD
-#              valueFrom:
-#                configMapKeyRef:
-#                  name: data-service-configmap
-#                  key: redis-password
+          env:
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: data-service-configmap
+                  key: redis-host
 
-
+            - name: REDIS_PORT
+              valueFrom:
+                 configMapKeyRef:
+                  name: data-service-configmap
+                  key: redis-port
 ---
 apiVersion: v1
 kind: Service
