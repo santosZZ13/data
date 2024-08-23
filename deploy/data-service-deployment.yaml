@@ -1,25 +1,28 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: data-service-deployment
+  name: data-service
+  namespace: default # testing, development, staging, production
   labels:
-    app: data-service-label-app
+    app: data-service
+    environment: production
+
 
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: data-service-label-app
+      app: data-service
   template:
     metadata:
       labels:
-        app: data-service-label-app
+        app: data-service
     spec:
       containers:
         - name: data-service
           image: quangnam130520/data-service:latest
           ports:
-            - containerPort: 8080 # The port that the container is running on in the cluster
+            - containerPort: 8080
           #          restartPolicy: Always
           imagePullPolicy: IfNotPresent
           #env:
@@ -27,7 +30,6 @@ spec:
               #value: "8080"
             #- name: SPRING_PROFILES_ACTIVE
               #value: "prod"
-
 
           #resources:
             #requests:

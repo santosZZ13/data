@@ -1,6 +1,7 @@
 services:
 
   data-service:
+    image: quangnam130520/data-service:latest
     build:
       context: .
     ports:
