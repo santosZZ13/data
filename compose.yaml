@@ -1,7 +1,7 @@
 services:
 
   data-service:
-    image: quangnam130520/data-service:latest
+    image: data-service:latest
     build:
       context: .
     ports:
@@ -10,6 +10,9 @@ services:
       - redis
     networks:
       - data-service-network
+#    environment:
+#        - REDIS_HOST=redis
+#        - REDIS_PORT=6379
 
 
   redis:

@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: redis-deployment
   labels:
-    app: redis-label-app
+    app: redid
 
 spec:
   selector:
@@ -18,28 +18,36 @@ spec:
     spec:
       containers:
         - name: redis
-          image: redis:alpin
+          image: redis:7.4.0
           ports:
             - containerPort: 6379
-          env:
-            - name: REDIS_HOST
-              valueFrom:
-                configMapKeyRef:
-                  name: data-service-configmap
-                  key: redis-host
+#          env:
+#            - name: REDIS_HOST
+#              valueFrom:
+#                configMapKeyRef:
+#                  name: data-service-configmap
+#                  key: redis-host
+#
+#            - name: REDIS_PORT
+#              valueFrom:
+#                 configMapKeyRef:
+#                  name: data-service-configmap
+#                  key: redis-port
+          volumeMounts:
+            - mountPath: /var/lib/redis/data
+              name: redis-persistent-storage
+      volumes:
+        - name: redis-persistent-storage
+          persistentVolumeClaim:
+            claimName: redis-pv-claim
 
-            - name: REDIS_PORT
-              valueFrom:
-                 configMapKeyRef:
-                  name: data-service-configmap
-                  key: redis-port
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: redis
   labels:
-    app: redis-label-app
+    app: redis
 
 spec:
   selector:
@@ -50,3 +58,16 @@ spec:
       port: 6379
       targetPort: 6379
   type: ClusterIP
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pv-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 256Mi

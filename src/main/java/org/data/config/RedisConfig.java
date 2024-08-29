@@ -1,5 +1,6 @@
 package org.data.config;
 
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +13,7 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
+@Log4j2
 public class RedisConfig {
 
 	@Value("${spring.data.redis.host}")
@@ -22,7 +24,9 @@ public class RedisConfig {
 
 	@Bean
 	public LettuceConnectionFactory redisConnectionFactory() {
-		// Tạo Standalone Connection tới Redis
+		// Tạo Standalone Connection tới Redis'
+		log.info("Redis Host: {}", redisHost);
+		log.info("Redis Port: {}", redisPort);
 		return new LettuceConnectionFactory(new RedisStandaloneConfiguration(redisHost, redisPort));
 	}
 

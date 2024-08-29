@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: data-service-configmap
 data:
+  redis-host: "redis"
+  redis-port: "6379"
 #    application.properties: |-
 #        server.port=8080
 #        spring.profiles.active=prod
@@ -45,5 +47,3 @@ data:
 #    spring.data.mongodb.repositories.mapping-base-package=com.example.demo.model
 #    spring.data.mongodb.repositories.query-lookup-strategy=create-if-not-found
 
-  redis-host: "redis"
-  redis-port: "6379"

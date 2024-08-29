@@ -15,30 +15,25 @@ spring:
 
   datasource:
 
-#    url: jdbc:mysql://localhost:3306/data?allowpublickeyretrieval=true&usessl=false
-#    username: root
-#    password: A%9jr>NK
-#    driver-class-name: com.mysql.cj.jdbc.Driver
-#    hikari:
-#      connection-timeout: 60000
-#      maximum-pool-size: 5
+  #    url: jdbc:mysql://localhost:3306/data?allowpublickeyretrieval=true&usessl=false
+  #    username: root
+  #    password: A%9jr>NK
+  #    driver-class-name: com.mysql.cj.jdbc.Driver
+  #    hikari:
+  #      connection-timeout: 60000
+  #      maximum-pool-size: 5
   cache:
     type: redis
+
   data:
     mongodb:
-#      NLiXVlvZc7Xk6Z4S
-#      uri: mongodb://localhost:27017
-      database: football
-#      uri: mongodb+srv://quangnam130520:NLiXVlvZc7Xk6Z4S@cluster0.fwoaemp.mongodb.net/
-      host: cluster0.fwoaemp.mongodb.net
-
+      database: ${MONGODB_DB:football}
+      uri: mongodb+srv://${MONGODB_USERNAME:quangnam130520}:${MONGODB_PW:NLiXVlvZc7Xk6Z4S}@${MONGODB_HOST:cluster0.fwoaemp.mongodb.net}/
     redis:
-      host: ${REDIS_HOST}:redis
-      port: ${REDIS_PORT}:6379
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
       client-type: lettuce
-
-
-
+#uri: mongodb+srv://quangnam130520:NLiXVlvZc7Xk6Z4S@cluster0.fwoaemp.mongodb.net/
   jpa:
     hibernate:
       ddl-auto: none
