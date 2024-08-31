@@ -33,21 +33,21 @@ pipeline {
             }
         }
 
-        stage('Deploy redis') {
-            steps {
-                script {
-                    echo 'Deploying and cleaning up Redis'
-                    sh 'docker image pull redis:7.4.0'
-                    sh 'docker network create data-service-network || echo "this network already exists"'
-                    sh 'docker container stop redis || echo "this container does not exist"'
-                    sh 'echo y | docker container prune'
-                    sh 'docker volume rm redis-data || echo "this volume does not exist"'
-
-                    sh 'docker run --name redis  --rm --network data-service-network -v redis-data:/var/lib/redis  redis:7.4.0'
-                    sh 'sleep 10'
-                }
-            }
-        }
+//        stage('Deploy redis') {
+//            steps {
+//                script {
+//                    echo 'Deploying and cleaning up Redis'
+//                    sh 'docker image pull redis:7.4.0'
+//                    sh 'docker network create data-service-network || echo "this network already exists"'
+//                    sh 'docker container stop redis || echo "this container does not exist"'
+//                    sh 'echo y | docker container prune'
+//                    sh 'docker volume rm redis-data || echo "this volume does not exist"'
+//
+//                    sh 'docker run --name redis  --rm --network data-service-network -v redis-data:/var/lib/redis  redis:7.4.0'
+//                    sh 'sleep 10'
+//                }
+//            }
+//        }
 
         stage('Deploy data-service') {
             steps {
