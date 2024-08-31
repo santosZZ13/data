@@ -59,7 +59,7 @@ pipeline {
                     sh 'docker container stop data-service || echo "this container does not exist"'
                     sh 'docker network create data-service-network || echo "this network already exists"'
                     sh 'echo y | docker container prune'
-                    sh 'docker run --name data-service --rm --network data-service-network -p 8080:8080 cucarot123/data-service'
+                    sh 'docker run -d --name data-service --rm --network data-service-network -p 8080:8080 cucarot123/data-service'
                 }
             }
         }
