@@ -26,7 +26,7 @@ pipeline {
 
         stage('Packaging/Pushing Docker Image') {
             steps {
-                withDockerRegistry([credentialsId: 'dockerhub', url: 'https://index.docker.io/v1/']) {
+                withDockerRegistry(credentialsId: 'dockerhub', url: 'https://index.docker.io/v1/') {
                     sh 'docker build -t cucarot123/data-service .'
                     sh 'docker push cucarot123/data-service'
                 }

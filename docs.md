@@ -4,7 +4,8 @@
 * Docker Volume 
 * Docker Network 
 * Docker Compose
-  * docker compose up --build
+  * docker compose -f <compose file name> up --build
+    * You can avoid -f if your filename is docker-compose.yml
   * docker compose down
   * docker compose ps
 
@@ -61,3 +62,12 @@ minikube service <service_name> -n <namespace> Ex: minikube service data-service
 ### Docker registry
 * gcloud auth configure-docker
 * docker tag <image_id> gcr.io/<project_id>/<image_name>:<tag> Ex: docker tag data-service gcr.io/my-project/data-service:1.0
+
+
+## Jenkins
+```
+docker run -p 8080:8080 -p 50000:50000 -v /your/home:/var/jenkins_home jenkins/jenkins
+docker logs [container_id]
+
+
+```
