@@ -6,9 +6,9 @@ pipeline {
     }
 
 
-    environment {
-//        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
-    }
+//    environment {
+////        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
+//    }
 
     stages {
 
