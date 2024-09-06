@@ -17,8 +17,9 @@ pipeline {
         stage('Get Branch Name') {
             steps {
                 script {
-                     scmVars = checkout scm
-                     echo '${scmVars}'
+                    def commitHash = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+                    env.dockerTag = "dev-commit-${commitHash}-${BUILD_NUMBER}"
+                    echo '${env.dockerTag}'
                 }
             }
         }
