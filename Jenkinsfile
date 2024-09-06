@@ -18,7 +18,7 @@ pipeline {
             steps {
                 script {
                      scmVars = checkout scm
-                     echo '${scmVars.GIT_BRANCH}'
+                     echo '${scmVars}'
                 }
             }
         }
