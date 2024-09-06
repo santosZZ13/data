@@ -23,6 +23,7 @@ pipeline {
                     
                     scmVars = checkout scm
                     env.BRANCH_NAME = scmVars.GIT_BRANCH.replaceAll('^origin/', '').replaceAll('/', '-').toLowerCase()
+                    echo "${scmVars.GIT_BRANCH}"
                     echo "Branch Name: ${env.BRANCH_NAME}"
                 }
             }
