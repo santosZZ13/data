@@ -4,29 +4,54 @@ pipeline {
         test_cre = credentials('test-secret')
         account = 'test-250@santossv.iam.gserviceaccount.com'
         host = 'asia-south1-docker.pkg.dev'
+
+        PROJET_ID = 'santossv'
+        CLUSTER_NAME = 'santossv-cluster'
+        ZONE = 'asia-south1-a'
+        K8S_NAMESPACE = 'santossv-namespace'
     }
     stages {
-        stage('Example') {
-            steps {
-                sh 'gcloud auth activate-service-account ${account} --key-file=${test_cre}'
-                sh 'gcloud auth configure-docker ${host}'
-                echo 'AUTHENTICATED SUCCESSFULLY'
-            }
-        }
-        
-        stage('Get Branch Name') {
+
+
+        stage('Init Environment') {
             steps {
                 script {
-                    def commitHash = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
-                    env.dockerTag = "dev-commit-${commitHash}-${BUILD_NUMBER}"
-                    echo "${env.dockerTag}"
-                    
                     scmVars = checkout scm
                     env.BRANCH_NAME = scmVars.GIT_BRANCH.replaceAll('^origin/', '').replaceAll('/', '-').toLowerCase()
-                    echo "${scmVars.GIT_BRANCH}"
-                    echo "Branch Name: ${env.BRANCH_NAME}"
+
+                    env.DATA_SERVICE_DEPLOYMENT_NAME = "data-service-${env.BRANCH_NAME}"
+                    env.DEPLOYMENT_NAME_LABEL = "data-service"
+                    env.DATA_SERVICE_PORT = "8080"
                 }
             }
         }
+
+
+        stage('Deploy to GKE') {
+            steps {
+                script {
+
+                    sh """
+                        sed -e 's|{{DEPLOYMENT_NAME}}|${DATA_SERVICE_DEPLOYMENT_NAME}|g' \
+                            -e 's|{{DEPLOYMENT_NAME_LABEL}}|${DEPLOYMENT_NAME_LABEL}|g' \
+                            -e 's|{{DATA_SERVICE_PORT}}|${DATA_SERVICE_PORT}|g' \
+                            k8s/deployment.yaml > k8s/deployment.yaml
+
+                    """
+
+
+
+                    withCredentials([test_cre]) {
+                        sh "gcloud auth activate-service-account --key-file=${test_cre}"
+                    }
+                    sh "gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE} --project ${PROJET_ID}"
+                    sh "kubectl create namespace ${K8S_NAMESPACE}"
+                    sh "kubectl config set-context --current --namespace=${K8S_NAMESPACE}"
+                    sh "kubectl apply -f k8s/deployment.yaml"
+                }
+            }
+        }
+
+
     }
 }
