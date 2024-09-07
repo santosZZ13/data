@@ -14,7 +14,7 @@ pipeline {
         DATA_SERVICE_REPO = "santos"
 
 
-        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-service-account-key')
+        // GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-service-account-key')
         CLIENT_EMAIL = "test-250@santossv.iam.gserviceaccount.com"
         GCLOUD_CREDS = credentials('gcloud-creds')
 
