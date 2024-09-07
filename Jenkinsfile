@@ -68,8 +68,8 @@ pipeline {
         stage('Pushing Docker Image') {
             steps {
                 script {
-                    sh 'docker build -t ${DATA_SERVICE_REGISTRY_PATH}:${BUILD_NUMBER} .'
-                    sh 'docker push ${DATA_SERVICE_REGISTRY_PATH}:${BUILD_NUMBER}'
+                    sh 'docker build -t ${DATA_SERVICE_REGISTRY_PATH}:latest .' // asia-east2-docker.pkg.dev/santossv/santos/data-service-master:11
+                    sh 'docker push ${DATA_SERVICE_REGISTRY_PATH}:latest'
                 }
             }
         }
