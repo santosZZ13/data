@@ -14,7 +14,7 @@ pipeline {
         DATA_SERVICE_REPO = "santos"
 
 
-        // GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-service-account-key')
+//        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-service-account-key')
         CLIENT_EMAIL = "test-250@santossv.iam.gserviceaccount.com"
         GCLOUD_CREDS = credentials('gcloud-creds')
 
@@ -33,7 +33,7 @@ pipeline {
                     env.DATA_SERVICE_PORT = "8080"
 
 
-                    env.DATA_SERVICE_REGISTRY_PATH = "${ZONE}-docker.pkg.dev/${PROJECT_ID}/${DATA_SERVICE_REPO}/${DATA_SERVICE_NAME}"
+                    env.DATA_SERVICE_REGISTRY_PATH = "${ZONE}-docker.pkg.dev/${PROJECT_ID}/${DATA_SERVICE_REPO}/${DATA_SERVICE_DEPLOYMENT_NAME}"
                 }
             }
         }
