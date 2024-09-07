@@ -8,15 +8,15 @@ pipeline {
     environment {
 //        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
 
-        PROJECT_ID = 'santossv'
-        CLUSTER_NAME = "node-kubernetes"
-        ZONE = "asia-east2"
-        DATA_SERVICE_REPO = "santos"
+        // PROJECT_ID = 'santossv'
+        // CLUSTER_NAME = "node-kubernetes"
+        // ZONE = "asia-east2"
+        // DATA_SERVICE_REPO = "santos"
 
 
         // GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-service-account-key')
-        CLIENT_EMAIL = "test-250@santossv.iam.gserviceaccount.com"
-        GCLOUD_CREDS = credentials('gcloud-creds')
+        // CLIENT_EMAIL = "test-250@santossv.iam.gserviceaccount.com"
+        // GCLOUD_CREDS = credentials('gcloud-creds')
 
     }
 
