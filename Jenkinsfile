@@ -53,10 +53,12 @@ pipeline {
         stage('Set up Google Cloud') {
             steps {
                 script {
+
+//                    gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE}
+
                     sh '''
                         gcloud auth activate-service-account ${CLIENT_EMAIL} --key-file="${GCLOUD_CREDS}"
                         gcloud config set project ${PROJECT_ID}
-                        gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE}
                         gcloud auth configure-docker ${ZONE}-docker.pkg.dev
                     '''
                 }
