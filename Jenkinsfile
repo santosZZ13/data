@@ -5,12 +5,38 @@ pipeline {
         maven 'my-maven'
     }
 
+    environment {
+//        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
 
-//    environment {
-////        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
-//    }
+        PROJECT_ID = 'santossv'
+        CLUSTER_NAME = "node-kubernetes"
+        ZONE = "asia-east2"
+        DATA_SERVICE_REPO = "santos"
+
+
+        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-service-account-key')
+        CLIENT_EMAIL = "test-250@santossv.iam.gserviceaccount.com"
+        GCLOUD_CREDS = credentials('gcloud-creds')
+
+    }
 
     stages {
+        stage('Init Environment') {
+            steps {
+                script {
+
+                    scmVars = checkout scm
+                    env.BRANCH_NAME = scmVars.GIT_BRANCH.replaceAll('^origin/', '').replaceAll('/', '-').toLowerCase()
+
+                    env.DATA_SERVICE_DEPLOYMENT_NAME = "data-service-${env.BRANCH_NAME}"
+                    env.DEPLOYMENT_NAME_LABEL = "data-service"
+                    env.DATA_SERVICE_PORT = "8080"
+
+
+                    env.DATA_SERVICE_REGISTRY_PATH = "${ZONE}-docker.pkg.dev/${PROJECT_ID}/${DATA_SERVICE_REPO}/${DATA_SERVICE_NAME}"
+                }
+            }
+        }
 
 
         stage('Build and Test') {
@@ -24,14 +50,44 @@ pipeline {
         }
 
 
-        stage('Packaging/Pushing Docker Image') {
+        stage('Set up Google Cloud') {
             steps {
-                withDockerRegistry(credentialsId: 'dockerhub', url: 'https://index.docker.io/v1/') {
-                    sh 'docker build -t cucarot123/data-service .'
-                    sh 'docker push cucarot123/data-service'
+                script {
+                    sh '''
+                        gcloud auth activate-service-account ${CLIENT_EMAIL} --key-file="${GCLOUD_CREDS}"
+                        gcloud config set project ${PROJECT_ID}
+                        gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE}
+                        gcloud auth configure-docker ${ZONE}-docker.pkg.dev
+                    '''
                 }
             }
         }
+
+        stage('Pushing Docker Image') {
+            steps {
+                script {
+                    sh 'docker build -t ${DATA_SERVICE_REGISTRY_PATH}:${BUILD_NUMBER} .'
+                    sh 'docker push ${DATA_SERVICE_REGISTRY_PATH}:${BUILD_NUMBER}'
+                }
+            }
+        }
+
+
+//        stage('Deploy to GKE') {
+//            steps {
+//                script {
+//
+//                }
+//            }
+//        }
+//
+//        stage('Deploy to GKE') {
+//            steps {
+//                script {
+//
+//                }
+//            }
+//        }
 
 //        stage('Deploy redis') {
 //            steps {
@@ -49,20 +105,20 @@ pipeline {
 //            }
 //        }
 
-        stage('Deploy data-service') {
-            steps {
-                script {
-
-                    echo 'Deploying and cleaning up data-service'
-
-                    echo 'docker image pull cucarot123/data-service'
-                    sh 'docker container stop data-service || echo "this container does not exist"'
-                    sh 'docker network create data-service-network || echo "this network already exists"'
-                    sh 'echo y | docker container prune'
-                    sh 'docker run -d --name data-service --rm --network data-service-network -p 8080:8080 cucarot123/data-service'
-                }
-            }
-        }
+//        stage('Deploy data-service') {
+//            steps {
+//                script {
+//
+//                    echo 'Deploying and cleaning up data-service'
+//
+//                    echo 'docker image pull cucarot123/data-service'
+//                    sh 'docker container stop data-service || echo "this container does not exist"'
+//                    sh 'docker network create data-service-network || echo "this network already exists"'
+//                    sh 'echo y | docker container prune'
+//                    sh 'docker run -d --name data-service --rm --network data-service-network -p 8080:8080 cucarot123/data-service'
+//                }
+//            }
+//        }
     }
 
     post {
