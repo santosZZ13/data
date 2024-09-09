@@ -80,9 +80,9 @@ pipeline {
                 script {
 
                     sh '''
-                        sed - e "s|\\\\\\${DATA_SERVICE_DEPLOYMENT_NAME}|${DATA_SERVICE_DEPLOYMENT_NAME}|g" \\
-                            - e "s|\\\\\\${DEPLOYMENT_NAME_LABEL}|${DEPLOYMENT_NAME_LABEL}|g" \\
-                            - e "s|\\\\\\${DATA_SERVICE_PORT}|${DATA_SERVICE_PORT}|g" \\
+                        sed -e "s|\\\\\\${DATA_SERVICE_DEPLOYMENT_NAME}|${DATA_SERVICE_DEPLOYMENT_NAME}|g" \\
+                            -e "s|\\\\\\${DEPLOYMENT_NAME_LABEL}|${DEPLOYMENT_NAME_LABEL}|g" \\
+                            -e "s|\\\\\\${DATA_SERVICE_PORT}|${DATA_SERVICE_PORT}|g" \\
                             data-service-deployment.yaml > data-service-deployment.yaml
 
                         sh 'kubectl apply -f data-service-deployment.yaml\'
