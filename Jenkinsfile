@@ -68,59 +68,26 @@ pipeline {
         stage('Pushing Docker Image') {
             steps {
                 script {
-                    sh 'docker build -t ${DATA_SERVICE_REGISTRY_PATH}:latest .' // asia-east2-docker.pkg.dev/santossv/santos/data-service-master:11
+                    sh 'docker build -t ${DATA_SERVICE_REGISTRY_PATH}:latest .'
+                    // asia-east2-docker.pkg.dev/santossv/santos/data-service-master:11
                     sh 'docker push ${DATA_SERVICE_REGISTRY_PATH}:latest'
                 }
             }
         }
 
+        stage('Deploy to GKE') {
+            steps {
+                script {
+                    sed - e "s|\\\${DATA_SERVICE_DEPLOYMENT_NAME}|${DATA_SERVICE_DEPLOYMENT_NAME}|g" \
+                        - e "s|\\\${DEPLOYMENT_NAME_LABEL}|${DEPLOYMENT_NAME_LABEL}|g" \
+                        - e "s|\\\${DATA_SERVICE_PORT}|${DATA_SERVICE_PORT}|g" \
+                        data-service-deployment.yaml > data-service-deployment.yaml
 
-//        stage('Deploy to GKE') {
-//            steps {
-//                script {
-//
-//                }
-//            }
-//        }
-//
-//        stage('Deploy to GKE') {
-//            steps {
-//                script {
-//
-//                }
-//            }
-//        }
+                    sh 'kubectl apply -f data-service-deployment.yaml'
 
-//        stage('Deploy redis') {
-//            steps {
-//                script {
-//                    echo 'Deploying and cleaning up Redis'
-//                    sh 'docker image pull redis:7.4.0'
-//                    sh 'docker network create data-service-network || echo "this network already exists"'
-//                    sh 'docker container stop redis || echo "this container does not exist"'
-//                    sh 'echo y | docker container prune'
-//                    sh 'docker volume rm redis-data || echo "this volume does not exist"'
-//
-//                    sh 'docker run --name redis  --rm --network data-service-network -v redis-data:/var/lib/redis  redis:7.4.0'
-//                    sh 'sleep 10'
-//                }
-//            }
-//        }
-
-//        stage('Deploy data-service') {
-//            steps {
-//                script {
-//
-//                    echo 'Deploying and cleaning up data-service'
-//
-//                    echo 'docker image pull cucarot123/data-service'
-//                    sh 'docker container stop data-service || echo "this container does not exist"'
-//                    sh 'docker network create data-service-network || echo "this network already exists"'
-//                    sh 'echo y | docker container prune'
-//                    sh 'docker run -d --name data-service --rm --network data-service-network -p 8080:8080 cucarot123/data-service'
-//                }
-//            }
-//        }
+                }
+            }
+        }
     }
 
     post {

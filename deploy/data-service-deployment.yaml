@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: data-service
+  name: ${DATA_SERVICE_DEPLOYMENT_NAME} # data-service
   namespace: default # testing, development, staging, production
   labels:
-    app: data-service
+    app: ${DEPLOYMENT_NAME_LABEL} # data-service
     environment: production
 
 
@@ -12,17 +12,20 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: data-service
+      app: ${DEPLOYMENT_NAME_LABEL} # data-service
   template:
     metadata:
       labels:
-        app: data-service
+        app: ${DEPLOYMENT_NAME_LABEL} # data-service
     spec:
       containers:
         - name: data-service
-          image: gcr.io/santossv/data-service:v0.0.1
+          # DATA_SERVICE_REGISTRY_PATH: asia-south1-docker.pkg.dev
+          # PROJECT_ID: data-service-320209
+          # REPOSITORY: jenkins
+          image: ${DATA_SERVICE_REGISTRY_PATH}/${PROJECT_ID}/${REPOSITORY}:${TAG}
           ports:
-            - containerPort: 8080
+            - containerPort: ${DATA_SERVICE_PORT} # 8080
           #          restartPolicy: Always
           imagePullPolicy: IfNotPresent
 
