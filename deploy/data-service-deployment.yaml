@@ -23,7 +23,7 @@ spec:
           # DATA_SERVICE_REGISTRY_PATH: asia-south1-docker.pkg.dev
           # PROJECT_ID: data-service-320209
           # REPOSITORY: jenkins
-          image: ${DATA_SERVICE_REGISTRY_PATH}/${PROJECT_ID}/${REPOSITORY}:${TAG}
+          image: ${DATA_SERVICE_REGISTRY_PATH}:latest
           ports:
             - containerPort: ${DATA_SERVICE_PORT} # 8080
           #          restartPolicy: Always
