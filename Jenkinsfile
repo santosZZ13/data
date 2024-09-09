@@ -55,13 +55,11 @@ pipeline {
         stage('Set up Google Cloud') {
             steps {
                 script {
-
-//                    gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE}
-
                     sh '''
                         gcloud auth activate-service-account ${CLIENT_EMAIL} --key-file="${GCLOUD_CREDS}"
                         gcloud config set project ${PROJECT_ID}
                         gcloud auth configure-docker ${ZONE}-docker.pkg.dev
+                        gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE_KUBERNETES} --project ${PROJECT_ID}
                     '''
                 }
             }
@@ -88,7 +86,6 @@ pipeline {
                                 -e "s|\\\${DATA_SERVICE_REGISTRY_PATH}|${DATA_SERVICE_REGISTRY_PATH}|g" \
                             data-service-deployment.yaml > data-service-deployment-updated.yaml
                             
-                            gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE_KUBERNETES} --project ${PROJECT_ID}
                             
                             kubectl apply -f data-service-deployment-updated.yaml
                     '''
