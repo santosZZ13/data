@@ -85,7 +85,7 @@ pipeline {
                             -e "s|\\\\\\${DATA_SERVICE_PORT}|${DATA_SERVICE_PORT}|g" \\
                             data-service-deployment.yaml > data-service-deployment.yaml
 
-                        sh 'kubectl apply -f data-service-deployment.yaml\'
+                        kubectl apply -f data-service-deployment.yaml
                     '''
 
 
