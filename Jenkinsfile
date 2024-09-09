@@ -85,17 +85,15 @@ pipeline {
                             -e "s|\\\\\\${DATA_SERVICE_PORT}|${DATA_SERVICE_PORT}|g" \\
                             data-service-deployment.yaml > data-service-deployment.yaml
 
-                        cat data-service-deployment.yaml
-                        kubectl apply -f data-service-deployment.yaml
-                        
+                     if [ -s data-service-deployment.yaml ]; then
+                       kubectl apply -f data-service-deployment.yaml
+                     else
+                       echo "Error: data-service-deployment.yaml is empty"
+                       exit 1
+                       fi
                     '''
 
-//                    if [ -s data-service-deployment.yaml ]; then
-//                    kubectl apply -f data-service-deployment.yaml
-//                    else
-//                    echo "Error: data-service-deployment.yaml is empty"
-//                    exit 1
-//                    fi
+
                 }
             }
         }
