@@ -12,7 +12,7 @@ pipeline {
         CLUSTER_NAME = "node-kubernetes"
         ZONE = "asia-east2"
         DATA_SERVICE_REPO = "santos"
-
+        DEPLOY_FOLDER = "${WORKSPACE}/deploy"
 
 //        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-service-account-key')
         CLIENT_EMAIL = "test-250@santossv.iam.gserviceaccount.com"
@@ -78,18 +78,16 @@ pipeline {
         stage('Deploy to GKE') {
             steps {
                 script {
-
-                    sh '''
+                    dir(DEPLOY_FOLDER) {
+                        sh '''
                         sed -e "s|\\\${DATA_SERVICE_DEPLOYMENT_NAME}|${DATA_SERVICE_DEPLOYMENT_NAME}|g" \
                             -e "s|\\\${DEPLOYMENT_NAME_LABEL}|${DEPLOYMENT_NAME_LABEL}|g" \
                             -e "s|\\\${DATA_SERVICE_PORT}|${DATA_SERVICE_PORT}|g" \
                             data-service-deployment.yaml > data-service-deployment-updated.yaml
 
                        kubectl apply -f data-service-deployment-updated.yaml
-
                     '''
-
-
+                    }
                 }
             }
         }
