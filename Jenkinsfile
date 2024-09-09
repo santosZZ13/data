@@ -85,7 +85,7 @@ pipeline {
                                 -e "s|\\\${DATA_SERVICE_PORT}|${DATA_SERVICE_PORT}|g" \
                                 -e "s|\\\${DATA_SERVICE_REGISTRY_PATH}|${DATA_SERVICE_REGISTRY_PATH}|g" \
                             data-service-deployment.yaml > data-service-deployment-updated.yaml
-                            kubectl apply -f data-service-deployment-updated.yaml
+                            kubectl apply -f data-service-deployment-updated.yaml --context ${CLUSTER_NAME}
                     '''
                     }
                 }
