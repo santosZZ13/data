@@ -83,10 +83,10 @@ pipeline {
                         sed -e "s|\\\\\\${DATA_SERVICE_DEPLOYMENT_NAME}|${DATA_SERVICE_DEPLOYMENT_NAME}|g" \\
                             -e "s|\\\\\\${DEPLOYMENT_NAME_LABEL}|${DEPLOYMENT_NAME_LABEL}|g" \\
                             -e "s|\\\\\\${DATA_SERVICE_PORT}|${DATA_SERVICE_PORT}|g" \\
-                            data-service-deployment.yaml > data-service-deployment.yaml
+                            data-service-deployment.yaml > data-service-deployment-updated.yaml
 
-                     if [ -s data-service-deployment.yaml ]; then
-                       kubectl apply -f data-service-deployment.yaml
+                     if [ -s data-service-deployment-updated.yaml ]; then
+                       kubectl apply -f data-service-deployment-updated.yaml
                      else
                        echo "Error: data-service-deployment.yaml is empty"
                        exit 1
