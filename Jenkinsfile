@@ -10,6 +10,8 @@ pipeline {
 
         PROJECT_ID = 'santossv'
         CLUSTER_NAME = "node-kubernetes"
+        ZONE_KUBERNETES = "us-central1-a"
+
         ZONE = "asia-east2"
         DATA_SERVICE_REPO = "santos"
         DEPLOY_FOLDER = "${WORKSPACE}/deploy"
@@ -85,6 +87,9 @@ pipeline {
                                 -e "s|\\\${DATA_SERVICE_PORT}|${DATA_SERVICE_PORT}|g" \
                                 -e "s|\\\${DATA_SERVICE_REGISTRY_PATH}|${DATA_SERVICE_REGISTRY_PATH}|g" \
                             data-service-deployment.yaml > data-service-deployment-updated.yaml
+                            
+                            gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE_KUBERNETES} --project ${PROJECT_ID}
+                            
                             kubectl apply -f data-service-deployment-updated.yaml
                     '''
                     }
