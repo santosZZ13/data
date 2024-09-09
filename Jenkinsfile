@@ -41,39 +41,39 @@ pipeline {
         }
 
 
-        stage('Build and Test') {
-            steps {
-                script {
-                    sh 'mvn -version'
-                    sh 'java -version'
-                    sh 'mvn clean package'
-                }
-            }
-        }
+//        stage('Build and Test') {
+//            steps {
+//                script {
+//                    sh 'mvn -version'
+//                    sh 'java -version'
+//                    sh 'mvn clean package'
+//                }
+//            }
+//        }
 
 
-        stage('Set up Google Cloud') {
-            steps {
-                script {
-                    sh '''
-                        gcloud auth activate-service-account ${CLIENT_EMAIL} --key-file="${GCLOUD_CREDS}"
-                        gcloud config set project ${PROJECT_ID}
-                        gcloud auth configure-docker ${ZONE}-docker.pkg.dev
-                        gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE_KUBERNETES} --project ${PROJECT_ID}
-                    '''
-                }
-            }
-        }
+//        stage('Set up Google Cloud') {
+//            steps {
+//                script {
+//                    sh '''
+//                        gcloud auth activate-service-account ${CLIENT_EMAIL} --key-file="${GCLOUD_CREDS}"
+//                        gcloud config set project ${PROJECT_ID}
+//                        gcloud auth configure-docker ${ZONE}-docker.pkg.dev
+//                        gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE_KUBERNETES} --project ${PROJECT_ID}
+//                    '''
+//                }
+//            }
+//        }
 
-        stage('Pushing Docker Image') {
-            steps {
-                script {
-                    sh 'docker build -t ${DATA_SERVICE_REGISTRY_PATH}:latest .'
-                    // asia-east2-docker.pkg.dev/santossv/santos/data-service-master:11
-                    sh 'docker push ${DATA_SERVICE_REGISTRY_PATH}:latest'
-                }
-            }
-        }
+//        stage('Pushing Docker Image') {
+//            steps {
+//                script {
+//                    sh 'docker build -t ${DATA_SERVICE_REGISTRY_PATH}:latest .'
+//                    // asia-east2-docker.pkg.dev/santossv/santos/data-service-master:11
+//                    sh 'docker push ${DATA_SERVICE_REGISTRY_PATH}:latest'
+//                }
+//            }
+//        }
 
         stage('Deploy to GKE') {
             steps {

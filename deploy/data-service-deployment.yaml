@@ -4,7 +4,7 @@ metadata:
   name: ${DATA_SERVICE_DEPLOYMENT_NAME} # data-service
   namespace: default # testing, development, staging, production
   labels:
-    app: ${DEPLOYMENT_NAME_LABEL} # data-service
+    app: data-service-master # data-service
     environment: production
 
 
@@ -12,20 +12,20 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ${DEPLOYMENT_NAME_LABEL} # data-service
+      app: data-service # data-service
   template:
     metadata:
       labels:
-        app: ${DEPLOYMENT_NAME_LABEL} # data-service
+        app: data-service # data-service
     spec:
       containers:
         - name: data-service
           # DATA_SERVICE_REGISTRY_PATH: asia-south1-docker.pkg.dev
           # PROJECT_ID: data-service-320209
           # REPOSITORY: jenkins
-          image: ${DATA_SERVICE_REGISTRY_PATH}:latest
+          image: asia-east2-docker.pkg.dev/santossv/santos/data-service-master:latest
           ports:
-            - containerPort: ${DATA_SERVICE_PORT} # 8080
+            - containerPort: 8080 # 8080
           #          restartPolicy: Always
           imagePullPolicy: IfNotPresent
 
