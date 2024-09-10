@@ -100,11 +100,7 @@ pipeline {
             steps {
                 script {
                     dir(DEPLOY_FOLDER) {
-                       kubernetesDeploy(
-                            kubeconfigId: 'kubeId',
-                            configs: 'data-service-deployment.yaml',
-                            enableConfigSubstitution: true
-                        )
+                       sh 'kubectl --kubeconfig=/home/quangnam130520/.kube/config apply -f data-service-deployment.yaml'
                     }
                 }
             }
