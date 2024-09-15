@@ -54,7 +54,10 @@ pipeline {
             steps {
                 script {
 
-                    sh 'gcloud auth activate-service-account --key-file=${SANTOS_REPO_SERVICE_ACCOUNT}'
+                    sh '''  
+                            gcloud auth activate-service-account --key-file=${SANTOS_REPO_SERVICE_ACCOUNT}
+                            gcloud auth configure-docker ${ZONE_REPO}-docker.pkg.dev
+                       '''
 
 //                    sh '''
 //                        gcloud auth activate-service-account ${CLIENT_EMAIL} --key-file="${GCLOUD_CREDS}"
