@@ -2,15 +2,15 @@ pipeline {
     agent any
 
     tools {
-        maven 'my-maven'
+        maven 'maven'
     }
 
     environment {
 //        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
 
-        PROJECT_ID = 'santossv'
-        CLUSTER_NAME = "node-kubernetes"
-        ZONE_KUBERNETES = "us-central1-a"
+        PROJECT_ID = 'santos-435406'
+        CLUSTER_NAME = "santosk8s"
+        ZONE_KUBERNETES = "asia-east1-a"
 
         ZONE = "asia-east2"
         DATA_SERVICE_REPO = "santos"
@@ -41,15 +41,15 @@ pipeline {
         }
 
 
-//        stage('Build and Test') {
-//            steps {
-//                script {
-//                    sh 'mvn -version'
-//                    sh 'java -version'
-//                    sh 'mvn clean package'
-//                }
-//            }
-//        }
+        stage('Build and Test') {
+            steps {
+                script {
+                    sh 'mvn -version'
+                    sh 'java -version'
+                    sh 'mvn clean package'
+                }
+            }
+        }
 //
 //
 //        stage('Set up Google Cloud') {
@@ -67,15 +67,15 @@ pipeline {
 //            }
 //        }
 
-//        stage('Pushing Docker Image') {
-//            steps {
-//                script {
-//                    sh 'docker build -t ${DATA_SERVICE_REGISTRY_PATH}:latest .'
-//                    // asia-east2-docker.pkg.dev/santossv/santos/data-service-master:11
-//                    sh 'docker push ${DATA_SERVICE_REGISTRY_PATH}:latest'
-//                }
-//            }
-//        }
+        stage('Pushing Docker Image') {
+            steps {
+                script {
+                    sh 'docker build -t ${DATA_SERVICE_REGISTRY_PATH}:latest .'
+                    // asia-east2-docker.pkg.dev/santossv/santos/data-service-master:11
+                    sh 'docker push ${DATA_SERVICE_REGISTRY_PATH}:latest'
+                }
+            }
+        }
 //
 //        stage('Deploy to GKE') {
 //            steps {
@@ -96,15 +96,15 @@ pipeline {
 //            }
 //        }
 
-        stage('Deploy to GKE') {
-            steps {
-                script {
-                    dir(DEPLOY_FOLDER) {
-                       sh 'kubectl --kubeconfig=/home/quangnam130520/.kube/config apply -f data-service-deployment.yaml'
-                    }
-                }
-            }
-    }
+//        stage('Deploy to GKE') {
+//            steps {
+//                script {
+//                    dir(DEPLOY_FOLDER) {
+//                       sh 'kubectl --kubeconfig=/home/quangnam130520/.kube/config apply -f data-service-deployment.yaml'
+//                    }
+//                }
+//            }
+//    }
 
 //    stage('SSH Into GKE') {
 //        def remote = [:]
