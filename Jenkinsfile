@@ -17,8 +17,8 @@ pipeline {
         DEPLOY_FOLDER = "${WORKSPACE}/deploy"
 
 //        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-service-account-key')
-        CLIENT_EMAIL = "test-250@santossv.iam.gserviceaccount.com"
-        GCLOUD_CREDS = credentials('test-secret')
+//        CLIENT_EMAIL = "test-250@santossv.iam.gserviceaccount.com"
+//        GCLOUD_CREDS = credentials('test-secret')
 
     }
 
