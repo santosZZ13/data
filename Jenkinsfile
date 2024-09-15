@@ -12,13 +12,13 @@ pipeline {
         CLUSTER_NAME = "santosk8s"
         ZONE_KUBERNETES = "asia-east1-a"
 
-        ZONE = "asia-east2"
-        DATA_SERVICE_REPO = "santos"
+        ZONE_REPO = "asia-east2"
+        DATA_SERVICE_REPO = "santos-repo"
         DEPLOY_FOLDER = "${WORKSPACE}/deploy"
 
 //        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-service-account-key')
 //        CLIENT_EMAIL = "test-250@santossv.iam.gserviceaccount.com"
-//        GCLOUD_CREDS = credentials('test-secret')
+         SANTOS_REPO_SERVICE_ACCOUNT = credentials('santos-repo-account-service')
 
     }
 
@@ -35,7 +35,7 @@ pipeline {
                     env.DATA_SERVICE_PORT = "8080"
 
 
-                    env.DATA_SERVICE_REGISTRY_PATH = "${ZONE}-docker.pkg.dev/${PROJECT_ID}/${DATA_SERVICE_REPO}/${DATA_SERVICE_DEPLOYMENT_NAME}"
+                    env.DATA_SERVICE_REGISTRY_PATH = "${ZONE_REPO}-docker.pkg.dev/${PROJECT_ID}/${DATA_SERVICE_REPO}/${DATA_SERVICE_DEPLOYMENT_NAME}"
                 }
             }
         }
@@ -50,35 +50,33 @@ pipeline {
                 }
             }
         }
-//
-//
-//        stage('Set up Google Cloud') {
-//            steps {
-//                script {
-//
-//
+        stage('Set up Google Cloud') {
+            steps {
+                script {
+
+                    sh 'gcloud auth activate-service-account --key-file=${SANTOS_REPO_SERVICE_ACCOUNT}'
+
 //                    sh '''
 //                        gcloud auth activate-service-account ${CLIENT_EMAIL} --key-file="${GCLOUD_CREDS}"
 //                        gcloud config set project ${PROJECT_ID}
 //                        gcloud auth configure-docker ${ZONE}-docker.pkg.dev
 //                        gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE_KUBERNETES} --project ${PROJECT_ID}
 //                    '''
-//                }
-//            }
-//        }
+                }
+            }
+        }
 
         stage('Pushing Docker Image') {
             steps {
                 script {
                     sh 'docker build -t ${DATA_SERVICE_REGISTRY_PATH}:latest .'
-                    // asia-east2-docker.pkg.dev/santossv/santos/data-service-master:11
                     sh 'docker push ${DATA_SERVICE_REGISTRY_PATH}:latest'
                 }
             }
         }
 //
 //        stage('Deploy to GKE') {
-//            steps {
+ //            steps {
 //                script {
 //                    dir(DEPLOY_FOLDER) {
 //                        sh '''
