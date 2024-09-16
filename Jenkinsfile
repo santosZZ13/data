@@ -65,6 +65,10 @@ pipeline {
 //                        gcloud auth configure-docker ${ZONE}-docker.pkg.dev
 //                        gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE_KUBERNETES} --project ${PROJECT_ID}
 //                    '''
+
+                    sh '''
+                        gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE_KUBERNETES} --project ${PROJECT_ID}
+                    '''
                 }
             }
         }
@@ -77,11 +81,12 @@ pipeline {
                 }
             }
         }
-//
-//        stage('Deploy to GKE') {
- //            steps {
-//                script {
-//                    dir(DEPLOY_FOLDER) {
+        stage('Deploy to GKE') {
+             steps {
+                script {
+                    dir(DEPLOY_FOLDER) {
+
+
 //                        sh '''
 //                            sed -e "s|\\\${DATA_SERVICE_DEPLOYMENT_NAME}|${DATA_SERVICE_DEPLOYMENT_NAME}|g" \
 //                                -e "s|\\\${DEPLOYMENT_NAME_LABEL}|${DEPLOYMENT_NAME_LABEL}|g" \
@@ -92,10 +97,10 @@ pipeline {
 //
 //                            kubectl apply -f data-service-deployment-updated.yaml
 //                    '''
-//                    }
-//                }
-//            }
-//        }
+                    }
+                }
+            }
+        }
 
 //        stage('Deploy to GKE') {
 //            steps {
