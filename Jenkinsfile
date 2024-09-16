@@ -6,36 +6,27 @@ pipeline {
     }
 
     environment {
-//        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
-
+        DEPLOY_FOLDER = "${WORKSPACE}/deploy"
+        // Kubernetes cluster configuration
         PROJECT_ID = 'santos-435406'
         CLUSTER_NAME = "santosk8s"
         ZONE_KUBERNETES = "asia-east1-a"
-
+        // Docker registry configuration
         ZONE_REPO = "asia-east2"
         DATA_SERVICE_REPO = "santos-repo"
-        DEPLOY_FOLDER = "${WORKSPACE}/deploy"
-
-//        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-service-account-key')
-//        CLIENT_EMAIL = "test-250@santossv.iam.gserviceaccount.com"
-         SANTOS_REPO_SERVICE_ACCOUNT = credentials('santos-repo-account-service')
-         COMPUTER_SERVICE_ACCOUNT = credentials('computer-engine-service-account')
-
+        // Service account configuration
+        SANTOS_REPO_SERVICE_ACCOUNT = credentials('santos-repo-account-service')
+        COMPUTER_SERVICE_ACCOUNT = credentials('computer-engine-service-account')
     }
 
     stages {
         stage('Init Environment') {
             steps {
                 script {
-
                     scmVars = checkout scm
                     env.BRANCH_NAME = scmVars.GIT_BRANCH.replaceAll('^origin/', '').replaceAll('/', '-').toLowerCase()
-
                     env.DATA_SERVICE_DEPLOYMENT_NAME = "data-service-${env.BRANCH_NAME}"
-                    env.DEPLOYMENT_NAME_LABEL = "data-service"
                     env.DATA_SERVICE_PORT = "8080"
-
-
                     env.DATA_SERVICE_REGISTRY_PATH = "${ZONE_REPO}-docker.pkg.dev/${PROJECT_ID}/${DATA_SERVICE_REPO}/${DATA_SERVICE_DEPLOYMENT_NAME}"
                 }
             }
@@ -90,25 +81,25 @@ pipeline {
 
 
         stage('Deploy to GKE') {
-             steps {
+            steps {
                 script {
                     dir(DEPLOY_FOLDER) {
 
                         sh '''
                             gcloud auth activate-service-account --key-file=${COMPUTER_SERVICE_ACCOUNT}
                             gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE_KUBERNETES} --project ${PROJECT_ID}
-                            kubectl apply -f data-service-deployment.yaml
                         '''
-//                        sh '''
-//                            sed -e "s|\\\${DATA_SERVICE_DEPLOYMENT_NAME}|${DATA_SERVICE_DEPLOYMENT_NAME}|g" \
-//                                -e "s|\\\${DEPLOYMENT_NAME_LABEL}|${DEPLOYMENT_NAME_LABEL}|g" \
-//                                -e "s|\\\${DATA_SERVICE_PORT}|${DATA_SERVICE_PORT}|g" \
-//                                -e "s|\\\${DATA_SERVICE_REGISTRY_PATH}|${DATA_SERVICE_REGISTRY_PATH}|g" \
-//                            data-service-deployment.yaml > data-service-deployment-updated.yaml
-//
-//
-//                            kubectl apply -f data-service-deployment-updated.yaml
-//                    '''
+                        sh '''
+                            sed -e "s|\\\${DATA_SERVICE_DEPLOYMENT_NAME}|${DATA_SERVICE_DEPLOYMENT_NAME}|g" \
+                                -e "s|\\\${DATA_SERVICE_PORT}|${DATA_SERVICE_PORT}|g" \
+                                -e "s|\\\${ZONE_REPO}|${ZONE_REPO}|g" \
+                                -e "s|\\\${PROJECT_ID}|${PROJECT_ID}|g" \
+                                -e "s|\\\${DATA_SERVICE_REPO}|${DATA_SERVICE_REPO}|g" \
+                                -e "s|\\\${DATA_SERVICE_REGISTRY_PATH}|${DATA_SERVICE_REGISTRY_PATH}|g" \
+                            data-service-deployment.yaml > data-service-deployment-updated.yaml
+                            
+                            kubectl apply -f data-service-deployment-updated.yaml
+                        '''
                     }
                 }
             }
@@ -123,41 +114,19 @@ pipeline {
 //                }
 //            }
 //    }
+    }
 
-//    stage('SSH Into GKE') {
-//        def remote = [:]
-//        remote.name = 'SSH Into GKE'
-//        remote.host = '35.238.152.162'
-//        remote.user = 'root'
-//        remote.password = 'vagrant'
-//        remote.identityFile = ''
-//
-//        stage('Put K8S file on GKE') {
-//            sshPut remote: remote, from: "${DEPLOY_FOLDER}/data-service-deployment-updated.yaml", into: "."
-//        }
-//
-//        stage('Deploy K8S file on GKE') {
-//            sshCommand remote: remote, command: "kubectl apply -f data-service-deployment-updated.yaml"
-//        }
-//
-//
-//    }
-
-
-}
-
-
-post {
-    // If the pipeline is successful, send a Slack notification.
+    post {
+        // If the pipeline is successful, send a Slack notification.
 //        success {
 //            slackSend channel: '#general',
 //                    color: 'good',
 //                    message: "The pipeline ${currentBuild.fullDisplayName} has succeeded."
 //        }
 
-    // Cleanup workspace after the build is done
-    always {
-        cleanWs()
+        // Cleanup workspace after the build is done
+        always {
+            cleanWs()
+        }
     }
-}
 }

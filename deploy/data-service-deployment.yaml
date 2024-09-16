@@ -1,27 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: data-service-master
+  name: ${DATA_SERVICE_DEPLOYMENT_NAME}
   namespace: default
   labels:
-    app: data-service-master
+    app: ${DATA_SERVICE_DEPLOYMENT_NAME}
     environment: production
 
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: data-service-master
+      app: ${DATA_SERVICE_DEPLOYMENT_NAME}
   template:
     metadata:
       labels:
-        app: data-service-master
+        app: ${DATA_SERVICE_DEPLOYMENT_NAME}
     spec:
       containers:
         - name: data-service
-          image: asia-east2-docker.pkg.dev/santos-435406/santos-repo/data-service-master:latest
+          image: ${ZONE_REPO}-docker.pkg.dev/${PROJECT_ID}/${DATA_SERVICE_REPO}/${DATA_SERVICE_REGISTRY_PATH}:latest
           ports:
-            - containerPort: 8080
+            - containerPort: ${DATA_SERVICE_PORT}
           imagePullPolicy: IfNotPresent
           env:
             - name: REDIS_HOST
@@ -40,16 +40,16 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: data-service-master
+  name: ${DATA_SERVICE_DEPLOYMENT_NAME}
   labels:
-    app: data-service-master
+    app: ${DATA_SERVICE_DEPLOYMENT_NAME}
 
 spec:
   selector:
-    app: data-service-master
+    app: ${DATA_SERVICE_DEPLOYMENT_NAME}
   ports:
     - protocol: TCP
       name: app
-      port: 8080
-      targetPort: 8080
+      port: ${DATA_SERVICE_PORT}
+      targetPort: ${DATA_SERVICE_PORT}
   type: LoadBalancer
