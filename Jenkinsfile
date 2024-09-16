@@ -43,29 +43,6 @@ pipeline {
             }
         }
 
-//        stage('Set up Google Cloud') {
-//            steps {
-//                script {
-//
-//                    sh '''
-//                            gcloud auth activate-service-account --key-file=${SANTOS_REPO_SERVICE_ACCOUNT}
-//                            gcloud auth configure-docker ${ZONE_REPO}-docker.pkg.dev
-//                       '''
-//
-////                    sh '''
-////                        gcloud auth activate-service-account ${CLIENT_EMAIL} --key-file="${GCLOUD_CREDS}"
-////                        gcloud config set project ${PROJECT_ID}
-////                        gcloud auth configure-docker ${ZONE}-docker.pkg.dev
-////                        gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE_KUBERNETES} --project ${PROJECT_ID}
-////                    '''
-//
-//                    sh '''
-//                        gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE_KUBERNETES} --project ${PROJECT_ID}
-//                    '''
-//                }
-//            }
-//        }
-
         stage('Pushing Docker Image') {
             steps {
                 script {
@@ -73,8 +50,8 @@ pipeline {
                             gcloud auth activate-service-account --key-file=${SANTOS_REPO_SERVICE_ACCOUNT}
                             gcloud auth configure-docker ${ZONE_REPO}-docker.pkg.dev
                        '''
-                    sh 'docker build -t ${DATA_SERVICE_REGISTRY_PATH}:latest .'
-                    sh 'docker push ${DATA_SERVICE_REGISTRY_PATH}:latest'
+                    sh 'docker build -t ${DATA_SERVICE_REGISTRY_PATH}:1.0.2 .'
+                    sh 'docker push ${DATA_SERVICE_REGISTRY_PATH}:1.0.2'
                 }
             }
         }
