@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: data-service
-          image: ${ZONE_REPO}-docker.pkg.dev/${PROJECT_ID}/${DATA_SERVICE_REPO}/${DATA_SERVICE_REGISTRY_PATH}:latest
+          image: ${ZONE_REPO}-docker.pkg.dev/${PROJECT_ID}/${DATA_SERVICE_REPO}/${DATA_SERVICE_REGISTRY_PATH}:1.0.2
           ports:
             - containerPort: ${DATA_SERVICE_PORT}
           imagePullPolicy: IfNotPresent
