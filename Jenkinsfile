@@ -78,12 +78,10 @@ pipeline {
         stage('Pushing Docker Image') {
             steps {
                 script {
-
                     sh '''  
                             gcloud auth activate-service-account --key-file=${SANTOS_REPO_SERVICE_ACCOUNT}
                             gcloud auth configure-docker ${ZONE_REPO}-docker.pkg.dev
                        '''
-
                     sh 'docker build -t ${DATA_SERVICE_REGISTRY_PATH}:latest .'
                     sh 'docker push ${DATA_SERVICE_REGISTRY_PATH}:latest'
                 }
@@ -101,8 +99,6 @@ pipeline {
                             gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE_KUBERNETES} --project ${PROJECT_ID}
                             kubectl apply -f data-service-deployment.yaml
                         '''
-
-
 //                        sh '''
 //                            sed -e "s|\\\${DATA_SERVICE_DEPLOYMENT_NAME}|${DATA_SERVICE_DEPLOYMENT_NAME}|g" \
 //                                -e "s|\\\${DEPLOYMENT_NAME_LABEL}|${DEPLOYMENT_NAME_LABEL}|g" \

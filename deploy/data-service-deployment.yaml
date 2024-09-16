@@ -1,70 +1,55 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ${DATA_SERVICE_DEPLOYMENT_NAME} # data-service
-  namespace: default # testing, development, staging, production
+  name: data-service-master
+  namespace: default
   labels:
-    app: ${DEPLOYMENT_NAME_LABEL} # data-service
+    app: data-service-master
     environment: production
-
 
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ${DEPLOYMENT_NAME_LABEL} # data-service
+      app: data-service-master
   template:
     metadata:
       labels:
-        app: ${DEPLOYMENT_NAME_LABEL} # data-service
+        app: data-service-master
     spec:
       containers:
         - name: data-service
-          # DATA_SERVICE_REGISTRY_PATH: asia-south1-docker.pkg.dev
-          # PROJECT_ID: data-service-320209
-          # REPOSITORY: jenkins
-          image: ${DATA_SERVICE_REGISTRY_PATH}:latest
+          image: asia-east2-docker.pkg.dev/santos-435406/santos-repo/data-service-master:latest
           ports:
-            - containerPort: ${DATA_SERVICE_PORT} # 8080
-          #          restartPolicy: Always
+            - containerPort: 8080
           imagePullPolicy: IfNotPresent
-
           env:
             - name: REDIS_HOST
               valueFrom:
                 configMapKeyRef:
                   name: data-service-configmap
                   key: redis-host
-
             - name: REDIS_PORT
               valueFrom:
                 configMapKeyRef:
                   name: data-service-configmap
                   key: redis-port
 
-            #resources:
-            #requests:
-            #memory: "64Mi"
-            #cpu: "250m"
-            #limits:
-            #memory: "128Mi"
-            #cpu: "500m"
-
 ---
 
 apiVersion: v1
 kind: Service
 metadata:
-  name: data-service
+  name: data-service-master
   labels:
-    app: data-service
+    app: data-service-master
 
 spec:
   selector:
-    app: data-service
+    app: data-service-master
   ports:
     - protocol: TCP
       name: app
-      port: 8080 # service port
-      targetPort: 8080 # container port
+      port: 8080
+      targetPort: 8080
   type: LoadBalancer
