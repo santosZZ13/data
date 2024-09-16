@@ -86,6 +86,10 @@ pipeline {
                 script {
                     dir(DEPLOY_FOLDER) {
 
+                        sh '''
+                            kubectl apply -f data-service-deployment.yaml
+                        '''
+
 
 //                        sh '''
 //                            sed -e "s|\\\${DATA_SERVICE_DEPLOYMENT_NAME}|${DATA_SERVICE_DEPLOYMENT_NAME}|g" \
