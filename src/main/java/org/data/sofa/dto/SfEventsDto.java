@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-public interface SofaEventsDto {
+public interface SfEventsDto {
 	@Builder
 	@Data
 	@AllArgsConstructor

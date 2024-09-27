@@ -36,23 +36,8 @@ public interface GetExBetEventByDate {
 	class ExBetResponseDto {
 		private int total;
 		private String date;
-		private List<ExBetMatchResponseDto> matches;
+		private List<ExBetCommonDto.ExBetMatchResponseDto> matches;
 	}
 
-	@Builder
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	class ExBetMatchResponseDto {
-		private String tntName;
-		private Integer iid;
-		private Boolean inPlay;
-		private String homeName;
-		private String awayName;
-		private String slug;
-		private LocalDateTime kickoffTime;
-		@JsonProperty("fetched_date")
-		private LocalDateTime fetchedDate;
-	}
 
 }

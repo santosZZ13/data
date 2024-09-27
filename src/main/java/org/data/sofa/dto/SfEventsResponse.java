@@ -9,7 +9,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 
-public class SofaEventsResponse {
+public class SfEventsResponse {
 
 	private List<EventResponse> events;
 	private Boolean hasNextPage;

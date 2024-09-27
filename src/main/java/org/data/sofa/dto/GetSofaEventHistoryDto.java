@@ -39,7 +39,7 @@ public interface GetSofaEventHistoryDto {
 		@JsonProperty("total_matches")
 		private int totalMatches;
 		@JsonProperty("team_details")
-		private SofaEventsDto.TeamDetails teamDetails;
+		private SfEventsDto.TeamDetails teamDetails;
 		@JsonProperty("history_scores")
 		private List<HistoryScore> historyScores;
 	}

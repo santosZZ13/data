@@ -37,7 +37,7 @@ public interface GetSofaEventsByDateDto {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class GetSofaEventsByDateData {
-		private List<SofaEventsDto.EventDto> events;
+		private List<SfEventsDto.EventDto> events;
 	}
 
 }

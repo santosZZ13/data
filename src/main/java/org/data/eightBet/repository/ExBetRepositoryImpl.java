@@ -2,6 +2,7 @@ package org.data.eightBet.repository;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.data.eightBet.dto.ExBetCommonDto;
 import org.data.eightBet.dto.GetExBetEventByDate;
 import org.data.eightBet.dto.ImportExBetFromFile;
 import org.data.eightBet.response.ExBetMatchResponse;
@@ -70,17 +71,16 @@ public class ExBetRepositoryImpl implements ExBetRepository {
 
 
 	@Override
-	public List<GetExBetEventByDate.ExBetMatchResponseDto> getExBetByDate(GetExBetEventByDate.Request request) {
-		String date = request.getDate();
+	public List<ExBetCommonDto.ExBetMatchResponseDto> getExBetByDate(String date) {
 		LocalDateTime startOfDay = TimeUtil.convertStringToLocalDateTime(date);
 		LocalDateTime endOfDay = startOfDay.plusDays(1);
 		exBetMongoRepository.findAllByKickoffTime(startOfDay, endOfDay);
 
 		List<ExBetEntity> allExBetByKickoffTime = exBetMongoRepository.findAllByKickoffTime(startOfDay, endOfDay);
 		if (!allExBetByKickoffTime.isEmpty()) {
-			List<GetExBetEventByDate.ExBetMatchResponseDto> exBetMatchResponseDtos = new ArrayList<>();
+			List<ExBetCommonDto.ExBetMatchResponseDto> exBetMatchResponseDtos = new ArrayList<>();
 			for (ExBetEntity exBetEntity : allExBetByKickoffTime) {
-				GetExBetEventByDate.ExBetMatchResponseDto exBetMatchResponseDto = GetExBetEventByDate.ExBetMatchResponseDto
+				ExBetCommonDto.ExBetMatchResponseDto exBetMatchResponseDto = ExBetCommonDto.ExBetMatchResponseDto
 						.builder()
 						.tntName(exBetEntity.getTnName())
 						.iid(exBetEntity.getIId())

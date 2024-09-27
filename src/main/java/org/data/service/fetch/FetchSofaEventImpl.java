@@ -5,7 +5,7 @@ import lombok.extern.log4j.Log4j2;
 import org.data.persistent.entity.HistoryFetchEventEntity;
 import org.data.persistent.repository.HistoryFetchEventMongoRepository;
 import org.data.properties.ConnectionProperties;
-import org.data.sofa.dto.SofaEventsResponse;
+import org.data.sofa.dto.SfEventsResponse;
 import org.data.sofa.repository.impl.SofaEventsRepository;
 import org.data.util.RestConnector;
 import org.data.util.TimeUtil;
@@ -131,7 +131,7 @@ public class FetchSofaEventImpl implements FetchSofaEvent {
 		int timesTestForLast = 0;
 		int timesTestForNext = 0;
 
-		List<SofaEventsResponse> sofaEventsRespons = new ArrayList<>();
+		List<SfEventsResponse> sofaEventsRespons = new ArrayList<>();
 
 		do {
 			if (isLast) {
@@ -142,13 +142,13 @@ public class FetchSofaEventImpl implements FetchSofaEvent {
 //				if (timesTestForLast > 5) {
 //					isLast = false;
 //				}
-				SofaEventsResponse sofaEventsResponseLast = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
-						SCHEDULED_EVENT_TEAM_LAST, SofaEventsResponse.class, Arrays.asList(id, initLast));
-				if (sofaEventsResponseLast.getHasNextPage()) {
+				SfEventsResponse sfEventsResponseLast = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
+						SCHEDULED_EVENT_TEAM_LAST, SfEventsResponse.class, Arrays.asList(id, initLast));
+				if (sfEventsResponseLast.getHasNextPage()) {
 					initLast++;
-					sofaEventsRespons.add(sofaEventsResponseLast);
+					sofaEventsRespons.add(sfEventsResponseLast);
 				} else {
-					sofaEventsRespons.add(sofaEventsResponseLast);
+					sofaEventsRespons.add(sfEventsResponseLast);
 					isLast = false;
 				}
 			}
@@ -162,14 +162,14 @@ public class FetchSofaEventImpl implements FetchSofaEvent {
 //					isNext = false;
 //				}
 
-				SofaEventsResponse sofaEventsResponseNext = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
-						SCHEDULED_EVENT_TEAM_NEXT, SofaEventsResponse.class, Arrays.asList(id, intNext));
+				SfEventsResponse sfEventsResponseNext = restConnector.restGet(ConnectionProperties.Host.SOFASCORE,
+						SCHEDULED_EVENT_TEAM_NEXT, SfEventsResponse.class, Arrays.asList(id, intNext));
 
-				if (sofaEventsResponseNext.getHasNextPage()) {
-					sofaEventsRespons.add(sofaEventsResponseNext);
+				if (sfEventsResponseNext.getHasNextPage()) {
+					sofaEventsRespons.add(sfEventsResponseNext);
 					intNext++;
 				} else {
-					sofaEventsRespons.add(sofaEventsResponseNext);
+					sofaEventsRespons.add(sfEventsResponseNext);
 					isNext = false;
 				}
 			}
@@ -177,7 +177,7 @@ public class FetchSofaEventImpl implements FetchSofaEvent {
 		} while (isLast || isNext);
 
 
-		List<SofaEventsResponse.EventResponse> eventResponses = new ArrayList<>();
+		List<SfEventsResponse.EventResponse> eventResponses = new ArrayList<>();
 
 		// sum of events
 		Optional<Integer> totalEvents = sofaEventsRespons
@@ -210,7 +210,7 @@ public class FetchSofaEventImpl implements FetchSofaEvent {
 		historyFetchEventMongoRepository.save(historyFetchEventEntity);
 	}
 
-	private void saveEventBatch(List<SofaEventsResponse.EventResponse> eventResponses, Integer idMatch) {
+	private void saveEventBatch(List<SfEventsResponse.EventResponse> eventResponses, Integer idMatch) {
 		log.info("#fetchHistoricalMatchesForId - saving events for [id: {}] with size: [{}]", idMatch, eventResponses.size());
 		sofaEventsRepository.saveEvents(eventResponses);
 		//			if (eventResponses.size() >= BATCH_SIZE) {

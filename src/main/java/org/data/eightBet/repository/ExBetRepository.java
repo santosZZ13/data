@@ -1,5 +1,6 @@
 package org.data.eightBet.repository;
 
+import org.data.eightBet.dto.ExBetCommonDto;
 import org.data.eightBet.dto.GetExBetEventByDate;
 import org.data.eightBet.dto.ImportExBetFromFile;
 import org.data.eightBet.response.ExBetMatchResponse;
@@ -20,5 +21,5 @@ public interface ExBetRepository {
 //	void saveMatchesMap(Map<EightXBetTournamentResponse, EightXBetCommonResponse.EightXBetMatchResponse> tournamentMatchResponseMap);
 
 	ImportExBetFromFile.ExBetResponseDto saveExBetEntity(List<ExBetTournamentResponse> exBetTournamentResponses);
-	List<GetExBetEventByDate.ExBetMatchResponseDto> getExBetByDate(GetExBetEventByDate.Request request);
+	List<ExBetCommonDto.ExBetMatchResponseDto> getExBetByDate(String date);
 }

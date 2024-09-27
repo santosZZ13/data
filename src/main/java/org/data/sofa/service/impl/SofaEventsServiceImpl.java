@@ -138,7 +138,7 @@ public class SofaEventsServiceImpl implements SofaEventsService {
 		List<GetSofaEventHistoryDto.HistoryScore> historyScore = sofaEventsTemplateRepository
 				.getHistoryScore(teamId, request.getStatus(), request.getFrom(), request.getTo());
 
-		SofaEventsDto.TeamDetails teamDetailsById = sofaEventsTemplateRepository.getTeamDetailsById(teamId);
+		SfEventsDto.TeamDetails teamDetailsById = sofaEventsTemplateRepository.getTeamDetailsById(teamId);
 
 		historyScore.forEach(hs -> {
 			if (hs.getHomeScore().isScoreEmpty()) {
