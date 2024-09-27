@@ -4,11 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.data.common.exception.ApiException;
-import org.data.eightBet.dto.EightXBetCommonResponse;
-import org.data.eightBet.dto.EventsByDateDTO;
-import org.data.eightBet.dto.EightXBetEventsResponse;
+import org.data.eightBet.dto.*;
 import org.data.eightBet.dto.EightXBetEventsResponse.EightXBetTournamentResponse;
-import org.data.eightBet.repository.EightXBetRepository;
+import org.data.eightBet.repository.ExBetRepository;
+import org.data.eightBet.response.ExBetResponse;
+import org.data.eightBet.response.ExBetTournamentResponse;
 import org.data.service.fetch.FetchSofaEvent;
 import org.data.service.sap.SapService;
 import org.data.common.model.BaseResponse;
@@ -21,8 +21,11 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -37,10 +40,10 @@ import static org.data.util.TeamUtils.areTeamNamesEqual;
 @Service
 @AllArgsConstructor
 @Log4j2
-public class EightXBetServiceImpl implements EightXBetService {
+public class ExBetServiceImpl implements ExBetService {
 
 	private final SapService sapService;
-	private final EightXBetRepository eightXBetRepository;
+	private final ExBetRepository exBetRepository;
 	private final RedisTemplate<String, Object> redisTemplate;
 	private final FetchSofaEvent fetchSofaEvent;
 //	private final HistoryFetchEventService historyFetchEventService;
@@ -242,6 +245,42 @@ public class EightXBetServiceImpl implements EightXBetService {
 					}
 				})
 				.join();
+	}
+
+	@Override
+	public ImportExBetFromFile.Response getDataFile(MultipartFile file) {
+		ObjectMapper objectMapper = new ObjectMapper();
+
+		try {
+			InputStream inputStream = file.getInputStream();
+			ExBetResponse exBetResponse = objectMapper.readValue(inputStream, ExBetResponse.class);
+			ExBetResponse.Data data = exBetResponse.getData();
+			List<ExBetTournamentResponse> tournaments = data.getTournaments();
+
+
+			ImportExBetFromFile.ExBetResponseDto exBetResponseDto = exBetRepository.saveExBetEntity(tournaments);
+
+
+			return ImportExBetFromFile.Response.builder()
+					.data(exBetResponseDto)
+					.build();
+
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+	}
+
+	@Override
+	public GetExBetEventByDate.Response getExBetEventByDate(GetExBetEventByDate.Request request) {
+		List<GetExBetEventByDate.ExBetMatchResponseDto> exBetMatchResponseDtos = exBetRepository.getExBetByDate(request);
+		return GetExBetEventByDate.Response.builder()
+				.data(GetExBetEventByDate.ExBetResponseDto.builder()
+						.total(exBetMatchResponseDtos.size())
+						.date(request.getDate())
+						.matches(exBetMatchResponseDtos)
+						.build())
+				.build();
 	}
 
 	private void processIdsForFetchHistoryEvent(List<Integer> ids) {

@@ -2,10 +2,7 @@ package org.data.sofa.controller;
 
 import lombok.AllArgsConstructor;
 import org.data.common.model.BaseResponse;
-import org.data.sofa.dto.GetHistoryFetchEventDto;
-import org.data.sofa.dto.GetSofaEventHistoryDto;
-import org.data.sofa.dto.GetStatisticsEventByIdDto;
-import org.data.sofa.dto.GetSofaEventsByDateDto;
+import org.data.sofa.dto.*;
 import org.data.sofa.service.SofaEventsService;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,12 +12,27 @@ public class SofaEventsController {
 
 	private final SofaEventsService sofaEventsService;
 
-	private static final String PRE_FIX_API = "/api/v1/data-service/sport/football";
+	private static final String PRE_FIX_API = "/api/v1/sport/football";
 
-	@PostMapping(PRE_FIX_API + "/scheduled-events")
-	public BaseResponse getScheduleEventsByDate(@RequestBody GetSofaEventsByDateDto.Request request) {
+	@PostMapping(PRE_FIX_API + GetEventScheduledDto.GET_SCHEDULED_EVENT_BY_DATE_API)
+	public GetEventScheduledDto.Response getScheduleEventsByDate(@RequestBody GetEventScheduledDto.Request request) {
 		return sofaEventsService.getAllScheduleEventsByDate(request);
 	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	@PostMapping( PRE_FIX_API + "/events")
 	public GetSofaEventHistoryDto.Response getHistoryEvents(@RequestBody GetSofaEventHistoryDto.Request request) {

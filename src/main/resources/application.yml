@@ -1,19 +1,18 @@
 server:
-  port: 8080
-
-logging:
-  level:
-    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
+  port: 3002
 
 spring:
   application:
-    name: data
+    name: data-service
   main:
     banner-mode: console # Disable the Spring logo
     #        web-application-type: none
   #    allow-bean-definition-overriding: true
-
-  datasource:
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+  #  datasource:
 
   #    url: jdbc:mysql://localhost:3306/data?allowpublickeyretrieval=true&usessl=false
   #    username: root
@@ -28,12 +27,12 @@ spring:
   data:
     mongodb:
       database: ${MONGODB_DB:football}
-      uri: mongodb+srv://${MONGODB_USERNAME:quangnam130520}:${MONGODB_PW:NLiXVlvZc7Xk6Z4S}@${MONGODB_HOST:cluster0.fwoaemp.mongodb.net}/
+      uri: mongodb+srv://${MONGODB_USERNAME:quangnam130520}:${MONGODB_PW:pij2bY1U5DHXOnb8}@${MONGODB_HOST:cluster0.fwoaemp.mongodb.net}/
     redis:
-      host: ${REDIS_HOST:redis}
+      host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       client-type: lettuce
-#uri: mongodb+srv://quangnam130520:NLiXVlvZc7Xk6Z4S@cluster0.fwoaemp.mongodb.net/
+  #uri: mongodb+srv://quangnam130520:NLiXVlvZc7Xk6Z4S@cluster0.fwoaemp.mongodb.net/
   jpa:
     hibernate:
       ddl-auto: none
@@ -44,6 +43,20 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
     generate-ddl: true
+
+#eureka:
+#  client:
+#    service-url:
+#      defaultZone: http://localhost:8761/eureka/
+#  instance:
+#    prefer-ip-address: true
+#    leaseRenewalIntervalInSeconds: 10
+
+logging:
+  level:
+    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
+
+
 
 connection:
   eightxbet:

@@ -2,25 +2,25 @@ package org.data.util;
 
 
 import org.data.eightBet.dto.EightXBetCommonResponse;
+import org.data.eightBet.response.*;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static org.data.eightBet.dto.EightXBetEventsResponse.*;
-import static org.data.persistent.entity.EventsEightXBetEntity.*;
+import static org.data.persistent.entity.ExBetEntity.*;
 
 public class TournamentEightXBetConverter {
-	public static TeamEntity convertToTeamEntity(EightXBetCommonResponse.EightXBetTeamResponse eightXBetTeamResponse) {
+	public static TeamEntity convertToTeamEntity(ExBetTeamResponse exBetTeamResponse) {
 		return TeamEntity.builder()
-				.id(eightXBetTeamResponse.getId())
-				.cid(eightXBetTeamResponse.getCid())
-				.name(eightXBetTeamResponse.getName())
-				.jerseyEntity(Objects.isNull(eightXBetTeamResponse.getJersey()) ? null : convertToJerseyEntity(eightXBetTeamResponse.getJersey()))
+				.id(exBetTeamResponse.getId())
+				.cid(exBetTeamResponse.getCid())
+				.name(exBetTeamResponse.getName())
+				.jerseyEntity(Objects.isNull(exBetTeamResponse.getJersey()) ? null : convertToJerseyEntity(exBetTeamResponse.getJersey()))
 				.build();
 	}
 
-	private static JerseyEntity convertToJerseyEntity(EightXBetCommonResponse.EightXBetJerseyResponse jerseyResponse) {
+	private static JerseyEntity convertToJerseyEntity(ExBetJerseyResponse jerseyResponse) {
 		return Objects.isNull(jerseyResponse) ? null : JerseyEntity.builder()
 				.base(jerseyResponse.getBase())
 				.sleeve(jerseyResponse.getSleeve())
@@ -31,7 +31,7 @@ public class TournamentEightXBetConverter {
 				.build();
 	}
 
-	public static RoundEntity convertToRoundEntity(EightXBetCommonResponse.EightXBetRoundResponse roundResponse) {
+	public static RoundEntity convertToRoundEntity(ExRoundResponse roundResponse) {
 		return Objects.isNull(roundResponse) ? null : RoundEntity.builder()
 				.roundType(roundResponse.getRoundType())
 				.roundName(roundResponse.getRoundName())
@@ -41,7 +41,7 @@ public class TournamentEightXBetConverter {
 				.build();
 	}
 
-	public static MarketInfoEntity convertToMarketInfoEntity(EightXBetCommonResponse.EightXBetMarketInfoResponse marketInfoResponse) {
+	public static MarketInfoEntity convertToMarketInfoEntity(ExBetMarketInfoResponse marketInfoResponse) {
 		return Objects.isNull(marketInfoResponse) ? null : MarketInfoEntity.builder()
 				.cr(marketInfoResponse.getCr())
 				.ot(marketInfoResponse.getOt())
@@ -53,7 +53,7 @@ public class TournamentEightXBetConverter {
 				.build();
 	}
 
-	public static MidsEntity convertToMidsEntity(EightXBetCommonResponse.EightXBetMidsResponse midsResponse) {
+	public static MidsEntity convertToMidsEntity(ExBetMidsResponse midsResponse) {
 		return Objects.isNull(midsResponse) ? null : MidsEntity.builder()
 				.fmid(midsResponse.getFmid())
 				.bmid(midsResponse.getBmid())
@@ -64,7 +64,7 @@ public class TournamentEightXBetConverter {
 				.build();
 	}
 
-	public static List<AnchorEntity> convertToAnchorEntity(List<EightXBetCommonResponse.EightXBetAnchorResponse> anchorResponses) {
+	public static List<AnchorEntity> convertToAnchorEntity(List<ExBetAnchorResponse> anchorResponses) {
 		return Objects.isNull(anchorResponses) ? null : anchorResponses.stream()
 				.map(anchorResponse -> AnchorEntity.builder()
 						.houseId(anchorResponse.getHouseId())
@@ -88,7 +88,7 @@ public class TournamentEightXBetConverter {
 
 	}
 
-	public static List<GiftEntity> convertToGiftEntity(List<EightXBetCommonResponse.EightXBetGiftResponse> gifs) {
+	public static List<GiftEntity> convertToGiftEntity(List<ExBetGiftResponse> gifs) {
 
 		return Objects.isNull(gifs) ? null : gifs.stream()
 				.map(giftResponse -> GiftEntity.builder()
@@ -99,7 +99,7 @@ public class TournamentEightXBetConverter {
 				.collect(Collectors.toList());
 	}
 
-	public static List<VideoEntity> convertToVideoEntity(List<EightXBetCommonResponse.EightXBetVideoResponse> videos) {
+	public static List<VideoEntity> convertToVideoEntity(List<ExBetVideoResponse> videos) {
 		return videos.stream()
 				.map(video -> VideoEntity.builder()
 						.info(video.getInfo())

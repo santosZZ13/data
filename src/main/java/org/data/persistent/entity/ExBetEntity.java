@@ -3,7 +3,7 @@ package org.data.persistent.entity;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,12 +14,12 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EventsEightXBetEntity {
+public class ExBetEntity {
 	@Id
 	private String id;
 	private Integer sId;
-	private Integer cId;
 	private Integer tId;
+	private Integer cId;
 	private Integer iId;
 	private Integer countdown;
 	private String state;
@@ -29,7 +29,7 @@ public class EventsEightXBetEntity {
 	private Integer chatMid;
 	private Integer gifMid;
 	private Integer graphMid;
-	private Boolean inplay;
+	private Boolean inPlay;
 	private Boolean video;
 	private Boolean nv;
 	private String scoreId;
@@ -37,7 +37,6 @@ public class EventsEightXBetEntity {
 	private Integer tnPriority;
 	private TeamEntity homeTeam;
 	private TeamEntity awayTeam;
-	private TournamentEntity tournament;
 	private RoundEntity round;
 	private MarketInfoEntity marketInfo;
 	private MidsEntity mids;
@@ -47,20 +46,21 @@ public class EventsEightXBetEntity {
 	private String name;
 //	@DateTimeFormat()
 	private LocalDateTime kickoffTime;
-
-	@Builder
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	public static class TournamentEntity {
-		private Integer sId;
-		private Integer cId;
-		private Integer tId;
-		private String name;
-		private Boolean favorite;
-		private Integer priority;
-		private Integer count;
-	}
+	@Field("fetched_date")
+	private LocalDateTime fetchedDate;
+//	@Builder
+//	@Data
+//	@AllArgsConstructor
+//	@NoArgsConstructor
+//	public static class TournamentEntity {
+//		private Integer sId;
+//		private Integer cId;
+//		private Integer tId;
+//		private String name;
+//		private Boolean favorite;
+//		private Integer priority;
+//		private Integer count;
+//	}
 
 	@Builder
 	@Data

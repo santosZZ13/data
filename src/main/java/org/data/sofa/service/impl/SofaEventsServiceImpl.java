@@ -13,6 +13,8 @@ import org.data.sofa.exception.NotFoundEventException;
 import org.data.sofa.mapper.SofaEventMapper;
 import org.data.sofa.repository.impl.HistoryFetchEventRepository;
 import org.data.sofa.repository.impl.SofaEventsTemplateRepository;
+import org.data.sofa.response.EventChildResponse;
+import org.data.sofa.response.EventsResponse;
 import org.data.sofa.service.SofaEventsService;
 import org.data.util.RestConnector;
 import org.data.util.TimeUtil;
@@ -29,7 +31,6 @@ import java.util.stream.Stream;
 
 
 import static org.data.sofa.dto.GetSofaEventsByDateDto.*;
-import static org.data.sofa.dto.SofaEventsResponse.*;
 
 @Service
 @AllArgsConstructor
@@ -46,58 +47,61 @@ public class SofaEventsServiceImpl implements SofaEventsService {
 	private final SofaEventMapper sofaEventMapper;
 
 	@Override
-	public BaseResponse getAllScheduleEventsByDate(Request request) {
-		CompletableFuture<SofaEventsResponse> sofaScheduledEventsResponseFuture =
+	public GetEventScheduledDto.Response getAllScheduleEventsByDate(GetEventScheduledDto.Request request) {
+
+		CompletableFuture<EventsResponse> scheduledEventsResponseFuture =
 				CompletableFuture.supplyAsync(() -> {
 					final String key = "sofa" + request.getDate();
 					if (Boolean.TRUE.equals(redisTemplate.hasKey(key))) {
 						log.info("#getAllScheduleEventsByDate - [Found] scheduled events for date: [{}] in [Thread: {}]", request.getDate(), Thread.currentThread().getName());
-						return (SofaEventsResponse) redisTemplate.opsForValue().get(key);
+						return (EventsResponse) redisTemplate.opsForValue().get(key);
 					} else {
 						log.info("#getAllScheduleEventsByDate - [Fetching] scheduled events for date: [{}] in [Thread: {}]", request.getDate(), Thread.currentThread().getName());
-						SofaEventsResponse sofaEventsResponse = sapService.restSofaScoreGet(SCHEDULED_EVENTS + request.getDate(), SofaEventsResponse.class);
+						EventsResponse sofaEventsResponse = sapService.restSofaScoreGet(SCHEDULED_EVENTS + request.getDate(), EventsResponse.class);
 						redisTemplate.opsForValue().set(key, sofaEventsResponse);
 						return sofaEventsResponse;
 					}
 				});
 
-		CompletableFuture<SofaEventsResponse> sofaInverseScheduledEventsResponseFuture =
+
+		CompletableFuture<EventsResponse> inverseScheduledEventsResponseFuture =
 				CompletableFuture.supplyAsync(() -> {
 					final String key = "sofa" + request.getDate() + "inverse";
 					if (Boolean.TRUE.equals(redisTemplate.hasKey(key))) {
 						log.info("#getAllScheduleEventsByDate - [Found] inverse scheduled events for date: [{}] in [Thread: {}]", request.getDate(), Thread.currentThread().getName());
-						return (SofaEventsResponse) redisTemplate.opsForValue().get(key);
+						return (EventsResponse) redisTemplate.opsForValue().get(key);
 					} else {
 						log.info("#getAllScheduleEventsByDate - [Fetching] inverse scheduled events for date: [{}] in [Thread: {}]", request.getDate(), Thread.currentThread().getName());
-						SofaEventsResponse sofaEventsResponse = sapService.restSofaScoreGet(SCHEDULED_EVENTS + request.getDate() + SCHEDULED_EVENTS_INVERSE, SofaEventsResponse.class);
+						EventsResponse sofaEventsResponse = sapService.restSofaScoreGet(SCHEDULED_EVENTS + request.getDate() + SCHEDULED_EVENTS_INVERSE, EventsResponse.class);
 						redisTemplate.opsForValue().set(key, sofaEventsResponse);
 						return sofaEventsResponse;
 					}
 				});
 
-		return sofaScheduledEventsResponseFuture
-				.thenCombine(sofaInverseScheduledEventsResponseFuture, (sofaScheduledEventsResponse, sofaInverseScheduledEventsResponse) -> {
+
+		return scheduledEventsResponseFuture
+				.thenCombine(inverseScheduledEventsResponseFuture, (scheduledEventsResponse, inverseScheduledEventsResponse) -> {
 					String date = request.getDate();
 					LocalDateTime requestDate = TimeUtil.convertStringToLocalDateTime(date);
-					List<SofaEventsDto.EventDto> eventDetails = getEventDetails(sofaScheduledEventsResponse, sofaInverseScheduledEventsResponse, requestDate);
-					eventDetails.sort(Comparator.comparing(SofaEventsDto.EventDto::getKickOffMatch));
+					List<GetEventScheduledDto.ScheduledEventDto> eventDetails = getEventDetails(scheduledEventsResponse, inverseScheduledEventsResponse, requestDate);
+					eventDetails.sort(Comparator.comparing(GetEventScheduledDto.ScheduledEventDto::getKickOffMatch));
 					log.info("#getAllScheduleEventsByDate - eventDetails size: [{}]", eventDetails.size());
 					return eventDetails;
 				})
-				.thenApplyAsync(eventDto -> {
+				.thenApplyAsync(eventDetails -> {
 					CompletableFuture.runAsync(() -> {
-						List<Integer> ids = getIdForFetchEventHistory(eventDto);
+						List<Integer> ids = getIdForFetchEventHistory(eventDetails);
 						if (!ids.isEmpty()) {
 							CompletableFuture.runAsync(() -> historyFetchEventRepository.saveHistoryEventWithIds(ids));
 						} else {
 							log.info("#getAllScheduleEventsByDate - No ids to fetch historical events");
 						}
 					});
-					return eventDto;
+					return eventDetails;
 				})
-				.thenApply(eventDto -> GetSofaEventsByDateDto.Response
+				.thenApply(eventDto -> GetEventScheduledDto.Response
 						.builder()
-						.data(GetSofaEventsByDateDto.GetSofaEventsByDateData.builder()
+						.data(GetEventScheduledDto.ScheduledEventByDate.builder()
 								.events(eventDto)
 								.build())
 						.build())
@@ -256,29 +260,29 @@ public class SofaEventsServiceImpl implements SofaEventsService {
 	}
 
 
-	private @NotNull List<SofaEventsDto.EventDto> getEventDetails(SofaEventsResponse sofaEventsResponse,
-																  SofaEventsResponse sofaInverseScheduledEventsResponse,
+	private @NotNull List<GetEventScheduledDto.ScheduledEventDto> getEventDetails(EventsResponse scheduledEventsResponse,
+																  EventsResponse inverseScheduledEventsResponse,
 																  LocalDateTime requestDate) {
-		List<EventResponse> sofaScheduledEventsResponseEventResponses = sofaEventsResponse.getEvents();
-		List<EventResponse> sofaInverseScheduledEventsResponseEventResponses = sofaInverseScheduledEventsResponse.getEvents();
-		sofaScheduledEventsResponseEventResponses.addAll(sofaInverseScheduledEventsResponseEventResponses);
+		List<EventChildResponse> eventResponses = scheduledEventsResponse.getEvents();
+		List<EventChildResponse> inverseEventResponses = inverseScheduledEventsResponse.getEvents();
+		eventResponses.addAll(inverseEventResponses);
 
-		List<SofaEventsDto.EventDto> eventDetails = new ArrayList<>();
+		List<GetEventScheduledDto.ScheduledEventDto> scheduledEventsDto = new ArrayList<>();
 
-		for (EventResponse responseEventResponse : sofaScheduledEventsResponseEventResponses) {
+		for (EventChildResponse responseEventResponse : eventResponses) {
 			LocalDateTime responseDate = TimeUtil.convertUnixTimestampToLocalDateTime(responseEventResponse.getStartTimestamp());
 			if (responseDate.getDayOfMonth() == requestDate.getDayOfMonth() &&
 					responseDate.getMonth() == requestDate.getMonth() &&
 					responseDate.getYear() == requestDate.getYear()) {
-				SofaEventsDto.EventDto eventDetail = sofaEventMapper.toEventDto(responseEventResponse);
-				eventDetails.add(eventDetail);
+				GetEventScheduledDto.ScheduledEventDto scheduledEventDto = sofaEventMapper.scheduledEventDto(responseEventResponse);
+				scheduledEventsDto.add(scheduledEventDto);
 			}
 		}
-		return eventDetails;
+		return scheduledEventsDto;
 	}
 
 
-	private List<Integer> getIdForFetchEventHistory(List<SofaEventsDto.EventDto> eventDetails) {
+	private List<Integer> getIdForFetchEventHistory(List<GetEventScheduledDto.ScheduledEventDto> eventDetails) {
 		return eventDetails.stream()
 				.flatMap(eventDetail -> {
 					Integer idTeamHome = eventDetail.getHomeDetails().getIdTeam();
