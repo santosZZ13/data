@@ -2,6 +2,7 @@ package org.data.service.fetch;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.data.conts.FetchStatus;
 import org.data.persistent.entity.HistoryFetchEventEntity;
 import org.data.persistent.repository.HistoryFetchEventMongoRepository;
 import org.data.properties.ConnectionProperties;
@@ -31,18 +32,22 @@ public class FetchSofaEventImpl implements FetchSofaEvent {
 	private final SofaEventsRepository sofaEventsRepository;
 	private final RestConnector restConnector;
 
-	private static final int BATCH_SIZE = 4; // Adjust batch size as needed
+	private static final int BATCH_SIZE = 30; // Adjust batch size as needed
 	private static final int BATCH_SIZE_FOR_FETCH = 5; // Adjust batch size as needed
 	private static final long DELAY_BETWEEN_BATCHES_MS = 5000;
 
 	@Override
 	public void fetchHistoricalMatches(List<Integer> ids) {
-		List<Integer> idsTest = ids.subList(0, 10);
-		List<List<Integer>> batches = createBatches(idsTest, BATCH_SIZE);
+		List<Integer> idsForFetch = new ArrayList<>();
+		for (Integer id : ids) {
+			if (!isFetchedForTeamId(id)) {
+				idsForFetch.add(id);
+			}
+		}
 
+		List<List<Integer>> batches = createBatches(idsForFetch, BATCH_SIZE);
 		ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 		CompletableFuture<Void> future = CompletableFuture.completedFuture(null);
-
 		for (List<Integer> batch : batches) {
 			future = future.thenCompose(previous -> processBatchWithDelay(batch, executorService));
 		}
@@ -65,11 +70,7 @@ public class FetchSofaEventImpl implements FetchSofaEvent {
 
 						CompletableFuture<Void> voidCompletableFuture = CompletableFuture.runAsync(() -> {
 							try {
-								if (!isFetchHistoricalMatchesForId(innerBatch)) {
-									fetchHistoricalMatchesForId(innerBatch);
-								} else {
-									log.info("Historical events for id: {} already fetched", innerBatch);
-								}
+								fetchHistoricalMatchesForId(innerBatch);
 							} catch (Exception e) {
 								log.error("Error fetching historical event for id: {}", innerBatch, e);
 							}
@@ -108,16 +109,13 @@ public class FetchSofaEventImpl implements FetchSofaEvent {
 	 * @param id
 	 * @return
 	 */
-	public Boolean isFetchHistoricalMatchesForId(Integer id) {
+	public Boolean isFetchedForTeamId(Integer id) {
 		Optional<HistoryFetchEventEntity> byIdTeam = historyFetchEventMongoRepository.findByTeamId(id);
-		if (byIdTeam.isPresent()) {
-			return true;
-		}
-		return false;
+		return byIdTeam.isPresent() && byIdTeam.get().getFetchStatus().equals(FetchStatus.FETCHED);
 	}
 
 
-	public void fetchHistoricalMatchesForId(Integer id)  {
+	public void fetchHistoricalMatchesForId(Integer id) {
 		// TODO:
 		// Caching Strategies for APIs: https://medium.com/@satyendra.jaiswal/caching-strategies-for-apis-improving-performance-and-reducing-load-1d4bd2df2b44
 		Instant start = Instant.now();
@@ -131,7 +129,7 @@ public class FetchSofaEventImpl implements FetchSofaEvent {
 		int timesTestForLast = 0;
 		int timesTestForNext = 0;
 
-		List<SfEventsResponse> sofaEventsRespons = new ArrayList<>();
+		List<SfEventsResponse> sfEventResponse = new ArrayList<>();
 
 		do {
 			if (isLast) {
@@ -146,9 +144,9 @@ public class FetchSofaEventImpl implements FetchSofaEvent {
 						SCHEDULED_EVENT_TEAM_LAST, SfEventsResponse.class, Arrays.asList(id, initLast));
 				if (sfEventsResponseLast.getHasNextPage()) {
 					initLast++;
-					sofaEventsRespons.add(sfEventsResponseLast);
+					sfEventResponse.add(sfEventsResponseLast);
 				} else {
-					sofaEventsRespons.add(sfEventsResponseLast);
+					sfEventResponse.add(sfEventsResponseLast);
 					isLast = false;
 				}
 			}
@@ -166,10 +164,10 @@ public class FetchSofaEventImpl implements FetchSofaEvent {
 						SCHEDULED_EVENT_TEAM_NEXT, SfEventsResponse.class, Arrays.asList(id, intNext));
 
 				if (sfEventsResponseNext.getHasNextPage()) {
-					sofaEventsRespons.add(sfEventsResponseNext);
+					sfEventResponse.add(sfEventsResponseNext);
 					intNext++;
 				} else {
-					sofaEventsRespons.add(sfEventsResponseNext);
+					sfEventResponse.add(sfEventsResponseNext);
 					isNext = false;
 				}
 			}
@@ -180,13 +178,10 @@ public class FetchSofaEventImpl implements FetchSofaEvent {
 		List<SfEventsResponse.EventResponse> eventResponses = new ArrayList<>();
 
 		// sum of events
-		Optional<Integer> totalEvents = sofaEventsRespons
+		Optional<Integer> totalEvents = sfEventResponse
 				.stream()
-				.map(sofaScheduledEventsResponse -> {
-					eventResponses.addAll(sofaScheduledEventsResponse.getEvents());
-					return sofaScheduledEventsResponse;
-				})
-				.map(sofaScheduledEventsResponse -> sofaScheduledEventsResponse.getEvents().size())
+				.peek(sfEventRp -> eventResponses.addAll(sfEventRp.getEvents()))
+				.map(sfEventRp -> sfEventRp.getEvents().size())
 				.reduce(Integer::sum);
 
 		totalEvents.ifPresent(totalEvent -> log.info("#fetchHistoricalMatchesForId - [Total] events for id: {} is: {}", id, totalEvents.get()));
@@ -205,6 +200,7 @@ public class FetchSofaEventImpl implements FetchSofaEvent {
 				.teamId(id)
 				.timeElapsed(timeElapses)
 				.total(totalEvents)
+				.fetchStatus(FetchStatus.FETCHED)
 				.createdDate(LocalDateTime.now())
 				.build();
 		historyFetchEventMongoRepository.save(historyFetchEventEntity);
