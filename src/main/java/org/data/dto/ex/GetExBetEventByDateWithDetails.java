@@ -5,7 +5,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.data.common.model.BaseResponse;
 import org.data.common.model.PaginationSortDto;
-import org.data.dto.sf.SfEventsDto;
+import org.data.dto.sf.SfEventsCommonDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,8 +28,14 @@ public interface GetExBetEventByDateWithDetails {
 	@NoArgsConstructor
 	class Response extends BaseResponse {
 		private ExBetDetailsResponseDto data;
-	}
 
+		public static Response of(ExBetDetailsResponseDto data) {
+			return Response
+					.builder()
+					.data(data)
+					.build();
+		}
+	}
 
 	@Builder
 	@Data
@@ -38,33 +44,18 @@ public interface GetExBetEventByDateWithDetails {
 	class ExBetDetailsResponseDto {
 		private int total;
 		private String date;
-		private List<ExBetMatchDetailsResponseDto> matches;
-	}
+		private ExBetDetail exBetDetail;
+		private ExBetSfDetail exBetSfDetail;
 
-	@EqualsAndHashCode(callSuper = true)
-	@SuperBuilder
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	class ExBetMatchDetailsResponseDto extends ExBetCommonDto.ExBetMatchResponseDto {
-		private SfEventsDto.EventDto sofaDetail;
-	}
-
-	@Builder
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	class SfScheduledEventDto {
-		private String tntName;
-		private String seasonName;
-		private Integer round;
-		private String status;
-		private TeamDetailsDto homeDetails;
-		private TeamDetailsDto awayDetails;
-		//		private ScoreDetailsDto homeScoreDetails;
-//		private GetEventScheduledDto.ScoreDetailsDto awayScoreDetails;
-		private Integer id;
-		private LocalDateTime kickOffMatch;
+		public static ExBetDetailsResponseDto of(String date, ExBetDetail exBetDetail, ExBetSfDetail exBetSfDetail) {
+			return ExBetDetailsResponseDto
+					.builder()
+					.total(exBetDetail.getTotal() + exBetSfDetail.getTotal())
+					.date(date)
+					.exBetDetail(exBetDetail)
+					.exBetSfDetail(exBetSfDetail)
+					.build();
+		}
 	}
 
 
@@ -72,10 +63,36 @@ public interface GetExBetEventByDateWithDetails {
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	class TeamDetailsDto {
-		@JsonProperty("id")
-		private Integer idTeam;
-		private String name;
-		private String country;
+	class ExBetSfDetail {
+		private int total;
+		private List<ExBetCommonDto.ExBetMatchDetailsResponseDto> matches;
+
+		public static ExBetSfDetail of(List<ExBetCommonDto.ExBetMatchDetailsResponseDto> matches) {
+			return ExBetSfDetail
+					.builder()
+					.total(matches.size())
+					.matches(matches)
+					.build();
+		}
+
 	}
+
+	@Builder
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	class ExBetDetail {
+		private int total;
+		private List<ExBetCommonDto.ExBetMatchResponseDto> matches;
+
+		public static ExBetDetail of(List<ExBetCommonDto.ExBetMatchResponseDto> matches) {
+			return ExBetDetail
+					.builder()
+					.total(matches.size())
+					.matches(matches)
+					.build();
+		}
+	}
+
+
 }

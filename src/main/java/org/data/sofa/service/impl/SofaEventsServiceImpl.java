@@ -113,13 +113,13 @@ public class SofaEventsServiceImpl implements SofaEventsService {
 		if (!historyFetchEventRepository.isExistByTeamId(id)) {
 			fetchSofaEvent.fetchHistoricalMatchesForId(id);
 			return BaseResponse.builder()
-					.code("")
+					.code(200)
 					.msg("Fetch event history for id: " + id)
 //					.data("Success")
 					.build();
 		}
 		return BaseResponse.builder()
-				.code("")
+				.code(200)
 				.msg("Fetch event history for id: " + id)
 //				.data("Already fetched")
 				.build();
@@ -138,7 +138,7 @@ public class SofaEventsServiceImpl implements SofaEventsService {
 		List<GetSofaEventHistoryDto.HistoryScore> historyScore = sofaEventsTemplateRepository
 				.getHistoryScore(teamId, request.getStatus(), request.getFrom(), request.getTo());
 
-		SfEventsDto.TeamDetails teamDetailsById = sofaEventsTemplateRepository.getTeamDetailsById(teamId);
+		SfEventsCommonDto.TeamDetails teamDetailsById = sofaEventsTemplateRepository.getTeamDetailsById(teamId);
 
 		historyScore.forEach(hs -> {
 			if (hs.getHomeScore().isScoreEmpty()) {

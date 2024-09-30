@@ -14,7 +14,7 @@ public class BaseResponse {
 	@Builder.Default
 	private String msg = "Success";
 	@Builder.Default
-	private String code = "200";
+	private Integer code = 200;
 	@Builder.Default
 	private String time = System.currentTimeMillis() + "";
 	private String traceId;

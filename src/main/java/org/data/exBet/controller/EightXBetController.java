@@ -1,6 +1,7 @@
 package org.data.exBet.controller;
 
 import lombok.AllArgsConstructor;
+import org.data.dto.ex.FetchExBetWithSfEventByDate;
 import org.data.dto.ex.GetExBetEventByDate;
 import org.data.dto.ex.GetExBetEventByDateWithDetails;
 import org.data.dto.ex.ImportExBetFromFile;
@@ -14,7 +15,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class EightXBetController {
 
 	private final ExBetService exBetService;
-
 
 
 	@PostMapping("/api/exBet/import")
@@ -32,15 +32,9 @@ public class EightXBetController {
 		return exBetService.getExBetEventByDateWithDetails(request);
 	}
 
-
-
-	@GetMapping("/api/eightXBet/inplay")
-	public BaseResponse getScheduledEventInPlay() {
-		return exBetService.getScheduledEventInPlay();
+	public FetchExBetWithSfEventByDate.Response fetchExBetWithSfEventByDate(FetchExBetWithSfEventByDate.Request request) {
+		return exBetService.fetchExBetWithSfEventByDate(request);
 	}
 
-	@GetMapping("/api/data-service/ex/events")
-	public BaseResponse getEventsByDate(@RequestParam String date) {
-		return exBetService.getEventsByDate(date);
-	}
+
 }

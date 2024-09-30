@@ -13,7 +13,7 @@ import org.data.service.fetch.FetchSofaEvent;
 import org.data.service.sap.SapService;
 import org.data.common.model.BaseResponse;
 import org.data.dto.sf.SofaCommonResponse;
-import org.data.dto.sf.SfEventsDto;
+import org.data.dto.sf.SfEventsCommonDto;
 import org.data.dto.sf.SfEventsResponse;
 import org.data.util.TimeUtil;
 import org.jetbrains.annotations.NotNull;
@@ -48,34 +48,6 @@ public class ExBetServiceImpl implements ExBetService {
 	private final FetchSofaEvent fetchSofaEvent;
 //	private final HistoryFetchEventService historyFetchEventService;
 
-	@Override
-	public BaseResponse getScheduledEventInPlay() {
-
-//		EightXBetEventsResponse eightXBetEventsResponse = sapService.restEightXBetGet(EventInPlayDTO.EIGHT_X_BET,
-//				EventInPlayDTO.queryParams(),
-//				EightXBetEventsResponse.class);
-//
-//		Data data = eightXBetEventsResponse.getData();
-//
-//		if (Objects.isNull(data.getTournaments())) {
-//			throw new ApiException("Errors", "", "No data found for scheduled events in play");
-//		}
-//
-//		EventInPlayDTO.Response response = populateScheduledEventInPlayResponseToDTO(data.getTournaments());
-//
-//		if (!Objects.equals(response.getTntSize(), 0)) {
-//			List<EventsEightXBetEntity> scheduledEventsEightXBetEntities = eightXBetRepository.saveTournamentResponse(data.getTournaments());
-//		}
-//
-//		return GenericResponseWrapper
-//				.builder()
-//				.code("")
-//				.msg("")
-//				.data(response)
-//				.build();
-		return null;
-
-	}
 
 //	@Cacheable(value = "sofaEvents", key = "#date")
 //	public SofaEventsResponse getSofaEventsResponse(String date) {
@@ -91,22 +63,26 @@ public class ExBetServiceImpl implements ExBetService {
 
 
 	@Override
+	public FetchExBetWithSfEventByDate.Response fetchExBetWithSfEventByDate(FetchExBetWithSfEventByDate.Request request) {
+		return null;
+	}
+
+	@Override
 	public GetExBetEventByDateWithDetails.Response getExBetEventByDateWithDetails(GetExBetEventByDateWithDetails.Request request) {
 		String date = request.getDate();
 		LocalDateTime localDateTime = TimeUtil.convertStringToLocalDateTime(date);
 
 		CompletableFuture<List<ExBetCommonDto.ExBetMatchResponseDto>> exBetByDateFuture = CompletableFuture.supplyAsync(() -> exBetRepository.getExBetByDate(date));
 
-
 		CompletableFuture<SfEventsResponse> sfEventsResponseFuture =
 				CompletableFuture.supplyAsync(() -> {
-					String cacheKey = "sofaEventsByDate::" + EventsByDateDTO.date;
+					String cacheKey = "sfEventByDate::" + date;
 					SfEventsResponse cachedResponse = (SfEventsResponse) redisTemplate.opsForValue().get(cacheKey);
 					if (cachedResponse != null) {
-						log.info("#getEventsByDate - [Found] cached sofa events for date: [{}] in [Thread: {}]", EventsByDateDTO.date, Thread.currentThread().getName());
+						log.info("#getExBetEventByDateWithDetails - [Found] cached sofa events for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
 						return cachedResponse;
 					} else {
-						log.info("#getEventsByDate - [Fetching] sofa events for date: [{}] in [Thread: {}]", EventsByDateDTO.date, Thread.currentThread().getName());
+						log.info("#getExBetEventByDateWithDetails - [Fetching] sofa events for date: [{}] in [Thread: {}]", EventsByDateDTO.date, Thread.currentThread().getName());
 						SfEventsResponse sfEventsResponse = sapService.restSofaScoreGet(SCHEDULED_EVENTS + date, SfEventsResponse.class);
 						redisTemplate.opsForValue().set(cacheKey, sfEventsResponse);
 						return sfEventsResponse;
@@ -116,13 +92,13 @@ public class ExBetServiceImpl implements ExBetService {
 		CompletableFuture<SfEventsResponse> sfInverseEventsResponseFuture =
 				CompletableFuture.supplyAsync(() -> {
 
-					String cacheKey = "sofaInverseEventsByDate::" + EventsByDateDTO.date;
+					String cacheKey = "sfInverseEventsByDate::" + date;
 					SfEventsResponse cachedResponse = (SfEventsResponse) redisTemplate.opsForValue().get(cacheKey);
 					if (cachedResponse != null) {
-						log.info("#getEventsByDate - [Found] cached sofa inverse events for date: [{}] in [Thread: {}]", EventsByDateDTO.date, Thread.currentThread().getName());
+						log.info("#getExBetEventByDateWithDetails - [Found] cached sofa inverse events for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
 						return cachedResponse;
 					} else {
-						log.info("#getEventsByDate - [Fetching] sofa inverse events for date: [{}] in [Thread: {}]", EventsByDateDTO.date, Thread.currentThread().getName());
+						log.info("#getExBetEventByDateWithDetails - [Fetching] sofa inverse events for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
 						SfEventsResponse sfEventsResponse = sapService.restSofaScoreGet(SCHEDULED_EVENTS + date + SCHEDULED_EVENTS_INVERSE, SfEventsResponse.class);
 						redisTemplate.opsForValue().set(cacheKey, sfEventsResponse);
 						return sfEventsResponse;
@@ -141,40 +117,25 @@ public class ExBetServiceImpl implements ExBetService {
 					}
 				})
 				.thenCombine(exBetByDateFuture, (sofaDto, exBet) -> {
-
-					List<GetExBetEventByDateWithDetails.ExBetMatchDetailsResponseDto> exBetMatches = new ArrayList<>();
+					List<ExBetCommonDto.ExBetMatchResponseDto> exBetMatches = new ArrayList<>();
+					List<ExBetCommonDto.ExBetMatchDetailsResponseDto> exBetSfMatches = new ArrayList<>();
 
 					for (ExBetCommonDto.ExBetMatchResponseDto exBetMatchResponseDto : exBet) {
-						SfEventsDto.EventDto eventDto = checkEightXBetMatcInEventDTO(exBetMatchResponseDto, sofaDto);
-						if (Objects.nonNull(eventDto)) {
-							GetExBetEventByDateWithDetails.ExBetMatchDetailsResponseDto exBetMatchDetailsResponseDto = GetExBetEventByDateWithDetails.ExBetMatchDetailsResponseDto
-									.builder()
-									.iid(exBetMatchResponseDto.getIid())
-									.tntName(exBetMatchResponseDto.getTntName())
-									.inPlay(exBetMatchResponseDto.getInPlay())
-									.homeName(exBetMatchResponseDto.getHomeName())
-									.awayName(exBetMatchResponseDto.getAwayName())
-									.slug(exBetMatchResponseDto.getSlug())
-									.kickoffTime(exBetMatchResponseDto.getKickoffTime())
-									.sofaDetail(eventDto)
-									.build();
-							exBetMatches.add(exBetMatchDetailsResponseDto);
+						//TODO: Optimize this method
+						SfEventsCommonDto.SfEventDto sfEventDto = checkEightXBetMatcInEventDTO(exBetMatchResponseDto, sofaDto);
+						if (Objects.isNull(sfEventDto)) {
+							exBetMatches.add(exBetMatchResponseDto);
+						} else {
+							ExBetCommonDto.ExBetMatchDetailsResponseDto exBetMatchSfDetailsResponseDto = ExBetCommonDto.ExBetMatchDetailsResponseDto.of(exBetMatchResponseDto, sfEventDto);
+							exBetSfMatches.add(exBetMatchSfDetailsResponseDto);
 						}
 					}
-
-					return exBetMatches;
+					GetExBetEventByDateWithDetails.ExBetDetail exBetDetail = GetExBetEventByDateWithDetails.ExBetDetail.of(exBetMatches);
+					GetExBetEventByDateWithDetails.ExBetSfDetail exBetSfDetail = GetExBetEventByDateWithDetails.ExBetSfDetail.of(exBetSfMatches);
+					return GetExBetEventByDateWithDetails.ExBetDetailsResponseDto.of(date, exBetDetail, exBetSfDetail);
 				})
-				.thenApply(response -> GetExBetEventByDateWithDetails.Response
-						.builder()
-						.code("")
-						.msg("")
-						.data(GetExBetEventByDateWithDetails.ExBetDetailsResponseDto
-								.builder()
-								.total(response.size())
-								.date(date)
-								.matches(response)
-								.build())
-						.build())
+				.thenApply(GetExBetEventByDateWithDetails.Response::of
+				)
 				.whenComplete((result, throwable) -> {
 					if (Objects.nonNull(throwable)) {
 						log.error("#getEventsByDate - Error occurred: {}", throwable.getMessage());
@@ -183,163 +144,6 @@ public class ExBetServiceImpl implements ExBetService {
 				.join();
 	}
 
-	@Override
-	public BaseResponse getEventsByDate(String date) {
-
-		//TODO: Need to call API
-		CompletableFuture<EightXBetEventsResponse> eightXBetEventResponseFuture =
-				CompletableFuture.supplyAsync(() -> {
-					ObjectMapper objectMapper = new ObjectMapper();
-					EightXBetEventsResponse eightXBetEventsResponse = null;
-					try {
-						eightXBetEventsResponse = objectMapper.readValue(new File("src/main/resources/response.json"),
-								EightXBetEventsResponse.class);
-					} catch (Exception e) {
-						throw new ApiException("Errors", "", "Error occurred while reading json file");
-					}
-					return eightXBetEventsResponse;
-				});
-
-
-		CompletableFuture<SfEventsResponse> sofaEventsResponseFuture =
-				CompletableFuture.supplyAsync(() -> {
-					String cacheKey = "sofaEventsByDate::" + date;
-					SfEventsResponse cachedResponse = (SfEventsResponse) redisTemplate.opsForValue().get(cacheKey);
-					if (cachedResponse != null) {
-						log.info("#getEventsByDate - [Found] cached sofa events for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
-						return cachedResponse;
-					} else {
-						log.info("#getEventsByDate - [Fetching] sofa events for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
-						SfEventsResponse sfEventsResponse = sapService.restSofaScoreGet(SCHEDULED_EVENTS + date, SfEventsResponse.class);
-						redisTemplate.opsForValue().set(cacheKey, sfEventsResponse);
-						return sfEventsResponse;
-					}
-				});
-
-		CompletableFuture<SfEventsResponse> sofaInverseEventsResponseFuture =
-				CompletableFuture.supplyAsync(() -> {
-
-					String cacheKey = "sofaInverseEventsByDate::" + date;
-					SfEventsResponse cachedResponse = (SfEventsResponse) redisTemplate.opsForValue().get(cacheKey);
-					if (cachedResponse != null) {
-						log.info("#getEventsByDate - [Found] cached sofa inverse events for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
-						return cachedResponse;
-					} else {
-						log.info("#getEventsByDate - [Fetching] sofa inverse events for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
-						SfEventsResponse sfEventsResponse = sapService.restSofaScoreGet(SCHEDULED_EVENTS + date + SCHEDULED_EVENTS_INVERSE, SfEventsResponse.class);
-						redisTemplate.opsForValue().set(cacheKey, sfEventsResponse);
-						return sfEventsResponse;
-					}
-				});
-
-		return sofaEventsResponseFuture.thenCombineAsync(sofaInverseEventsResponseFuture, (sofaEventsResponse, sofaInverseEventsResponse) -> {
-					log.info("#getEventsByDate - [Merging] {{sofa events}} with {{inverse sofa events}} for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
-					List<SfEventsResponse.EventResponse> eventsResponse = sofaEventsResponse.getEvents();
-					List<SfEventsResponse.EventResponse> eventsInverseResponse = sofaInverseEventsResponse.getEvents();
-					eventsResponse.addAll(eventsInverseResponse);
-					getSfEventDtoByDate(eventsResponse, TimeUtil.convertStringToLocalDateTime(date));
-					return getSfEventDtoByDate(eventsResponse, TimeUtil.convertStringToLocalDateTime(date));
-				})
-				.thenCombine(eightXBetEventResponseFuture, (eventDTOS, eightXBetEventResponse) -> {
-					log.info("#getEventsByDate - [Merging]  {{eventDTS}} with {{eightXBetEventResponse}} for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
-					Data data = eightXBetEventResponse.getData();
-					if (!data.getTournaments().isEmpty()) {
-
-						Map<Integer, List<EightXBetTournamentDTO>> eightXBetTournamentDTOMap = convertToEightXBetTournamentDTO(data.getTournaments(),
-								TimeUtil.convertStringToLocalDateTime(date));
-
-						Map.Entry<Integer, List<EightXBetTournamentDTO>> eightXBetTournamentDTOEntry = eightXBetTournamentDTOMap
-								.entrySet()
-								.iterator()
-								.next();
-
-						List<Integer> idsForSofaToFetch = new ArrayList<>();
-						List<EightXBetTournamentDTO> tournamentDtoWithId = new ArrayList<>();
-						List<EightXBetTournamentDTO> tournamentDTOWithNoId = new ArrayList<>();
-						int totalMatchesWithId = 0;
-						int totalMatchesWitNoId = 0;
-
-						for (EightXBetTournamentDTO eightXBetTournamentDTO : eightXBetTournamentDTOEntry.getValue()) {
-
-							List<EightXBetMatchDTO> eightXBetMatchDtoWithId = new ArrayList<>();
-							List<EightXBetMatchDTO> eightXBetMatchDtoWithNoId = new ArrayList<>();
-
-							for (EightXBetMatchDTO eightXBetMatchDTO : eightXBetTournamentDTO.getMatches()) {
-								SfEventsDto.EventDto eventDTO = null;
-								if (!Objects.isNull(eventDTO)) {
-									idsForSofaToFetch.add(eventDTO.getHomeDetails().getIdTeam());
-									idsForSofaToFetch.add(eventDTO.getAwayDetails().getIdTeam());
-									SofaEvent sofaEvent = buildSofaEvent(eventDTO);
-									eightXBetMatchDTO.setSofaDetail(sofaEvent);
-									eightXBetMatchDtoWithId.add(eightXBetMatchDTO);
-									totalMatchesWithId++;
-								} else {
-									eightXBetMatchDtoWithNoId.add(eightXBetMatchDTO);
-									totalMatchesWitNoId++;
-								}
-							}
-
-
-							if (!eightXBetMatchDtoWithId.isEmpty()) {
-								EightXBetTournamentDTO eightXBetTournamentDTOFirst = EightXBetTournamentDTO
-										.builder()
-										.tntName(eightXBetTournamentDTO.getTntName())
-										.count(eightXBetMatchDtoWithId.size())
-										.matches(eightXBetMatchDtoWithId)
-										.build();
-								tournamentDtoWithId.add(eightXBetTournamentDTOFirst);
-							}
-
-							if (!eightXBetMatchDtoWithNoId.isEmpty()) {
-								EightXBetTournamentDTO eightXBetTournamentDTOSecond = EightXBetTournamentDTO
-										.builder()
-										.tntName(eightXBetTournamentDTO.getTntName())
-										.count(eightXBetMatchDtoWithNoId.size())
-										.matches(eightXBetMatchDtoWithNoId)
-										.build();
-								tournamentDTOWithNoId.add(eightXBetTournamentDTOSecond);
-							}
-						}
-
-						processIdsForFetchHistoryEvent(idsForSofaToFetch);
-
-
-						EventsByDateDTO.TournamentDTO tournamentFirst = EventsByDateDTO.TournamentDTO.builder()
-								.eightXBetTournamentDto(tournamentDtoWithId)
-								.matchSize(totalMatchesWithId)
-								.tntSize(tournamentDtoWithId.size())
-								.build();
-
-						EventsByDateDTO.TournamentDTO tournamentSecond = EventsByDateDTO.TournamentDTO.builder()
-								.eightXBetTournamentDto(tournamentDTOWithNoId)
-								.matchSize(totalMatchesWitNoId)
-								.tntSize(tournamentDTOWithNoId.size())
-								.build();
-
-						return EventsByDateDTO
-								.Response
-								.builder()
-								.totalMatches(eightXBetTournamentDTOEntry.getKey())
-								.totalTournaments(eightXBetTournamentDTOEntry.getValue().size())
-								.tournamentsWithId(tournamentFirst)
-								.tournamentsWithNoId(tournamentSecond)
-								.build();
-					}
-					return null;
-				})
-				.thenApply(response -> BaseResponse
-						.builder()
-						.code("")
-						.msg("")
-//						.data(response)
-						.build())
-				.whenComplete((result, throwable) -> {
-					if (Objects.nonNull(throwable)) {
-						log.error("#getEventsByDate - Error occurred: {}", throwable.getMessage());
-					}
-				})
-				.join();
-	}
 
 	@Override
 	public ImportExBetFromFile.Response getDataFile(MultipartFile file) {
@@ -350,11 +154,7 @@ public class ExBetServiceImpl implements ExBetService {
 			ExBetResponse exBetResponse = objectMapper.readValue(inputStream, ExBetResponse.class);
 			ExBetResponse.Data data = exBetResponse.getData();
 			List<ExBetTournamentResponse> tournaments = data.getTournaments();
-
-
 			ImportExBetFromFile.ExBetResponseDto exBetResponseDto = exBetRepository.saveExBetEntity(tournaments);
-
-
 			return ImportExBetFromFile.Response.builder()
 					.data(exBetResponseDto)
 					.build();
@@ -377,69 +177,38 @@ public class ExBetServiceImpl implements ExBetService {
 				.build();
 	}
 
-	private void processIdsForFetchHistoryEvent(List<Integer> ids) {
-//		CompletableFuture.runAsync(() -> {
-//			log.info("#processIdsForFetchHistoryEvent - [Processing] ids for fetch history event in [Thread: {}]", Thread.currentThread().getName());
-//			List<Integer> historyFetchEventFetched = historyFetchEventService.getHistoryFetchEventWithStatus(FetchStatus.FETCHED);
-//			List<Integer> idsToFetch = new ArrayList<>();
-//			for (Integer id : ids) {
-//				if (!historyFetchEventFetched.contains(id)) {
-//					idsToFetch.add(id);
-//				}
-//			}
-//			if (!idsToFetch.isEmpty()) {
-//				historyFetchEventService.saveHistoryEventWithIds(idsToFetch);
-//			}
-//		});
-	}
 
-
-	private SofaEvent buildSofaEvent(SfEventsDto.@NotNull EventDto eventDTO) {
-		Team firstTeam = Team.builder()
-				.id(eventDTO.getHomeDetails().getIdTeam())
-				.name(eventDTO.getHomeDetails().getName())
-				.build();
-		Team secondTeam = Team.builder()
-				.id(eventDTO.getAwayDetails().getIdTeam())
-				.name(eventDTO.getAwayDetails().getName())
-				.build();
-		return SofaEvent.builder()
-				.firstTeam(firstTeam)
-				.secondTeam(secondTeam)
-				.build();
-	}
-
-	private List<SfEventsDto.EventDto> getSfEventDtoByDate(List<SfEventsResponse.EventResponse> eventResponses,
-														   LocalDateTime requestDate) {
-		List<SfEventsDto.EventDto> sofaEventDto = new ArrayList<>();
+	private List<SfEventsCommonDto.SfEventDto> getSfEventDtoByDate(List<SfEventsResponse.EventResponse> eventResponses,
+																   LocalDateTime requestDate) {
+		List<SfEventsCommonDto.SfEventDto> sofaSfEventDto = new ArrayList<>();
 		for (SfEventsResponse.EventResponse eventResponse : eventResponses) {
 			LocalDateTime responseDate = TimeUtil.convertUnixTimestampToLocalDateTime(eventResponse.getStartTimestamp());
 			if (responseDate.getDayOfMonth() == requestDate.getDayOfMonth() &&
 					responseDate.getMonth() == requestDate.getMonth() &&
 					responseDate.getYear() == requestDate.getYear()) {
-				SfEventsDto.EventDto eventDTO = populatedToEventDTO(eventResponse);
-				sofaEventDto.add(eventDTO);
+				SfEventsCommonDto.SfEventDto sfEventDTO = populatedToEventDTO(eventResponse);
+				sofaSfEventDto.add(sfEventDTO);
 			}
 		}
-		return sofaEventDto;
+		return sofaSfEventDto;
 	}
 
-	public SfEventsDto.EventDto populatedToEventDTO(SfEventsResponse.EventResponse eventResponse) {
+	public SfEventsCommonDto.SfEventDto populatedToEventDTO(SfEventsResponse.EventResponse eventResponse) {
 
 		SofaCommonResponse.Score homeScoreResponse = eventResponse.getHomeScore();
 		SofaCommonResponse.Score eventResponseAwayScore = eventResponse.getAwayScore();
 
-		return SfEventsDto.EventDto.builder()
+		return SfEventsCommonDto.SfEventDto.builder()
 				.id(eventResponse.getId())
 				.tntName(eventResponse.getTournament().getName())
 				.seasonName(Objects.isNull(eventResponse.getSeason()) ? null : eventResponse.getSeason().getName())
 				.round(Objects.isNull(eventResponse.getRoundInfo()) ? null : eventResponse.getRoundInfo().getRound())
 				.status(Objects.isNull(eventResponse.getStatus()) ? null : eventResponse.getStatus().getDescription())
-				.homeDetails(SfEventsDto.TeamDetails.builder()
+				.homeDetails(SfEventsCommonDto.TeamDetails.builder()
 						.idTeam(eventResponse.getHomeTeam().getId())
 						.name(eventResponse.getHomeTeam().getName())
 						.build())
-				.awayDetails(SfEventsDto.TeamDetails.builder()
+				.awayDetails(SfEventsCommonDto.TeamDetails.builder()
 						.idTeam(eventResponse.getAwayTeam().getId())
 						.name(eventResponse.getAwayTeam().getName())
 						.build())
@@ -448,7 +217,7 @@ public class ExBetServiceImpl implements ExBetService {
 	}
 
 
-	private @Nullable SfEventsDto.EventDto checkEightXBetMatcInEventDTO(ExBetCommonDto.ExBetMatchResponseDto eightXBetMatchDTO, List<SfEventsDto.EventDto> eventDtos) {
+	private @Nullable SfEventsCommonDto.SfEventDto checkEightXBetMatcInEventDTO(ExBetCommonDto.ExBetMatchResponseDto eightXBetMatchDTO, List<SfEventsCommonDto.SfEventDto> sfEventDtos) {
 
 		String eightXBetNameHome = eightXBetMatchDTO.getHomeName();
 		String eightXBetAwayName = eightXBetMatchDTO.getAwayName();
@@ -457,13 +226,13 @@ public class ExBetServiceImpl implements ExBetService {
 		boolean isEqualNameFirst;
 		boolean isEqualNameSecond;
 
-		for (SfEventsDto.EventDto eventDTO : eventDtos) {
+		for (SfEventsCommonDto.SfEventDto sfEventDTO : sfEventDtos) {
 			isEqualNameFirst = false;
 			isEqualNameSecond = false;
 
-			String sofaNameHome = eventDTO.getHomeDetails().getName();
-			String sofaAwayName = eventDTO.getAwayDetails().getName();
-			LocalDateTime kickOffMatch = eventDTO.getKickOffMatch();
+			String sofaNameHome = sfEventDTO.getHomeDetails().getName();
+			String sofaAwayName = sfEventDTO.getAwayDetails().getName();
+			LocalDateTime kickOffMatch = sfEventDTO.getKickOffMatch();
 
 			if (areTeamNamesEqual(eightXBetNameHome, sofaNameHome) || areTeamNamesEqual(eightXBetAwayName, sofaNameHome)) {
 				if (TimeUtil.isEqual(kickoffTime, kickOffMatch)) {
@@ -478,7 +247,7 @@ public class ExBetServiceImpl implements ExBetService {
 			}
 
 			if (isEqualNameFirst && isEqualNameSecond) {
-				return eventDTO;
+				return sfEventDTO;
 			}
 		}
 		return null;

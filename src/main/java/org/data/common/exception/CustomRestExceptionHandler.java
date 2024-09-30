@@ -45,7 +45,7 @@ public class CustomRestExceptionHandler extends ResponseEntityExceptionHandler {
 		return ResponseEntity.badRequest().body(BaseResponse
 				.builder()
 //				.data(fieldErrorWrappers)
-				.code("")
+				.code(200)
 				.msg("")
 				.build());
 	}
@@ -58,7 +58,7 @@ public class CustomRestExceptionHandler extends ResponseEntityExceptionHandler {
 		String shortDesc = ex.getShortDesc();
 
 		BaseResponse response = BaseResponse.builder()
-				.code(code)
+				.code(200)
 				.msg(shortDesc)
 //				.data(message)
 				.build();
@@ -71,7 +71,7 @@ public class CustomRestExceptionHandler extends ResponseEntityExceptionHandler {
 	public ResponseEntity<Object> handAll(Exception ex, WebRequest request) {
 		log.error("Exception occurred: ", ex);
 		BaseResponse response = BaseResponse.builder()
-				.code("INTERNAL_SERVER_ERROR")
+				.code(200)
 				.msg("Request could not be processed due to an internal error")
 				.build();
 		return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
