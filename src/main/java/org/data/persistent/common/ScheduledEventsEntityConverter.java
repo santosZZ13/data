@@ -1,6 +1,6 @@
 package org.data.persistent.common;
 
-import org.data.sofa.dto.SofaCommonResponse;
+import org.data.dto.sf.SofaCommonResponse;
 import org.data.util.TimeUtil;
 
 import java.util.Objects;

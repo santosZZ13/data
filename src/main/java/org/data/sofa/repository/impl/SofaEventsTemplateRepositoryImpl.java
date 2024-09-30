@@ -2,8 +2,8 @@ package org.data.sofa.repository.impl;
 
 import lombok.AllArgsConstructor;
 import org.data.conts.EventStatus;
-import org.data.sofa.dto.GetSofaEventHistoryDto;
-import org.data.sofa.dto.SfEventsDto;
+import org.data.dto.sf.GetSofaEventHistoryDto;
+import org.data.dto.sf.SfEventsDto;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.*;

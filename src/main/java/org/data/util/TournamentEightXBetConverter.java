@@ -1,8 +1,7 @@
 package org.data.util;
 
 
-import org.data.eightBet.dto.EightXBetCommonResponse;
-import org.data.eightBet.response.*;
+import org.data.exBet.response.*;
 
 import java.util.List;
 import java.util.Objects;

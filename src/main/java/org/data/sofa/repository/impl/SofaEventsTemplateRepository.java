@@ -1,8 +1,8 @@
 package org.data.sofa.repository.impl;
 
 import org.data.conts.EventStatus;
-import org.data.sofa.dto.GetSofaEventHistoryDto;
-import org.data.sofa.dto.SfEventsDto;
+import org.data.dto.sf.GetSofaEventHistoryDto;
+import org.data.dto.sf.SfEventsDto;
 
 import java.time.LocalDateTime;
 import java.util.List;

@@ -5,7 +5,7 @@ import lombok.extern.log4j.Log4j2;
 import org.data.persistent.entity.HistoryFetchEventEntity;
 import org.data.persistent.repository.HistoryFetchEventMongoRepository;
 import org.data.properties.ConnectionProperties;
-import org.data.sofa.dto.SfEventsResponse;
+import org.data.dto.sf.SfEventsResponse;
 import org.data.sofa.repository.impl.SofaEventsRepository;
 import org.data.util.RestConnector;
 import org.data.util.TimeUtil;
@@ -19,8 +19,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
 
-import static org.data.sofa.dto.GetSofaEventsByDateDto.SCHEDULED_EVENT_TEAM_LAST;
-import static org.data.sofa.dto.GetSofaEventsByDateDto.SCHEDULED_EVENT_TEAM_NEXT;
+import static org.data.dto.sf.GetSofaEventsByDateDto.SCHEDULED_EVENT_TEAM_LAST;
+import static org.data.dto.sf.GetSofaEventsByDateDto.SCHEDULED_EVENT_TEAM_NEXT;
 
 @Service
 @Log4j2

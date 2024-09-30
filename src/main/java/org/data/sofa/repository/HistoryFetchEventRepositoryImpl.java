@@ -5,7 +5,7 @@ import lombok.extern.log4j.Log4j2;
 import org.data.conts.FetchStatus;
 import org.data.persistent.entity.HistoryFetchEventEntity;
 import org.data.persistent.repository.HistoryFetchEventMongoRepository;
-import org.data.sofa.dto.GetHistoryFetchEventDto;
+import org.data.dto.sf.GetHistoryFetchEventDto;
 import org.data.sofa.mapper.HistoryFetchEventMapper;
 import org.data.sofa.repository.impl.HistoryFetchEventRepository;
 import org.springframework.data.domain.Page;
@@ -15,7 +15,6 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 @AllArgsConstructor

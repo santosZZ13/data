@@ -1,7 +1,7 @@
 package org.data.sofa.mapper;
 
 import org.data.persistent.entity.HistoryFetchEventEntity;
-import org.data.sofa.dto.GetHistoryFetchEventDto;
+import org.data.dto.sf.GetHistoryFetchEventDto;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;

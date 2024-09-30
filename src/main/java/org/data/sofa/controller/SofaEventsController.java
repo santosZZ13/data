@@ -2,7 +2,10 @@ package org.data.sofa.controller;
 
 import lombok.AllArgsConstructor;
 import org.data.common.model.BaseResponse;
-import org.data.sofa.dto.*;
+import org.data.dto.sf.GetEventScheduledDto;
+import org.data.dto.sf.GetHistoryFetchEventDto;
+import org.data.dto.sf.GetSofaEventHistoryDto;
+import org.data.dto.sf.GetStatisticsEventByIdDto;
 import org.data.sofa.service.SofaEventsService;
 import org.springframework.web.bind.annotation.*;
 

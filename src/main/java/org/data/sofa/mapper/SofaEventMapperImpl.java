@@ -1,6 +1,6 @@
 package org.data.sofa.mapper;
 
-import org.data.sofa.dto.GetEventScheduledDto;
+import org.data.dto.sf.GetEventScheduledDto;
 import org.data.sofa.response.EventChildResponse;
 import org.data.sofa.response.ScoreResponse;
 import org.data.util.TimeUtil;

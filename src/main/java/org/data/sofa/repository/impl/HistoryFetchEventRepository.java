@@ -1,12 +1,10 @@
 package org.data.sofa.repository.impl;
 
-import org.data.persistent.entity.HistoryFetchEventEntity;
-import org.data.sofa.dto.GetHistoryFetchEventDto;
+import org.data.dto.sf.GetHistoryFetchEventDto;
 import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 public interface HistoryFetchEventRepository {
 

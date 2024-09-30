@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.data.sofa.dto.RoundInfoResponse;
+import org.data.dto.sf.RoundInfoResponse;
 
 @Data
 @AllArgsConstructor

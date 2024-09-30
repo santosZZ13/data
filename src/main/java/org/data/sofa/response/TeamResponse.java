@@ -1,7 +1,6 @@
 package org.data.sofa.response;
 
 import lombok.*;
-import org.data.sofa.dto.SofaCommonResponse;
 
 import java.util.List;
 

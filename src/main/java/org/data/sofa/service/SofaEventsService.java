@@ -1,7 +1,10 @@
 package org.data.sofa.service;
 
 import org.data.common.model.BaseResponse;
-import org.data.sofa.dto.*;
+import org.data.dto.sf.GetEventScheduledDto;
+import org.data.dto.sf.GetHistoryFetchEventDto;
+import org.data.dto.sf.GetSofaEventHistoryDto;
+import org.data.dto.sf.GetStatisticsEventByIdDto;
 
 public interface SofaEventsService {
 	GetEventScheduledDto.Response getAllScheduleEventsByDate(GetEventScheduledDto.Request request);

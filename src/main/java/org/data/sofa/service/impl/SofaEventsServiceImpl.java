@@ -4,11 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.data.common.model.SortDto;
 import org.data.config.FetchEventScheduler;
+import org.data.dto.sf.*;
 import org.data.service.fetch.FetchSofaEvent;
 import org.data.service.fetch.FetchSofaEventImpl;
 import org.data.service.sap.SapService;
 import org.data.common.model.BaseResponse;
-import org.data.sofa.dto.*;
 import org.data.sofa.exception.NotFoundEventException;
 import org.data.sofa.mapper.SofaEventMapper;
 import org.data.sofa.repository.impl.HistoryFetchEventRepository;
@@ -30,7 +30,7 @@ import java.util.concurrent.*;
 import java.util.stream.Stream;
 
 
-import static org.data.sofa.dto.GetSofaEventsByDateDto.*;
+import static org.data.dto.sf.GetSofaEventsByDateDto.*;
 
 @Service
 @AllArgsConstructor

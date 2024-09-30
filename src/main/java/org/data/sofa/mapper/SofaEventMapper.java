@@ -1,6 +1,6 @@
 package org.data.sofa.mapper;
 
-import org.data.sofa.dto.GetEventScheduledDto;
+import org.data.dto.sf.GetEventScheduledDto;
 import org.data.sofa.response.EventChildResponse;
 
 public interface SofaEventMapper {
