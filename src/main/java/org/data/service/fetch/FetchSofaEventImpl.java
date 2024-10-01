@@ -37,15 +37,15 @@ public class FetchSofaEventImpl implements FetchSofaEvent {
 	private static final long DELAY_BETWEEN_BATCHES_MS = 5000;
 
 	@Override
-	public void fetchHistoricalMatches(List<Integer> ids) {
-		List<Integer> idsForFetch = new ArrayList<>();
-		for (Integer id : ids) {
-			if (!isFetchedForTeamId(id)) {
-				idsForFetch.add(id);
+	public void fetchHistoricalMatches(List<Integer> teamIds) {
+		List<Integer> teamIdsForFetch = new ArrayList<>();
+		for (Integer teamId : teamIds) {
+			if (!isFetchedForTeamId(teamId)) {
+				teamIdsForFetch.add(teamId);
 			}
 		}
 
-		List<List<Integer>> batches = createBatches(idsForFetch, BATCH_SIZE);
+		List<List<Integer>> batches = createBatches(teamIdsForFetch, BATCH_SIZE);
 		ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 		CompletableFuture<Void> future = CompletableFuture.completedFuture(null);
 		for (List<Integer> batch : batches) {

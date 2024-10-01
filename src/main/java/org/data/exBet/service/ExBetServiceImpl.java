@@ -49,6 +49,9 @@ public class ExBetServiceImpl implements ExBetService {
 //	private final HistoryFetchEventService historyFetchEventService;
 
 
+	private static final String SF_EVENT_BY_DATE_KEY = "sfEventByDate::";
+	private static final String SF_INVERSE_EVENT_BY_DATE_KEY = "sfInverseEventsByDate::";
+
 //	@Cacheable(value = "sofaEvents", key = "#date")
 //	public SofaEventsResponse getSofaEventsResponse(String date) {
 //		log.info("#getEventsByDate - fetching [Sofa events] for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
@@ -61,11 +64,112 @@ public class ExBetServiceImpl implements ExBetService {
 //		return sapService.restSofaScoreGet(SCHEDULED_EVENTS + date + SCHEDULED_EVENTS_INVERSE, SofaEventsResponse.class);
 //	}
 
+	private List<SfEventsResponse.EventResponse> combineSofaEvents(List<SfEventsResponse.EventResponse> events,
+																   List<SfEventsResponse.EventResponse> inverseEvents) {
+		List<SfEventsResponse.EventResponse> combinedEvents = new ArrayList<>(events);
+		combinedEvents.addAll(inverseEvents);
+		return combinedEvents;
+	}
+
+	private CompletableFuture<List<SfEventsCommonDto.SfEventDto>> getSfEventDtoByDate(CompletableFuture<SfEventsResponse> sfEventsResponseCompletableFuture,
+																					  CompletableFuture<SfEventsResponse> sfInverseEventsResponseFuture,
+																					  String date) {
+		return sfEventsResponseCompletableFuture.thenCombineAsync(sfInverseEventsResponseFuture, (sfEventResponse, sfInverseEvents) ->
+				getSfEventDtoByDate(
+						combineSofaEvents(
+								sfEventResponse.getEvents(),
+								sfInverseEvents.getEvents()
+						),
+						TimeUtil.convertStringToLocalDateTime(date)
+				)
+		);
+	}
+
 
 	@Override
+
 	public FetchExBetWithSfEventByDate.Response fetchExBetWithSfEventByDate(FetchExBetWithSfEventByDate.Request request) {
+		String date = request.getDate();
+
+		CompletableFuture<List<ExBetCommonDto.ExBetMatchResponseDto>> exBetCompletableFuture = CompletableFuture.supplyAsync(() -> exBetRepository.getExBetByDate(date));
+		CompletableFuture<SfEventsResponse> sfEventsResponseCompletableFuture = getSfEventsResponseCompletableFuture(date, Boolean.FALSE);
+		CompletableFuture<SfEventsResponse> sfInverseEventsResponseFuture = getSfEventsResponseCompletableFuture(date, Boolean.TRUE);
+		CompletableFuture<List<SfEventsCommonDto.SfEventDto>> sfEventDtoByDate = getSfEventDtoByDate(sfEventsResponseCompletableFuture, sfInverseEventsResponseFuture, date);
+
+		sfEventDtoByDate
+				.thenCombine(exBetCompletableFuture, (sf, ex) -> {
+//					List<ExBetCommonDto.ExBetMatchResponseDto> exBetMatches = new ArrayList<>();
+					List<ExBetCommonDto.ExBetMatchDetailsResponseDto> exBetSfMatches = new ArrayList<>();
+
+					for (ExBetCommonDto.ExBetMatchResponseDto exBetMatchResponseDto : ex) {
+						SfEventsCommonDto.SfEventDto sfEventDto = checkEightXBetMatcInEventDTO(exBetMatchResponseDto, sf);
+						if (Objects.isNull(sfEventDto)) {
+//							exBetMatches.add(exBetMatchResponseDto);
+						} else {
+							ExBetCommonDto.ExBetMatchDetailsResponseDto exBetMatchSfDetailsResponseDto = ExBetCommonDto.ExBetMatchDetailsResponseDto.of(exBetMatchResponseDto, sfEventDto);
+							exBetSfMatches.add(exBetMatchSfDetailsResponseDto);
+						}
+					}
+
+
+					// get all the id of home and away in sofaDetail
+					List<Integer> sfIds = new ArrayList<>();
+					for (ExBetCommonDto.ExBetMatchDetailsResponseDto exBetMatchDetailsResponseDto : exBetSfMatches) {
+						SfEventsCommonDto.SfEventDto sfDetail = exBetMatchDetailsResponseDto.getSofaDetail();
+						sfIds.add(sfDetail.getHomeDetails().getIdTeam());
+						sfIds.add(sfDetail.getAwayDetails().getIdTeam());
+					}
+
+					fetchSofaEvent.fetchHistoricalMatches(sfIds);
+
+				})
+				.thenApply(GetExBetEventByDateWithDetails.Response::of
+				)
+				.whenComplete((result, throwable) -> {
+					if (Objects.nonNull(throwable)) {
+						log.error("#getEventsByDate - Error occurred: {}", throwable.getMessage());
+					}
+				})
+				.join();
 		return null;
 	}
+
+	private CompletableFuture<SfEventsResponse> getSfEventsResponseCompletableFuture(String date, boolean isInverse) {
+		return CompletableFuture.supplyAsync(() -> {
+			final String cacheKey;
+			final String requestPath;
+			SfEventsResponse cachedResponse;
+
+			if (isInverse) {
+				cacheKey = SF_INVERSE_EVENT_BY_DATE_KEY + date;
+				cachedResponse = (SfEventsResponse) redisTemplate.opsForValue().get(cacheKey);
+				if (cachedResponse != null) {
+					log.info("#getExBetEventByDateWithDetails - [Found] cached sofa inverse events for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
+					return cachedResponse;
+				} else {
+					log.info("#getExBetEventByDateWithDetails - [Fetching] sofa inverse events for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
+					requestPath = SCHEDULED_EVENTS + date + SCHEDULED_EVENTS_INVERSE;
+					SfEventsResponse sfEventsResponse = sapService.restSofaScoreGet(requestPath, SfEventsResponse.class);
+					redisTemplate.opsForValue().set(cacheKey, sfEventsResponse);
+					return sfEventsResponse;
+				}
+			} else {
+				cacheKey = SF_EVENT_BY_DATE_KEY + date;
+				cachedResponse = (SfEventsResponse) redisTemplate.opsForValue().get(cacheKey);
+				if (cachedResponse != null) {
+					log.info("#getExBetEventByDateWithDetails - [Found] cached sofa events for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
+					return cachedResponse;
+				} else {
+					log.info("#getExBetEventByDateWithDetails - [Fetching] sofa events for date: [{}] in [Thread: {}]", EventsByDateDTO.date, Thread.currentThread().getName());
+					requestPath = SCHEDULED_EVENTS + date;
+					SfEventsResponse sfEventsResponse = sapService.restSofaScoreGet(requestPath, SfEventsResponse.class);
+					redisTemplate.opsForValue().set(cacheKey, sfEventsResponse);
+					return sfEventsResponse;
+				}
+			}
+		});
+	}
+
 
 	@Override
 	public GetExBetEventByDateWithDetails.Response getExBetEventByDateWithDetails(GetExBetEventByDateWithDetails.Request request) {
@@ -73,49 +177,10 @@ public class ExBetServiceImpl implements ExBetService {
 		LocalDateTime localDateTime = TimeUtil.convertStringToLocalDateTime(date);
 
 		CompletableFuture<List<ExBetCommonDto.ExBetMatchResponseDto>> exBetByDateFuture = CompletableFuture.supplyAsync(() -> exBetRepository.getExBetByDate(date));
+		CompletableFuture<SfEventsResponse> sfEventsResponseCompletableFuture = getSfEventsResponseCompletableFuture(date, Boolean.FALSE);
+		CompletableFuture<SfEventsResponse> sfInverseEventsResponseFuture = getSfEventsResponseCompletableFuture(date, Boolean.TRUE);
 
-		CompletableFuture<SfEventsResponse> sfEventsResponseFuture =
-				CompletableFuture.supplyAsync(() -> {
-					String cacheKey = "sfEventByDate::" + date;
-					SfEventsResponse cachedResponse = (SfEventsResponse) redisTemplate.opsForValue().get(cacheKey);
-					if (cachedResponse != null) {
-						log.info("#getExBetEventByDateWithDetails - [Found] cached sofa events for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
-						return cachedResponse;
-					} else {
-						log.info("#getExBetEventByDateWithDetails - [Fetching] sofa events for date: [{}] in [Thread: {}]", EventsByDateDTO.date, Thread.currentThread().getName());
-						SfEventsResponse sfEventsResponse = sapService.restSofaScoreGet(SCHEDULED_EVENTS + date, SfEventsResponse.class);
-						redisTemplate.opsForValue().set(cacheKey, sfEventsResponse);
-						return sfEventsResponse;
-					}
-				});
-
-		CompletableFuture<SfEventsResponse> sfInverseEventsResponseFuture =
-				CompletableFuture.supplyAsync(() -> {
-
-					String cacheKey = "sfInverseEventsByDate::" + date;
-					SfEventsResponse cachedResponse = (SfEventsResponse) redisTemplate.opsForValue().get(cacheKey);
-					if (cachedResponse != null) {
-						log.info("#getExBetEventByDateWithDetails - [Found] cached sofa inverse events for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
-						return cachedResponse;
-					} else {
-						log.info("#getExBetEventByDateWithDetails - [Fetching] sofa inverse events for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
-						SfEventsResponse sfEventsResponse = sapService.restSofaScoreGet(SCHEDULED_EVENTS + date + SCHEDULED_EVENTS_INVERSE, SfEventsResponse.class);
-						redisTemplate.opsForValue().set(cacheKey, sfEventsResponse);
-						return sfEventsResponse;
-					}
-				});
-
-
-		return sfEventsResponseFuture.thenCombineAsync(sfInverseEventsResponseFuture, (sfEventResponse, sfInverseEvents) -> {
-					List<SfEventsResponse.EventResponse> sfEventResponses = sfEventResponse.getEvents();
-					List<SfEventsResponse.EventResponse> sfInverseEventsEvents = sfInverseEvents.getEvents();
-					boolean addAll = sfEventResponses.addAll(sfInverseEventsEvents);
-					if (addAll) {
-						return getSfEventDtoByDate(sfEventResponses, localDateTime);
-					} else {
-						throw new RuntimeException("Error");
-					}
-				})
+		return getSfEventDtoByDate(sfEventsResponseCompletableFuture, sfInverseEventsResponseFuture, date)
 				.thenCombine(exBetByDateFuture, (sofaDto, exBet) -> {
 					List<ExBetCommonDto.ExBetMatchResponseDto> exBetMatches = new ArrayList<>();
 					List<ExBetCommonDto.ExBetMatchDetailsResponseDto> exBetSfMatches = new ArrayList<>();

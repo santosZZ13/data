@@ -32,7 +32,8 @@ public class EightXBetController {
 		return exBetService.getExBetEventByDateWithDetails(request);
 	}
 
-	public FetchExBetWithSfEventByDate.Response fetchExBetWithSfEventByDate(FetchExBetWithSfEventByDate.Request request) {
+	@PostMapping("/api/exBet/fetch")
+	public FetchExBetWithSfEventByDate.Response fetchExBetWithSfEventByDate(@RequestBody FetchExBetWithSfEventByDate.Request request) {
 		return exBetService.fetchExBetWithSfEventByDate(request);
 	}
 
