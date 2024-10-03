@@ -48,21 +48,8 @@ public class ExBetServiceImpl implements ExBetService {
 	private final FetchSofaEvent fetchSofaEvent;
 //	private final HistoryFetchEventService historyFetchEventService;
 
-
 	private static final String SF_EVENT_BY_DATE_KEY = "sfEventByDate::";
 	private static final String SF_INVERSE_EVENT_BY_DATE_KEY = "sfInverseEventsByDate::";
-
-//	@Cacheable(value = "sofaEvents", key = "#date")
-//	public SofaEventsResponse getSofaEventsResponse(String date) {
-//		log.info("#getEventsByDate - fetching [Sofa events] for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
-//		return sapService.restSofaScoreGet(SCHEDULED_EVENTS + date, SofaEventsResponse.class);
-//	}
-//
-//	@Cacheable(value = "sofaInverseEvents", key = "#date")
-//	public SofaEventsResponse getSofaInverseEventsResponse(String date) {
-//		log.info("#getEventsByDate - fetching [Inverse events events] for date: [{}] in [Thread: {}]", date, Thread.currentThread().getName());
-//		return sapService.restSofaScoreGet(SCHEDULED_EVENTS + date + SCHEDULED_EVENTS_INVERSE, SofaEventsResponse.class);
-//	}
 
 	private List<SfEventsResponse.EventResponse> combineSofaEvents(List<SfEventsResponse.EventResponse> events,
 																   List<SfEventsResponse.EventResponse> inverseEvents) {
@@ -100,36 +87,42 @@ public class ExBetServiceImpl implements ExBetService {
 				.thenCombine(exBetCompletableFuture, (sf, ex) -> {
 //					List<ExBetCommonDto.ExBetMatchResponseDto> exBetMatches = new ArrayList<>();
 					List<ExBetCommonDto.ExBetMatchDetailsResponseDto> exBetSfMatches = new ArrayList<>();
-
 					for (ExBetCommonDto.ExBetMatchResponseDto exBetMatchResponseDto : ex) {
 						SfEventsCommonDto.SfEventDto sfEventDto = checkEightXBetMatcInEventDTO(exBetMatchResponseDto, sf);
 						if (Objects.isNull(sfEventDto)) {
 //							exBetMatches.add(exBetMatchResponseDto);
 						} else {
-							ExBetCommonDto.ExBetMatchDetailsResponseDto exBetMatchSfDetailsResponseDto = ExBetCommonDto.ExBetMatchDetailsResponseDto.of(exBetMatchResponseDto, sfEventDto);
+							ExBetCommonDto.ExBetMatchDetailsResponseDto exBetMatchSfDetailsResponseDto = ExBetCommonDto.ExBetMatchDetailsResponseDto
+									.of(exBetMatchResponseDto, sfEventDto);
 							exBetSfMatches.add(exBetMatchSfDetailsResponseDto);
 						}
 					}
-
-
-					// get all the id of home and away in sofaDetail
+					return exBetSfMatches;
+				})
+				.thenApply(exSfMatch -> {
 					List<Integer> sfIds = new ArrayList<>();
-					for (ExBetCommonDto.ExBetMatchDetailsResponseDto exBetMatchDetailsResponseDto : exBetSfMatches) {
+					for (ExBetCommonDto.ExBetMatchDetailsResponseDto exBetMatchDetailsResponseDto : exSfMatch) {
 						SfEventsCommonDto.SfEventDto sfDetail = exBetMatchDetailsResponseDto.getSofaDetail();
 						sfIds.add(sfDetail.getHomeDetails().getIdTeam());
 						sfIds.add(sfDetail.getAwayDetails().getIdTeam());
 					}
-
 					fetchSofaEvent.fetchHistoricalMatches(sfIds);
+					return List.of(sfIds, exSfMatch);
+				})
+				.thenApply(lst -> {
+					List<Integer> sfIds = (List<Integer>) lst.get(0);
+					List<ExBetCommonDto.ExBetMatchDetailsResponseDto> exSfMatch = (List<ExBetCommonDto.ExBetMatchDetailsResponseDto>) lst.get(1);
 
 				})
-				.thenApply(GetExBetEventByDateWithDetails.Response::of
-				)
 				.whenComplete((result, throwable) -> {
 					if (Objects.nonNull(throwable)) {
 						log.error("#getEventsByDate - Error occurred: {}", throwable.getMessage());
 					}
 				})
+//				.exceptionally(throwable -> {
+//					log.error("#getEventsByDate - Error occurred: {}", throwable.getMessage());
+//					return null;
+//				})
 				.join();
 		return null;
 	}
