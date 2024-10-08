@@ -17,6 +17,7 @@ public class HistoryFetchEventEntity {
 	private String id;
 	@Field("team_id")
 	private Integer teamId;
+	@Field("team")
 	private String team;
 	@Field("time_elapsed")
 	private Long timeElapsed;

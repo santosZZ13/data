@@ -1,7 +1,7 @@
 package org.data.util;
 
 
-import org.data.exBet.response.*;
+import org.data.response.ex.*;
 
 import java.util.List;
 import java.util.Objects;

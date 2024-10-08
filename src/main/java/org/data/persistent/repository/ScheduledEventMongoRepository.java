@@ -19,5 +19,5 @@ public interface ScheduledEventMongoRepository extends MongoRepository<Scheduled
 	List<ScheduledEventsSofaScoreEntity> findAll();
 	@Override
 	<S extends ScheduledEventsSofaScoreEntity> @NotNull S save(@NotNull S entity);
-	Page<ScheduledEventsSofaScoreEntity> findAllByStartTimestamp(LocalDateTime startTimestamp, Pageable pageable);
+//	Page<ScheduledEventsSofaScoreEntity> findAllByStartTimestamp(LocalDateTime startTimestamp, Pageable pageable);
 }

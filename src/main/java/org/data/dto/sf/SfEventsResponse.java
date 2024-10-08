@@ -45,5 +45,13 @@ public class SfEventsResponse {
 		private Boolean feedLocked;
 		private Boolean isEditor;
 
+		public String getTeamNameFromId(Integer teamId, List<SofaCommonResponse.TeamResponse> teams) {
+			for (SofaCommonResponse.TeamResponse team : teams) {
+				if (team.getId().equals(teamId)) {
+					return team.getName();
+				}
+			}
+			return null;
+		}
 	}
 }

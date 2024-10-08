@@ -1,8 +1,7 @@
 package org.data.test;
 
 import lombok.AllArgsConstructor;
-import org.data.persistent.entity.HistoryFetchEventEntity;
-import org.data.service.fetch.FetchSofaEvent;
+import org.data.service.fetch.FetchSfEventService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,8 +12,8 @@ import java.util.Arrays;
 @AllArgsConstructor
 public class HistoryController {
 
-	private final FetchSofaEvent historyService;
-	private final FetchSofaEvent fetchSofaEvent;
+	private final FetchSfEventService historyService;
+	private final FetchSfEventService fetchSofaEvent;
 
 //	@PostMapping("/api/test/history")
 //	public HistoryFetchEventEntity save(@RequestBody HistoryFetchEventEntity historyFetchEventEntity) {

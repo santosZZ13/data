@@ -34,7 +34,7 @@ public interface GetExBetEventByDate {
 	class ExBetResponseDto {
 		private int total;
 		private String date;
-		private List<ExBetCommonDto.ExBetMatchResponseDto> matches;
+		private List<ExCommonDto.ExMatchResponseDto> matches;
 	}
 
 

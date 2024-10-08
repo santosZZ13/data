@@ -1,13 +1,10 @@
 package org.data.dto.ex;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.data.common.model.BaseResponse;
 import org.data.common.model.PaginationSortDto;
-import org.data.dto.sf.SfEventsCommonDto;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 public interface GetExBetEventByDateWithDetails {
@@ -65,9 +62,9 @@ public interface GetExBetEventByDateWithDetails {
 	@NoArgsConstructor
 	class ExBetSfDetail {
 		private int total;
-		private List<ExBetCommonDto.ExBetMatchDetailsResponseDto> matches;
+		private List<ExCommonDto.ExMatchDetailsResponseDto> matches;
 
-		public static ExBetSfDetail of(List<ExBetCommonDto.ExBetMatchDetailsResponseDto> matches) {
+		public static ExBetSfDetail of(List<ExCommonDto.ExMatchDetailsResponseDto> matches) {
 			return ExBetSfDetail
 					.builder()
 					.total(matches.size())
@@ -83,9 +80,9 @@ public interface GetExBetEventByDateWithDetails {
 	@NoArgsConstructor
 	class ExBetDetail {
 		private int total;
-		private List<ExBetCommonDto.ExBetMatchResponseDto> matches;
+		private List<ExCommonDto.ExMatchResponseDto> matches;
 
-		public static ExBetDetail of(List<ExBetCommonDto.ExBetMatchResponseDto> matches) {
+		public static ExBetDetail of(List<ExCommonDto.ExMatchResponseDto> matches) {
 			return ExBetDetail
 					.builder()
 					.total(matches.size())

@@ -2,31 +2,25 @@ package org.data.persistent.entity;
 
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.data.persistent.common.ScheduledEventsCommonEntity;
 import org.data.persistent.entity.base.ScheduledEventsBaseEntity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@EqualsAndHashCode(callSuper = true)
-@SuperBuilder
+import java.time.LocalDateTime;
+import java.util.List;
+
+
+@Builder
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Document(collection = "scheduled_events_sofascore")
-public class ScheduledEventsSofaScoreEntity extends ScheduledEventsBaseEntity {
+@Document(collection = "scheduled_events_sofa_score")
+public class ScheduledEventsSofaScoreEntity  {
 	@Id
 	private String id;
-	private ScheduledEventsCommonEntity.TournamentEntity tournament;
-	private ScheduledEventsCommonEntity.SeasonEntity season;
-	private ScheduledEventsCommonEntity.RoundInfoEntity roundInfo;
-	private String customId;
-	private ScheduledEventsCommonEntity.StatusEntity status;
-	private Integer winnerCode;
-	private ScheduledEventsCommonEntity.TeamEntity homeTeam;
-	private ScheduledEventsCommonEntity.TeamEntity awayTeam;
-	private ScheduledEventsCommonEntity.ScoreEntity homeScore;
-	private ScheduledEventsCommonEntity.ScoreEntity awayScore;
-	private ScheduledEventsCommonEntity.TimeEntity time;
-	private ScheduledEventsCommonEntity.ChangesEntity changes;
-
+	private int teamId;
+	private String team;
+	private LocalDateTime createdDate;
+	private LocalDateTime updatedDate;
+	private List<HistoryEntity> histories;
 }

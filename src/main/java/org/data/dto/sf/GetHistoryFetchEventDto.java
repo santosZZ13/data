@@ -6,6 +6,7 @@ import org.data.common.model.BaseResponse;
 import org.data.common.model.GenericResponseWithPagination;
 import org.data.common.model.PaginationSortDto;
 import org.data.conts.FetchStatus;
+import org.data.dto.history.HistoryFetchCommonDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -38,18 +39,8 @@ public interface GetHistoryFetchEventDto {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class GetHistoryFetchEventData extends GenericResponseWithPagination {
-		private List<HistoryFetchEventDto> history;
+		private List<HistoryFetchCommonDto.HistoryFetchEventDto> history;
 	}
 
-	@Builder
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	class HistoryFetchEventDto {
-		private Integer teamId;
-		private Long timeElapsed;
-		private Integer total;
-		private FetchStatus fetchStatus;
-		private LocalDateTime createdDate;
-	}
+
 }

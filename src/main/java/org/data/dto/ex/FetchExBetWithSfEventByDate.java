@@ -4,8 +4,8 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.data.common.model.BaseResponse;
 import org.data.common.model.PaginationSortDto;
+import org.data.dto.history.HistoryFetchCommonDto;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 public interface FetchExBetWithSfEventByDate {
@@ -25,22 +25,24 @@ public interface FetchExBetWithSfEventByDate {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class Response extends BaseResponse {
-		private List<SfStatusFetchEvent> date;
+		private ResponseData data;
 	}
-
 
 	@Builder
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	class SfStatusFetchEvent {
-		private int id;
-		private String name;
-		private String country;
-		private LocalDateTime fetchedDate;
+	class ResponseData {
 		private int totalMatches;
-		private int totalMatchesFetched;
-		private int totalMatchesNotFetched;
-		private int timeConsumed;
+		private List<FetchHistoryExWithSf> metaData;
+	}
+
+	@Builder
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	class FetchHistoryExWithSf {
+		private HistoryFetchCommonDto.HistoryFetchEventDto historyFetchData;
+		private ExCommonDto.ExMatchDetailsResponseDto exData;
 	}
 }

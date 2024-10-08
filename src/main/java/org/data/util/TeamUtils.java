@@ -22,47 +22,47 @@ public class TeamUtils {
 			return true;
 		}
 
-		// Stage 2: "eif" and "Ekenas IF"
-		List<String> splitTeamFirst = Arrays.stream(appliedTransliterationFirst.split(" ")).toList();
-		List<String> splitTeamSecond = Arrays.stream(appliedTransliterationSecond.split(" ")).toList();
-
-		if (splitTeamFirst.size() > splitTeamSecond.size()) {
-			String first = splitTeamFirst.get(0);
-			String second = splitTeamFirst.get(1);
-			String fullName;
-			if (first.length() > second.length()) {
-				fullName = first.charAt(0) + second;
-			} else {
-				fullName = second.charAt(0) + first;
-			}
-
-			if (fullName.equals(splitTeamSecond.get(0))) {
-				return true;
-			}
-		} else if (splitTeamFirst.size() < splitTeamSecond.size()) {
-
-			String first = splitTeamSecond.get(0);
-			String second = splitTeamSecond.get(1);
-			String fullName;
-			if (first.length() > second.length()) {
-				fullName = first.charAt(0) + second;
-			} else {
-				fullName = second.charAt(0) + first;
-			}
-
-			if (fullName.equals(splitTeamFirst.get(0))) {
-				return true;
-			}
-		}
-
-		// Stage 3: Feyenoord Rotterdam vs feyenoord
-		List<String> appliedFirst = Arrays.stream(appliedTransliterationFirst.split(" ")).toList();
-		List<String> appliedSecond = Arrays.stream(appliedTransliterationSecond.split(" ")).toList();
-		for (String ele : appliedFirst) {
-			if (appliedSecond.contains(ele)) {
-				return true;
-			}
-		}
+//		// Stage 2: "eif" and "Ekenas IF"
+//		List<String> splitTeamFirst = Arrays.stream(appliedTransliterationFirst.split(" ")).toList();
+//		List<String> splitTeamSecond = Arrays.stream(appliedTransliterationSecond.split(" ")).toList();
+//
+//		if (splitTeamFirst.size() > splitTeamSecond.size()) {
+//			String first = splitTeamFirst.get(0);
+//			String second = splitTeamFirst.get(1);
+//			String fullName;
+//			if (first.length() > second.length()) {
+//				fullName = first.charAt(0) + second;
+//			} else {
+//				fullName = second.charAt(0) + first;
+//			}
+//
+//			if (fullName.equals(splitTeamSecond.get(0))) {
+//				return true;
+//			}
+//		} else if (splitTeamFirst.size() < splitTeamSecond.size()) {
+//
+//			String first = splitTeamSecond.get(0);
+//			String second = splitTeamSecond.get(1);
+//			String fullName;
+//			if (first.length() > second.length()) {
+//				fullName = first.charAt(0) + second;
+//			} else {
+//				fullName = second.charAt(0) + first;
+//			}
+//
+//			if (fullName.equals(splitTeamFirst.get(0))) {
+//				return true;
+//			}
+//		}
+//
+//		// Stage 3: Feyenoord Rotterdam vs feyenoord
+//		List<String> appliedFirst = Arrays.stream(appliedTransliterationFirst.split(" ")).toList();
+//		List<String> appliedSecond = Arrays.stream(appliedTransliterationSecond.split(" ")).toList();
+//		for (String ele : appliedFirst) {
+//			if (appliedSecond.contains(ele)) {
+//				return true;
+//			}
+//		}
 		return false;
 	}
 
