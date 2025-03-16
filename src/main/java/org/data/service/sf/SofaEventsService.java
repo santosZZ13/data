@@ -8,15 +8,6 @@ import org.data.dto.sf.GetStatisticsEventByIdDto;
 
 public interface SofaEventsService {
 	GetEventScheduledDto.Response getAllScheduleEventsByDate(GetEventScheduledDto.Request request);
-
-
-
-
-
-
-
-
-
 	BaseResponse fetchDataForTeamWithId(Integer id);
 	GetSofaEventHistoryDto.Response getHistoryEventsFromTeamId(GetSofaEventHistoryDto.Request request);
 	GetStatisticsEventByIdDto.Response getStatisticsTeamFromTeamId(GetStatisticsEventByIdDto.Request request);
