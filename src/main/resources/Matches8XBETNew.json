@@ -1,0 +1,21 @@
+{
+    "tournament": "England Premier League",
+    "home": {
+        "id": 1060,
+        "name": "Southampton FC"
+    },
+    "away": {
+        "id": 1928,
+        "cid": 20,
+        "name": "Manchester City FC"
+    },
+    "round": {
+        "roundType": "group",
+        "roundName": "premier league",
+        "roundGroup": "",
+        "roundGroupName": "premier league",
+        "roundNumber": "36"
+    },
+    "name": "Southampton FC-vs-Manchester City FC",
+    "kickoffTime": 1746885600
+}

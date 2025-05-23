@@ -1,0 +1,450 @@
+{
+    "msg": "",
+    "code": 0,
+    "data": {
+        "tournaments": [
+            {
+                "sid": 1,
+                "tid": 564,
+                "cid": 5,
+                "name": "Germany 1. Bundesliga Playoff",
+                "favorite": false,
+                "priority": 20008,
+                "count": 1,
+                "matches": [
+                    {
+                        "sid": 1,
+                        "cid": 5,
+                        "tid": 564,
+                        "iid": 3808751,
+                        "countdown": 414,
+                        "state": "",
+                        "series": "",
+                        "vd": "b",
+                        "streaming": 0,
+                        "chatMid": 0,
+                        "gifMid": 60433915,
+                        "graphMid": 60433915,
+                        "inplay": false,
+                        "video": false,
+                        "nv": false,
+                        "scoreId": "",
+                        "tnName": "Germany 1. Bundesliga Playoff",
+                        "tnPriority": 20008,
+                        "home": {
+                            "id": 149,
+                            "cid": 5,
+                            "name": "1. FC Heidenheim",
+                            "jersey": {
+                                "base": "ff0000",
+                                "sleeve": "ff0000",
+                                "style": "",
+                                "styleColor": "",
+                                "shirtType": "short",
+                                "sleeveDetails": "0000ff"
+                            }
+                        },
+                        "away": {
+                            "id": 9601,
+                            "cid": 5,
+                            "name": "SV 07 Elversberg",
+                            "jersey": {
+                                "base": "000000",
+                                "sleeve": "000000",
+                                "style": "stripes",
+                                "styleColor": "464444",
+                                "shirtType": "short",
+                                "sleeveDetails": ""
+                            }
+                        },
+                        "round": {
+                            "roundType": "cup",
+                            "roundName": "final",
+                            "roundGroup": "",
+                            "roundGroupName": "final",
+                            "roundNumber": ""
+                        },
+                        "marketInfo": {
+                            "cr": true,
+                            "ot": false,
+                            "pk": false,
+                            "otcr": false,
+                            "ad": false,
+                            "redCard": true,
+                            "otRedCard": false
+                        },
+                        "mids": {
+                            "fmid": 0,
+                            "bmid": 60433915,
+                            "amid": 0,
+                            "cmid": 0,
+                            "dmid": 0,
+                            "jmid": 0
+                        },
+                        "videos": [],
+                        "anchors": [
+                            {
+                                "houseId": "102563",
+                                "liveStatus": 1,
+                                "visitHistory": 0,
+                                "playStreamAddress": "https://live5.hengbeixingtech.com/live/102563.flv?txSecret=cd17d59c6d800a35a91c723eebfe7691&txTime=1930FE3EC7A",
+                                "playStreamAddress2": "https://live5.hengbeixingtech.com/live/102563.m3u8?txSecret=cd17d59c6d800a35a91c723eebfe7691&txTime=1930FE3EC7A",
+                                "userImage": "https://anchor51.oss-accelerate.aliyuncs.com/business/image/2563/HjwhaooZQQeP_4SX8nZoCA.png",
+                                "houseName": "Ton",
+                                "houseImage": "https://anchor51.oss-accelerate.aliyuncs.com/business/image/2563/XRlrqe4yTW-f92lmvpRVww.png",
+                                "nickName": "Ton Nateebap",
+                                "anchorTypeName": "足球",
+                                "fansCount": 0,
+                                "anchorTitle": "",
+                                "houseIntroduction": "",
+                                "languageType": "tha",
+                                "vendors": [
+                                    "vd001"
+                                ]
+                            },
+                            {
+                                "houseId": "102582",
+                                "liveStatus": 1,
+                                "visitHistory": 0,
+                                "playStreamAddress": "https://live5.hengbeixingtech.com/live/102582.flv?txSecret=c2384386dd92465079b392f7f4cb33a9&txTime=193C8D320AF",
+                                "playStreamAddress2": "https://live5.hengbeixingtech.com/live/102582.m3u8?txSecret=c2384386dd92465079b392f7f4cb33a9&txTime=193C8D320AF",
+                                "userImage": "https://anchor51.oss-accelerate.aliyuncs.com/business/image/2582/cDCO_gNGS1-c_nf7_ASkMw.jpg",
+                                "houseName": "Phòng live BLV MILLO ",
+                                "houseImage": "https://anchor51.oss-accelerate.aliyuncs.com/business/image/2582/yKLy0wvJRO-1RpSey3Kl0w.jpg",
+                                "nickName": "BLV MILLO",
+                                "anchorTypeName": "足球",
+                                "fansCount": 1,
+                                "anchorTitle": "millo ",
+                                "houseIntroduction": " ",
+                                "languageType": "vie",
+                                "vendors": [
+                                    "vd001"
+                                ]
+                            }
+                        ],
+                        "name": "1. FC Heidenheim-vs-SV 07 Elversberg",
+                        "kickoffTime": 1747938600
+                    }
+                ]
+            },
+            {
+                "sid": 1,
+                "tid": 47,
+                "cid": 21,
+                "name": "Korea K League 1",
+                "favorite": false,
+                "priority": 50022,
+                "count": 2,
+                "matches": [
+                    {
+                        "sid": 1,
+                        "cid": 21,
+                        "tid": 47,
+                        "iid": 3805598,
+                        "countdown": 1374,
+                        "state": "",
+                        "series": "",
+                        "vd": "b",
+                        "streaming": 0,
+                        "chatMid": 0,
+                        "gifMid": 57130731,
+                        "graphMid": 57130731,
+                        "inplay": false,
+                        "video": false,
+                        "nv": false,
+                        "scoreId": "",
+                        "tnName": "Korea K League 1",
+                        "tnPriority": 50022,
+                        "home": {
+                            "id": 19988,
+                            "cid": 21,
+                            "name": "FC Anyang",
+                            "jersey": {
+                                "base": "400080",
+                                "sleeve": "000000",
+                                "style": "",
+                                "styleColor": "",
+                                "shirtType": "short",
+                                "sleeveDetails": ""
+                            }
+                        },
+                        "away": {
+                            "id": 99950,
+                            "cid": 21,
+                            "name": "Pohang Steelers",
+                            "jersey": {
+                                "base": "ffffff",
+                                "sleeve": "ffffff",
+                                "style": "",
+                                "styleColor": "",
+                                "shirtType": "short",
+                                "sleeveDetails": "fafafa"
+                            }
+                        },
+                        "round": {
+                            "roundType": "group",
+                            "roundName": "k-league 1",
+                            "roundGroup": "K-League 1",
+                            "roundGroupName": "k-league 1",
+                            "roundNumber": "15"
+                        },
+                        "marketInfo": {
+                            "cr": false,
+                            "ot": false,
+                            "pk": false,
+                            "otcr": false,
+                            "ad": false,
+                            "redCard": false,
+                            "otRedCard": false
+                        },
+                        "mids": {
+                            "fmid": 0,
+                            "bmid": 57130731,
+                            "amid": 9491689,
+                            "cmid": 11826224,
+                            "dmid": 0,
+                            "jmid": 0
+                        },
+                        "videos": [],
+                        "anchors": [],
+                        "name": "FC Anyang-vs-Pohang Steelers",
+                        "kickoffTime": 1747996200
+                    },
+                    {
+                        "sid": 1,
+                        "cid": 21,
+                        "tid": 47,
+                        "iid": 3817908,
+                        "countdown": 1374,
+                        "state": "",
+                        "series": "",
+                        "vd": "b",
+                        "streaming": 0,
+                        "chatMid": 0,
+                        "gifMid": 57130729,
+                        "graphMid": 57130729,
+                        "inplay": false,
+                        "video": false,
+                        "nv": false,
+                        "scoreId": "",
+                        "tnName": "Korea K League 1",
+                        "tnPriority": 50022,
+                        "home": {
+                            "id": 64308,
+                            "cid": 21,
+                            "name": "Jeju SK FC",
+                            "jersey": {
+                                "base": "fa7c32",
+                                "sleeve": "000000",
+                                "style": "",
+                                "styleColor": "",
+                                "shirtType": "short",
+                                "sleeveDetails": ""
+                            }
+                        },
+                        "away": {
+                            "id": 11,
+                            "cid": 121,
+                            "name": "Jeonbuk Hyundai Motors",
+                            "jersey": {
+                                "base": "fcfcfc",
+                                "sleeve": "fafafa",
+                                "style": "",
+                                "styleColor": "",
+                                "shirtType": "short",
+                                "sleeveDetails": "030303"
+                            }
+                        },
+                        "round": {
+                            "roundType": "group",
+                            "roundName": "k-league 1",
+                            "roundGroup": "K-League 1",
+                            "roundGroupName": "k-league 1",
+                            "roundNumber": "15"
+                        },
+                        "marketInfo": {
+                            "cr": false,
+                            "ot": false,
+                            "pk": false,
+                            "otcr": false,
+                            "ad": false,
+                            "redCard": false,
+                            "otRedCard": false
+                        },
+                        "mids": {
+                            "fmid": 0,
+                            "bmid": 57130729,
+                            "amid": 9491686,
+                            "cmid": 11826225,
+                            "dmid": 0,
+                            "jmid": 0
+                        },
+                        "videos": [],
+                        "anchors": [
+                            {
+                                "houseId": "102568",
+                                "liveStatus": 1,
+                                "visitHistory": 0,
+                                "playStreamAddress": "https://live5.hengbeixingtech.com/live/102568.flv?txSecret=5ebb90d40f0e1475365ed20d163e5cb6&txTime=1932CCBBA88",
+                                "playStreamAddress2": "https://live5.hengbeixingtech.com/live/102568.m3u8?txSecret=5ebb90d40f0e1475365ed20d163e5cb6&txTime=1932CCBBA88",
+                                "userImage": "https://anchor51.oss-accelerate.aliyuncs.com/business/image/2568/3FYTPfuaTOOqGUJ9vibh_g.jpg",
+                                "houseName": "LHAM",
+                                "houseImage": "https://anchor51.oss-accelerate.aliyuncs.com/business/image/2568/-3_VlC2jSdqYZeZ_SnQ2TA.jpg",
+                                "nickName": "LHAM TEP3TA",
+                                "anchorTypeName": "足球",
+                                "fansCount": 1,
+                                "anchorTitle": "",
+                                "houseIntroduction": "",
+                                "languageType": "tha",
+                                "vendors": [
+                                    "vd001"
+                                ]
+                            }
+                        ],
+                        "name": "Jeju SK FC-vs-Jeonbuk Hyundai Motors",
+                        "kickoffTime": 1747996200
+                    }
+                ]
+            },
+            {
+                "sid": 1,
+                "tid": 4105,
+                "cid": 21,
+                "name": "Korea K3 League",
+                "favorite": false,
+                "priority": 80090,
+                "count": 2,
+                "matches": [
+                    {
+                        "sid": 1,
+                        "cid": 21,
+                        "tid": 4105,
+                        "iid": 3820021,
+                        "countdown": 1344,
+                        "state": "",
+                        "series": "",
+                        "vd": "b",
+                        "streaming": 0,
+                        "chatMid": 0,
+                        "gifMid": 58318635,
+                        "graphMid": 58318635,
+                        "inplay": false,
+                        "video": false,
+                        "nv": false,
+                        "scoreId": "",
+                        "tnName": "Korea K3 League",
+                        "tnPriority": 80090,
+                        "home": {
+                            "id": 101949,
+                            "cid": 21,
+                            "name": "Daejeon Korail",
+                            "jersey": null
+                        },
+                        "away": {
+                            "id": 99951,
+                            "cid": 21,
+                            "name": "Busan Transportation Corporation FC",
+                            "jersey": null
+                        },
+                        "round": {
+                            "roundType": "group",
+                            "roundName": "k3 league",
+                            "roundGroup": "",
+                            "roundGroupName": "k3 league",
+                            "roundNumber": "10"
+                        },
+                        "marketInfo": {
+                            "cr": false,
+                            "ot": false,
+                            "pk": false,
+                            "otcr": false,
+                            "ad": false,
+                            "redCard": false,
+                            "otRedCard": false
+                        },
+                        "mids": {
+                            "fmid": 0,
+                            "bmid": 58318635,
+                            "amid": 9518649,
+                            "cmid": 11917576,
+                            "dmid": 0,
+                            "jmid": 0
+                        },
+                        "videos": [],
+                        "anchors": [],
+                        "name": "Daejeon Korail-vs-Busan Transportation Corporation FC",
+                        "kickoffTime": 1747994400
+                    },
+                    {
+                        "sid": 1,
+                        "cid": 21,
+                        "tid": 4105,
+                        "iid": 3821596,
+                        "countdown": 1344,
+                        "state": "",
+                        "series": "",
+                        "vd": "b",
+                        "streaming": 0,
+                        "chatMid": 0,
+                        "gifMid": 0,
+                        "graphMid": 58318633,
+                        "inplay": false,
+                        "video": false,
+                        "nv": false,
+                        "scoreId": "",
+                        "tnName": "Korea K3 League",
+                        "tnPriority": 80090,
+                        "home": {
+                            "id": 107544,
+                            "cid": 21,
+                            "name": "Ulsan Citizen",
+                            "jersey": null
+                        },
+                        "away": {
+                            "id": 289413,
+                            "cid": 21,
+                            "name": "FC Mokpo",
+                            "jersey": {
+                                "base": "0000ff",
+                                "sleeve": "000000",
+                                "style": "",
+                                "styleColor": "",
+                                "shirtType": "",
+                                "sleeveDetails": ""
+                            }
+                        },
+                        "round": {
+                            "roundType": "group",
+                            "roundName": "k3 league",
+                            "roundGroup": "",
+                            "roundGroupName": "k3 league",
+                            "roundNumber": "10"
+                        },
+                        "marketInfo": {
+                            "cr": false,
+                            "ot": false,
+                            "pk": false,
+                            "otcr": false,
+                            "ad": false,
+                            "redCard": false,
+                            "otRedCard": false
+                        },
+                        "mids": {
+                            "fmid": 0,
+                            "bmid": 58318633,
+                            "amid": 9518652,
+                            "cmid": 11917575,
+                            "dmid": 0,
+                            "jmid": 0
+                        },
+                        "videos": [],
+                        "anchors": [],
+                        "name": "Ulsan Citizen-vs-FC Mokpo",
+                        "kickoffTime": 1747994400
+                    }
+                ]
+            }
+        ]
+    },
+    "time": 1747913751224
+}

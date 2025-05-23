@@ -27,7 +27,7 @@ spring:
   data:
     mongodb:
       database: ${MONGODB_DB:football}
-      uri: mongodb+srv://${MONGODB_USERNAME:quangnam130520}:${MONGODB_PW:pij2bY1U5DHXOnb8}@${MONGODB_HOST:cluster0.fwoaemp.mongodb.net}/
+      uri: mongodb+srv://${MONGODB_USERNAME:quangnam130520}:${MONGODB_PW:2eixDOgAx1TVcXqp}@${MONGODB_HOST:cluster0.fwoaemp.mongodb.net}/
 #    redis:
 #      host: ${REDIS_HOST:localhost}
 #      port: ${REDIS_PORT:6379}
