@@ -2,6 +2,7 @@ package org.data.service.ex;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
+import org.data.dto.GetMatchesExByDate;
 import org.data.dto.ImportMatchesJsonFile;
 import org.data.repository.ex.ExBetRepository;
 import org.data.response.ex.ExBetMatchResponse;
@@ -39,6 +40,14 @@ public class ExServiceImpl implements ExService {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	@Override
+	public GetMatchesExByDate.Response getMatchesByDate(String date) {
+		List<GetMatchesExByDate.ExBetMatchDto> exBetByDate = exBetRepository.getExBetByDate(date);
+		return GetMatchesExByDate.Response.builder()
+				.matches(exBetByDate)
+				.build();
 	}
 
 

@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 public class TimeUtil {
@@ -25,15 +26,11 @@ public class TimeUtil {
 	 * @return
 	 */
 	public static LocalDateTime convertStringToLocalDateTime(@NotNull  String date) {
-		if (!Objects.isNull(date)) {
-			if (Objects.equals(date, "today")) {
-				return LocalDateTime.now();
-			} else {
-				return LocalDateTime.parse(date + "T00:00:00");
-			}
-		}
-		return null;
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+		return LocalDateTime.parse(date, formatter);
 	}
+
+
 
 	public static long calculateTimeElapsed(Instant start, Instant finish) {
 		return Duration.between(start, finish).toMillis();

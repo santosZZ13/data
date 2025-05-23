@@ -1,12 +1,11 @@
 package org.data.controller;
 
 import lombok.AllArgsConstructor;
+import org.data.dto.GetMatchesExByDate;
 import org.data.dto.ImportMatchesJsonFile;
 import org.data.service.ex.ExService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.data.repository.query.Param;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
@@ -19,5 +18,10 @@ public class EightXBetController {
 	@PostMapping("/importMatchesJsonFile")
 	public ImportMatchesJsonFile.Response importMatchesJsonFile(@RequestPart("file") MultipartFile request) {
 		return exService.getDataFile(request);
+	}
+
+	@GetMapping("/matches")
+	public GetMatchesExByDate.Response getMachesByDate(@Param("date") String date) {
+		return exService.getMatchesByDate(date);
 	}
 }
