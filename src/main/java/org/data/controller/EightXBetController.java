@@ -1,8 +1,9 @@
 package org.data.controller;
 
 import lombok.AllArgsConstructor;
-import org.data.dto.GetMatchesExByDate;
+import org.data.dto.GetMatchesExByDateDto;
 import org.data.dto.ImportMatchesJsonFile;
+import org.data.dto.SaveMatchesDto;
 import org.data.service.ex.ExService;
 import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api/exBet")
+	@CrossOrigin(origins = "http://localhost:3000")
 public class EightXBetController {
 
 	private final ExService exService;
@@ -21,7 +23,13 @@ public class EightXBetController {
 	}
 
 	@GetMapping("/matches")
-	public GetMatchesExByDate.Response getMachesByDate(@Param("date") String date) {
+	public GetMatchesExByDateDto.Response getMachesByDate(@Param("date") String[] date) {
 		return exService.getMatchesByDate(date);
 	}
+
+	@PostMapping("/matchesFavorite")
+	public SaveMatchesDto.Response saveMatchesFavorite(@RequestBody SaveMatchesDto.Request request) {
+		return exService.saveMatchesFavorite(request, true);
+	}
+
 }

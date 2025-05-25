@@ -4,11 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.data.dto.common.ExBetMatchDto;
+import org.data.dto.common.ExBetMatchDto.RoundDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface GetMatchesExByDate {
+public interface GetMatchesExByDateDto {
 	@Builder
 	@Data
 	@AllArgsConstructor
@@ -36,6 +38,6 @@ public interface GetMatchesExByDate {
 		private String homeName;
 		private int awayId;
 		private String awayName;
-		private ImportMatchesJsonFile.RoundDto round;
+		private RoundDto round;
 	}
 }

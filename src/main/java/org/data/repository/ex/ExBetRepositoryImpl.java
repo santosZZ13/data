@@ -2,22 +2,15 @@ package org.data.repository.ex;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.data.dto.GetMatchesExByDate;
+import org.data.dto.GetMatchesExByDateDto;
 import org.data.dto.ImportMatchesJsonFile;
-import org.data.dto.ex.ExCommonDto;
-import org.data.dto.ex.ImportExBetFromFile;
+import org.data.dto.common.ExBetMatchDto;
+import org.data.dto.common.ExBetMatchDto.RoundDto;
 import org.data.persistent.entity.ExBetMatchEntity;
 import org.data.persistent.repository.ExBetMatchMongoRepository;
-import org.data.response.ex.ExBetMatchResponse;
-import org.data.response.ex.ExBetTournamentResponse;
-import org.data.persistent.entity.ExBetEntity;
-import org.data.persistent.projection.EventsEightXBetProjection;
-import org.data.persistent.repository.ExBetMongoRepository;
 import org.data.util.TimeUtil;
-import org.data.util.TournamentEightXBetConverter;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,18 +19,19 @@ import java.util.List;
 @Log4j2
 public class ExBetRepositoryImpl implements ExBetRepository {
 
-	private final ExBetMongoRepository exBetMongoRepository;
 	private final ExBetMatchMongoRepository exBetMatchMongoRepository;
 
-	public void saveExBetMatchDto(List<ImportMatchesJsonFile.ExBetMatchDto> exBetMatchDtos) {
-		List<ExBetMatchEntity> exBetMatchEntities = exBetMatchDtos.stream().map(
+	public int saveExBetMatchDto(List<ExBetMatchDto> matchesDto) {
+		List<ExBetMatchEntity> exBetMatchEntities = matchesDto.stream().map(
 				exBetMatchDto -> ExBetMatchEntity.builder()
+						.matchId(exBetMatchDto.getMatchId())
 						.tournamentName(exBetMatchDto.getTournamentName())
 						.homeId(exBetMatchDto.getHomeId())
 						.homeName(exBetMatchDto.getHomeName())
 						.awayId(exBetMatchDto.getAwayId())
 						.awayName(exBetMatchDto.getAwayName())
-						.kickoffTime(exBetMatchDto.getKickoffTime())
+						.kickoffTime(TimeUtil.convertStringToLocalDateTime(exBetMatchDto.getKickoffTime()))
+						.isFavorite(exBetMatchDto.isFavorite())
 						.round(ExBetMatchEntity.RoundEntity
 								.builder()
 								.roundName(exBetMatchDto.getRound().getRoundName())
@@ -45,27 +39,44 @@ public class ExBetRepositoryImpl implements ExBetRepository {
 								.build())
 						.build()
 		).toList();
-		exBetMatchMongoRepository.saveAll(exBetMatchEntities);
+
+		List<ExBetMatchEntity> exBetMatchEntitiesDB = exBetMatchMongoRepository.findAll();
+		List<ExBetMatchEntity> exBetMatchEntitiesToSave = new ArrayList<>();
+		for (ExBetMatchEntity exBetMatchEntity : exBetMatchEntities) {
+			if (exBetMatchEntitiesDB.stream().noneMatch(
+					exBetMatchEntityDB -> exBetMatchEntityDB.getMatchId() == exBetMatchEntity.getMatchId())) {
+				exBetMatchEntitiesToSave.add(exBetMatchEntity);
+			}
+		}
+		exBetMatchMongoRepository.saveAll(exBetMatchEntitiesToSave);
+
+		return exBetMatchEntitiesToSave.size();
 	}
 
 
 	@Override
-	public List<GetMatchesExByDate.ExBetMatchDto> getExBetByDate(String date) {
-		return exBetMatchMongoRepository.findAllByKickoffTimeBetween(
-				TimeUtil.convertStringToLocalDateTime(date + " 00:00:00"),
-				TimeUtil.convertStringToLocalDateTime(date + " 23:59:59")
-			).stream()
-				.map(exBetMatchEntity -> GetMatchesExByDate.ExBetMatchDto.builder()
-						.tournamentName(exBetMatchEntity.getTournamentName())
-						.kickoffTime(exBetMatchEntity.getKickoffTime())
-						.homeId(exBetMatchEntity.getHomeId())
-						.homeName(exBetMatchEntity.getHomeName())
-						.awayId(exBetMatchEntity.getAwayId())
-						.awayName(exBetMatchEntity.getAwayName())
-						.round(ImportMatchesJsonFile.RoundDto.builder()
-								.roundName(exBetMatchEntity.getRound().getRoundName())
-								.roundType(exBetMatchEntity.getRound().getRoundType())
-								.build())
-						.build()).toList();
+	public List<GetMatchesExByDateDto.ExBetMatchDto> getExBetByDate(String[] date) {
+		List<GetMatchesExByDateDto.ExBetMatchDto> allMatchesByDate = new ArrayList<>();
+		for (String dt : date) {
+			List<GetMatchesExByDateDto.ExBetMatchDto> matches = exBetMatchMongoRepository.findAllByKickoffTimeBetween(
+							TimeUtil.convertStringToLocalDateTime(dt + " 00:00:00"),
+							TimeUtil.convertStringToLocalDateTime(dt + " 23:59:59")
+					).stream()
+					.map(exBetMatchEntity -> GetMatchesExByDateDto.ExBetMatchDto.builder()
+							.tournamentName(exBetMatchEntity.getTournamentName())
+							.kickoffTime(exBetMatchEntity.getKickoffTime())
+							.homeId(exBetMatchEntity.getHomeId())
+							.homeName(exBetMatchEntity.getHomeName())
+							.awayId(exBetMatchEntity.getAwayId())
+							.awayName(exBetMatchEntity.getAwayName())
+							.round(RoundDto.builder()
+									.roundName(exBetMatchEntity.getRound().getRoundName())
+									.roundType(exBetMatchEntity.getRound().getRoundType())
+									.build())
+							.build()).toList();
+
+			allMatchesByDate.addAll(matches);
+		}
+		return allMatchesByDate;
 	}
 }

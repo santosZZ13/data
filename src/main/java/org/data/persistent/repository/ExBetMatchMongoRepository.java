@@ -1,6 +1,5 @@
 package org.data.persistent.repository;
 
-import org.data.persistent.entity.ExBetEntity;
 import org.data.persistent.entity.ExBetMatchEntity;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.mongodb.repository.MongoRepository;
