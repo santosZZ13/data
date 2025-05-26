@@ -1,21 +1,21 @@
-package org.data.dto;
+package org.data.dto.sf;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.data.dto.common.ExBetMatchDto;
+import org.data.dto.common.SofaMatchDto;
 
 import java.util.List;
 
-public interface SaveMatchesDto {
+public interface SaveScheduledMatchDto {
 
 	@Builder
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class Request {
-		private List<ExBetMatchDto> matches;
+		private List<SofaMatchDto> matches;
 	}
 
 	@Builder
@@ -24,6 +24,5 @@ public interface SaveMatchesDto {
 	@NoArgsConstructor
 	class Response {
 		private String message;
-		private int totalMatches;
 	}
 }

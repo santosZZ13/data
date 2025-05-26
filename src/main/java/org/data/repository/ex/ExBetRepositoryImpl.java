@@ -2,8 +2,7 @@ package org.data.repository.ex;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.data.dto.GetMatchesExByDateDto;
-import org.data.dto.ImportMatchesJsonFile;
+import org.data.dto.ex.GetMatchesExByDateDto;
 import org.data.dto.common.ExBetMatchDto;
 import org.data.dto.common.ExBetMatchDto.RoundDto;
 import org.data.persistent.entity.ExBetMatchEntity;
@@ -11,7 +10,6 @@ import org.data.persistent.repository.ExBetMatchMongoRepository;
 import org.data.util.TimeUtil;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;

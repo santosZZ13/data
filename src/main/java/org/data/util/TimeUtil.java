@@ -22,10 +22,11 @@ public class TimeUtil {
 
 	/**
 	 * date format: yyyy-MM-dd
+	 *
 	 * @param date
 	 * @return
 	 */
-	public static LocalDateTime convertStringToLocalDateTime(@NotNull  String date) {
+	public static LocalDateTime convertStringToLocalDateTime(@NotNull String date) {
 		if (Objects.isNull(date) || date.isEmpty()) {
 			return null;
 		}
@@ -33,7 +34,7 @@ public class TimeUtil {
 		return LocalDateTime.parse(date, formatter);
 	}
 
-	public static LocalDateTime convertStringToLocalDateTimeFormal(@NotNull  String date) {
+	public static LocalDateTime convertStringToLocalDateTimeFormal(@NotNull String date) {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 		return LocalDateTime.parse(date, formatter);
 	}
@@ -43,7 +44,23 @@ public class TimeUtil {
 		return Duration.between(start, finish).toMillis();
 	}
 
-	// convert 2024-08-03 -> 20240803
+	public static LocalDateTime convertStringToLocalDateTimeFormalWithZone(@NotNull String date) {
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+		LocalDateTime localDateTime = LocalDateTime.parse(date, formatter);
+		return localDateTime
+				.atZone(ZoneId.systemDefault())
+				.toLocalDateTime();
+	}
+
+	public static String convertLocalDateTimeToString(LocalDateTime localDateTime) {
+		if (Objects.isNull(localDateTime)) {
+			return null;
+		}
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+		return localDateTime.format(formatter);
+	}
+
+
 	public static String convertIntoXet(String date) {
 		return date.replace("-", "");
 	}

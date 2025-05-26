@@ -1,6 +1,6 @@
 package org.data.repository.ex;
 
-import org.data.dto.GetMatchesExByDateDto;
+import org.data.dto.ex.GetMatchesExByDateDto;
 import org.data.dto.common.ExBetMatchDto;
 
 import java.util.List;

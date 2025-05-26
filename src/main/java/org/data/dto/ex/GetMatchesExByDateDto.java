@@ -1,10 +1,9 @@
-package org.data.dto;
+package org.data.dto.ex;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.data.dto.common.ExBetMatchDto;
 import org.data.dto.common.ExBetMatchDto.RoundDto;
 
 import java.time.LocalDateTime;

@@ -2,9 +2,9 @@ package org.data.service.ex;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
-import org.data.dto.GetMatchesExByDateDto;
-import org.data.dto.ImportMatchesJsonFile;
-import org.data.dto.SaveMatchesDto;
+import org.data.dto.ex.GetMatchesExByDateDto;
+import org.data.dto.ex.ImportMatchesJsonFile;
+import org.data.dto.ex.SaveMatchesDto;
 import org.data.dto.common.ExBetMatchDto;
 import org.data.repository.ex.ExBetRepository;
 import org.data.response.ex.ExBetMatchResponse;

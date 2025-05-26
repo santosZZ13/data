@@ -1,9 +1,9 @@
 package org.data.controller;
 
 import lombok.AllArgsConstructor;
-import org.data.dto.GetMatchesExByDateDto;
-import org.data.dto.ImportMatchesJsonFile;
-import org.data.dto.SaveMatchesDto;
+import org.data.dto.ex.GetMatchesExByDateDto;
+import org.data.dto.ex.ImportMatchesJsonFile;
+import org.data.dto.ex.SaveMatchesDto;
 import org.data.service.ex.ExService;
 import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.*;

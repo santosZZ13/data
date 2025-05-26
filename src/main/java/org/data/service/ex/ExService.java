@@ -1,8 +1,8 @@
 package org.data.service.ex;
 
-import org.data.dto.GetMatchesExByDateDto;
-import org.data.dto.ImportMatchesJsonFile;
-import org.data.dto.SaveMatchesDto;
+import org.data.dto.ex.GetMatchesExByDateDto;
+import org.data.dto.ex.ImportMatchesJsonFile;
+import org.data.dto.ex.SaveMatchesDto;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface ExService {

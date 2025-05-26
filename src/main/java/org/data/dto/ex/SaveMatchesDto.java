@@ -1,32 +1,29 @@
-package org.data.dto;
+package org.data.dto.ex;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.data.dto.common.ExBetMatchDto;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-public interface ImportMatchesJsonFile {
+public interface SaveMatchesDto {
 
 	@Builder
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class Request {
-		private MultipartFile file;
+		private List<ExBetMatchDto> matches;
 	}
-
 
 	@Builder
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class Response {
+		private String message;
 		private int totalMatches;
-		private int totalMatchesSaved;
-		private List<ExBetMatchDto> matches;
 	}
 }
