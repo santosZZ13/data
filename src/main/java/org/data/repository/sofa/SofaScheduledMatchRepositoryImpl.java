@@ -48,4 +48,9 @@ public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepos
 		}
 
 	}
+
+	@Override
+	public SofaMatchDto findSofaScheduledMatchByName(String name) {
+		return null;
+	}
 }
