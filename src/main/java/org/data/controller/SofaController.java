@@ -1,6 +1,7 @@
 package org.data.controller;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.data.dto.sf.GetScheduledMatchByName;
 import org.data.dto.sf.SaveScheduledMatchDto;
 import org.data.service.sf.SofaScheduledMatchService;
@@ -11,12 +12,14 @@ import org.springframework.web.bind.annotation.*;
 @AllArgsConstructor
 @RequestMapping("/api/sofa")
 @CrossOrigin(origins = "http://localhost:3000")
+@Log4j2
 public class SofaController {
 
 	private final SofaScheduledMatchService sofaScheduledMatchService;
 
-	@GetMapping("/scheduled-matches")
-	public SaveScheduledMatchDto.Response saveScheduledMatches(SaveScheduledMatchDto.Request request) {
+	@PostMapping("/scheduled-matches")
+	public SaveScheduledMatchDto.Response saveScheduledMatches(@RequestBody SaveScheduledMatchDto.Request request) {
+		log.info("Saving scheduled matches: {}", request.getMatches().size());
 		return sofaScheduledMatchService.saveScheduledMatches(request);
 	}
 

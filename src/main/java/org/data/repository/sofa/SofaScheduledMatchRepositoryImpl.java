@@ -19,15 +19,20 @@ import java.util.Optional;
 public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepository {
 	private final SofaScheduledMatchMongoRepository sofaScheduledMatchMongoRepository;
 
+
+	//TODO: Optimize this method to reduce the number of database calls
 	@Override
 	public void saveSofaScheduledMatches(List<SofaMatchDto> matchesDto) {
 		List<SofaScheduledMatchEntity> entitiesToSave = new ArrayList<>();
+		// calculate the time running time
+		int timeRunning = (int) (System.currentTimeMillis() / 1000);
 
 		if (matchesDto.isEmpty()) {
 			return;
 		}
 
 		for (SofaMatchDto sofaMatchDto : matchesDto) {
+			log.info("Processing match: {}", sofaMatchDto.getMatchId());
 			Optional<SofaScheduledMatchEntity> byMatchIdEntity = sofaScheduledMatchMongoRepository.getByMatchId(sofaMatchDto.getMatchId());
 			if (byMatchIdEntity.isEmpty()) {
 				SofaScheduledMatchEntity sofaScheduledMatchEntity = SofaMatchConverter.toEntity(sofaMatchDto);
@@ -39,14 +44,17 @@ public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepos
 					matchFromDto.setId(existingMatch.getId());
 					entitiesToSave.add(matchFromDto);
 				}
-
 			}
 		}
+		// 168 seconds
+		int timeRunningAfter = (int) (System.currentTimeMillis() / 1000);
+		log.info("Time running for saving matches: {} seconds", timeRunningAfter - timeRunning);
 
 		if (!entitiesToSave.isEmpty()) {
 			sofaScheduledMatchMongoRepository.saveAll(entitiesToSave);
 		}
-
+		int timeRunningFinal = (int) (System.currentTimeMillis() / 1000);
+		log.info("Total time running for saving matches: {} seconds", timeRunningFinal - timeRunning);
 	}
 
 	@Override
