@@ -39,5 +39,6 @@ public interface GetMatchesExByDateDto {
 		private int awayId;
 		private String awayName;
 		private RoundDto round;
+		private boolean isFavorite;
 	}
 }

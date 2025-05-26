@@ -8,7 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 public interface ExService {
 	ImportMatchesJsonFile.Response getDataFile(MultipartFile request);
 
-	GetMatchesExByDateDto.Response getMatchesByDate(String[] date);
+	GetMatchesExByDateDto.Response getMatchesByDate(String[] date, boolean isFavorite);
 
 	SaveMatchesDto.Response saveMatchesFavorite(SaveMatchesDto.Request request, boolean isFavorite);
 }

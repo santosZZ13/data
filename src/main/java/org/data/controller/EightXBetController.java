@@ -24,12 +24,23 @@ public class EightXBetController {
 
 	@GetMapping("/matches")
 	public GetMatchesExByDateDto.Response getMachesByDate(@Param("date") String[] date) {
-		return exService.getMatchesByDate(date);
+		return exService.getMatchesByDate(date, false);
 	}
 
 	@PostMapping("/matchesFavorite")
 	public SaveMatchesDto.Response saveMatchesFavorite(@RequestBody SaveMatchesDto.Request request) {
 		return exService.saveMatchesFavorite(request, true);
 	}
+
+	@GetMapping("/matchesFavorite")
+	public GetMatchesExByDateDto.Response getFavoriteMatches(@Param("date") String[] date) {
+		return exService.getMatchesByDate(date, true);
+	}
+
+
+//	@PostMapping("/matchesNotFavorite")
+//	public SaveMatchesDto.Response saveMatchesNotFavorite(@RequestBody SaveMatchesDto.Request request) {
+//		return exService.saveMatchesFavorite(request, false);
+//	}
 
 }

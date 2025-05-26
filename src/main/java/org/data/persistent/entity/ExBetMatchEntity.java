@@ -1,6 +1,7 @@
 package org.data.persistent.entity;
 
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.data.dto.ImportMatchesJsonFile;
 import org.data.persistent.entity.base.BaseEntity;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -8,11 +9,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 
 @Document(collection = "exbet_matches")
-@Getter
-@Setter
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class ExBetMatchEntity extends BaseEntity {
 	private String id;
 	private int matchId;

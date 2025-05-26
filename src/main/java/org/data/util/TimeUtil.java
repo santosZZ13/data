@@ -26,10 +26,17 @@ public class TimeUtil {
 	 * @return
 	 */
 	public static LocalDateTime convertStringToLocalDateTime(@NotNull  String date) {
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+		if (Objects.isNull(date) || date.isEmpty()) {
+			return null;
+		}
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 		return LocalDateTime.parse(date, formatter);
 	}
 
+	public static LocalDateTime convertStringToLocalDateTimeFormal(@NotNull  String date) {
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+		return LocalDateTime.parse(date, formatter);
+	}
 
 
 	public static long calculateTimeElapsed(Instant start, Instant finish) {

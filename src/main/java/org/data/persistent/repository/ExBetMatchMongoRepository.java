@@ -11,4 +11,6 @@ public interface ExBetMatchMongoRepository extends MongoRepository<ExBetMatchEnt
 	@Override
 	<S extends ExBetMatchEntity> @NotNull List<S> saveAll(@NotNull Iterable<S> entities);
 	List<ExBetMatchEntity> findAllByKickoffTimeBetween(LocalDateTime start, LocalDateTime end);
+	List<ExBetMatchEntity> findAllByKickoffTimeBetweenAndFavoriteIsTrue(LocalDateTime start, LocalDateTime end);
+	List<ExBetMatchEntity> findAllByKickoffTimeBetweenAndFavoriteIsFalse(LocalDateTime start, LocalDateTime end);
 }

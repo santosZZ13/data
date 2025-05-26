@@ -8,5 +8,5 @@ import java.util.List;
 public interface ExBetRepository {
 	int saveExBetMatchDto(List<ExBetMatchDto> matchesDto);
 
-	List<GetMatchesExByDateDto.ExBetMatchDto> getExBetByDate(String[] date);
+	List<GetMatchesExByDateDto.ExBetMatchDto> getExBetByDate(String[] date, boolean isFavorite);
 }

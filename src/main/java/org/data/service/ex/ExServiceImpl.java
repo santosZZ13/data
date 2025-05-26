@@ -47,8 +47,8 @@ public class ExServiceImpl implements ExService {
 	}
 
 	@Override
-	public GetMatchesExByDateDto.Response getMatchesByDate(String[] date) {
-		List<GetMatchesExByDateDto.ExBetMatchDto> exBetByDate = exBetRepository.getExBetByDate(date);
+	public GetMatchesExByDateDto.Response getMatchesByDate(String[] date, boolean isFavorite) {
+		List<GetMatchesExByDateDto.ExBetMatchDto> exBetByDate = exBetRepository.getExBetByDate(date, isFavorite);
 		return GetMatchesExByDateDto.Response.builder()
 				.matches(exBetByDate)
 				.build();
