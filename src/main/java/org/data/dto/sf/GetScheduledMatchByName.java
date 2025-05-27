@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.data.dto.common.SofaMatchDto;
 
+import java.util.List;
+
 public interface GetScheduledMatchByName {
 	@Builder
 	@Data
@@ -20,6 +22,6 @@ public interface GetScheduledMatchByName {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class Response {
-		private SofaMatchDto matchDto;
+		private List<SofaMatchDto> matches;
 	}
 }

@@ -23,7 +23,7 @@ public class SofaScheduledMatchServiceImpl implements SofaScheduledMatchService 
 	@Override
 	public GetScheduledMatchByName.Response findMatchesByName(String name) {
 		return GetScheduledMatchByName.Response.builder()
-				.matchDto(sofaScheduledMatchRepository.findSofaScheduledMatchByName(name))
+				.matches(sofaScheduledMatchRepository.findSofaScheduledMatchByName(name))
 				.build();
 	}
 }

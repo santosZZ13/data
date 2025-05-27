@@ -2,6 +2,7 @@ package org.data.persistent.repository;
 
 import org.data.persistent.entity.SofaScheduledMatchEntity;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.data.domain.Example;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
@@ -12,4 +13,5 @@ public interface SofaScheduledMatchMongoRepository extends MongoRepository<SofaS
 	<S extends SofaScheduledMatchEntity> @NotNull List<S> saveAll(@NotNull Iterable<S> entities);
 
 	Optional<SofaScheduledMatchEntity> getByMatchId(Integer matchId);
+
 }

@@ -31,9 +31,6 @@ public class SofaScheduledMatchEntity extends BaseEntity {
 		if (o == null || getClass() != o.getClass()) {
 			return false;
 		}
-		if (!super.equals(o)) {
-			return false;
-		}
 		SofaScheduledMatchEntity sofaScheduledMatchEntity = (SofaScheduledMatchEntity) o;
 		return Objects.equals(status, sofaScheduledMatchEntity.status) &&
 				Objects.equals(homeScore, sofaScheduledMatchEntity.homeScore) &&
@@ -84,7 +81,9 @@ public class SofaScheduledMatchEntity extends BaseEntity {
 
 		@Override
 		public boolean equals(Object o) {
-			if (o == null || getClass() != o.getClass()) return false;
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
 			StatusEntity that = (StatusEntity) o;
 			return Objects.equals(description, that.description) && Objects.equals(type, that.type);
 		}
@@ -106,7 +105,9 @@ public class SofaScheduledMatchEntity extends BaseEntity {
 
 		@Override
 		public boolean equals(Object o) {
-			if (o == null || getClass() != o.getClass()) return false;
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
 			TeamEntity that = (TeamEntity) o;
 			return Objects.equals(id, that.id) && Objects.equals(name, that.name) && Objects.equals(country, that.country);
 		}
@@ -135,7 +136,9 @@ public class SofaScheduledMatchEntity extends BaseEntity {
 
 		@Override
 		public boolean equals(Object o) {
-			if (o == null || getClass() != o.getClass()) return false;
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
 			ScoreEntity that = (ScoreEntity) o;
 			return Objects.equals(current, that.current) &&
 					Objects.equals(display, that.display) &&

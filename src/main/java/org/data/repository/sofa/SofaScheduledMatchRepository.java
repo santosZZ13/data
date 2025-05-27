@@ -8,5 +8,5 @@ import java.util.List;
 public interface SofaScheduledMatchRepository {
 	void saveSofaScheduledMatches(List<SofaMatchDto> matchesDto);
 
-	SofaMatchDto findSofaScheduledMatchByName(String name);
+	List<SofaMatchDto> findSofaScheduledMatchByName(String name);
 }
