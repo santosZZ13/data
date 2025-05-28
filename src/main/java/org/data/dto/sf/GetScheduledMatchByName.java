@@ -22,6 +22,6 @@ public interface GetScheduledMatchByName {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class Response {
-		private SofaMatchDto matches;
+		private List<SofaMatchDto> matches;
 	}
 }

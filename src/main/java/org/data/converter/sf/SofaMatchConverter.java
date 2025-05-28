@@ -2,6 +2,7 @@ package org.data.converter.sf;
 
 import org.data.dto.common.SofaMatchDto;
 import org.data.persistent.entity.SofaScheduledMatchEntity;
+import org.data.util.NormalizeTeamName;
 import org.data.util.TimeUtil;
 
 public class SofaMatchConverter {
@@ -12,6 +13,8 @@ public class SofaMatchConverter {
 
 		return SofaScheduledMatchEntity.builder()
 				.matchId(dto.getMatchId())
+				.homeNormalizedName(NormalizeTeamName.normalize(dto.getHomeTeam() != null ? dto.getHomeTeam().getName() : null))
+				.awayNormalizedName(NormalizeTeamName.normalize(dto.getAwayTeam() != null ? dto.getAwayTeam().getName() : null))
 				.startTimestamp(TimeUtil.convertStringToLocalDateTimeFormalWithZone(dto.getStartTimestamp()))
 				.tournamentInfo(dto.getTournamentInfo() != null ? SofaScheduledMatchEntity.TournamentEntity.builder()
 						.id(dto.getTournamentInfo().getId())
@@ -69,6 +72,8 @@ public class SofaMatchConverter {
 		if (entity == null) return null;
 
 		return SofaMatchDto.builder()
+				.homeNormalizedName(entity.getHomeNormalizedName())
+				.awayNormalizedName(entity.getAwayNormalizedName())
 				.matchId(entity.getMatchId())
 				.startTimestamp(TimeUtil.convertLocalDateTimeToString(entity.getStartTimestamp()))
 				.tournamentInfo(entity.getTournamentInfo() != null ? SofaMatchDto.TournamentDto.builder()

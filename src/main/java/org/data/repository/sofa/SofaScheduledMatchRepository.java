@@ -9,5 +9,5 @@ public interface SofaScheduledMatchRepository {
 
 	List<SofaMatchDto> findSofaScheduledMatchesByName(String name);
 
-	SofaMatchDto findSofaScheduledMatchByName(String name);
+	List<SofaMatchDto> findSofaScheduledMatchByName(String name);
 }

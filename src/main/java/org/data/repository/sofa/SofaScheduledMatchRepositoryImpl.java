@@ -125,63 +125,24 @@ public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepos
 	}
 
 	@Override
-	public SofaMatchDto findSofaScheduledMatchByName(String name) {
+	public List<SofaMatchDto> findSofaScheduledMatchByName(String name) {
 		if (name == null || name.trim().isEmpty()) {
 			log.warn("Search name is null or empty.");
 			return null;
 		}
 
-		// Tách chuỗi tìm kiếm thành hai tên đội bóng
-		String[] teamNames = splitTeamNames(name);
-		if (teamNames.length != 2) {
-			log.warn("Search term must contain exactly two team names: {}", name);
-			return null;
-		}
-
-		String normalizedTeam1 = normalizeTeamName(teamNames[0]);
-		String normalizedTeam2 = normalizeTeamName(teamNames[1]);
-
-		if (normalizedTeam1.isEmpty() || normalizedTeam2.isEmpty()) {
-			log.warn("Invalid team names after normalization: team1={}, team2={}", normalizedTeam1, normalizedTeam2);
-			return null;
-		}
-
-		log.info("Searching for match between teams: {} vs {}", normalizedTeam1, normalizedTeam2);
-
-		// Tạo text criteria cho từng đội bóng
-		TextCriteria team1CriteriaHome = TextCriteria.forDefaultLanguage()
-				.matching(normalizedTeam1);
-		TextCriteria team1CriteriaAway = TextCriteria.forDefaultLanguage()
-				.matching(normalizedTeam1);
-		TextCriteria team2CriteriaHome = TextCriteria.forDefaultLanguage()
-				.matching(normalizedTeam2);
-		TextCriteria team2CriteriaAway = TextCriteria.forDefaultLanguage()
-				.matching(normalizedTeam2);
-
-		// Tạo query để tìm trận đấu có cả hai đội
+		String normalizedName = normalizeTeamName(name);
+		log.info("Searching for matches with normalized team name: {}", normalizedName);
 		Query query = new Query().addCriteria(
 				new Criteria().orOperator(
-						// Trường hợp: Team1 là homeTeam, Team2 là awayTeam
-						new Criteria().andOperator(
-								Criteria.where("homeTeam.name").is(team1CriteriaHome),
-								Criteria.where("awayTeam.name").is(team2CriteriaAway)
-						),
-						// Trường hợp: Team1 là awayTeam, Team2 là homeTeam
-						new Criteria().andOperator(
-								Criteria.where("homeTeam.name").is(team2CriteriaHome),
-								Criteria.where("awayTeam.name").is(team1CriteriaAway)
-						)
+						Criteria.where("homeNormalizedName").regex(normalizedName, "i"),
+						Criteria.where("awayNormalizedName").regex(normalizedName, "i")
 				)
-		).limit(1); // Chỉ lấy 1 kết quả phù hợp nhất
-
-		SofaScheduledMatchEntity entity = mongoTemplate.findOne(query, SofaScheduledMatchEntity.class);
-		if (entity == null) {
-			log.info("No match found for teams: {} vs {}", normalizedTeam1, normalizedTeam2);
-			return null;
-		}
-
-		log.info("Found match for teams: {} vs {}, matchId: {}", normalizedTeam1, normalizedTeam2, entity.getMatchId());
-		return SofaMatchConverter.toDto(entity);
+		);
+		List<SofaScheduledMatchEntity> sofaScheduledMatchEntities = mongoTemplate.find(query, SofaScheduledMatchEntity.class);
+		return sofaScheduledMatchEntities.stream()
+				.map(SofaMatchConverter::toDto)
+				.collect(Collectors.toList());
 	}
 
 
@@ -195,24 +156,4 @@ public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepos
 				.replaceAll("[^a-z0-9\\s]", "") // Loại bỏ ký tự đặc biệt
 				.trim(); // Loại bỏ khoảng trắng thừa
 	}
-
-	private String[] splitTeamNames(String searchTerm) {
-		// Chuẩn hóa chuỗi tìm kiếm
-		String normalized = searchTerm.trim().replaceAll("\\s+", " ");
-		String[] words = normalized.split(" ");
-
-		// Nếu chuỗi có ít hơn 2 từ, không thể tách thành hai đội
-		if (words.length < 2) {
-			return new String[]{};
-		}
-
-		// Heuristic đơn giản: Chia chuỗi thành hai phần gần bằng nhau
-		int midPoint = words.length / 2;
-		String team1 = String.join(" ", Arrays.copyOfRange(words, 0, midPoint));
-		String team2 = String.join(" ", Arrays.copyOfRange(words, midPoint, words.length));
-
-		return new String[]{team1, team2};
-	}
-
-
 }
