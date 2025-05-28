@@ -8,7 +8,7 @@ import org.data.dto.common.SofaMatchDto;
 
 import java.util.List;
 
-public interface GetScheduledMatchByName {
+public interface GetScheduledMatchesByName {
 	@Builder
 	@Data
 	@AllArgsConstructor
@@ -22,6 +22,6 @@ public interface GetScheduledMatchByName {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class Response {
-		private SofaMatchDto matches;
+		private List<SofaMatchDto> matches;
 	}
 }

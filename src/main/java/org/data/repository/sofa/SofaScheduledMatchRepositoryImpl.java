@@ -81,12 +81,30 @@ public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepos
 	 * 1. Use fuzzy search
 	 * 2. Use regex
 	 * 3. Text search
+	 * })
+	 * <p>
+	 * db.sofa_scheduled_matches.createIndex(
+	 * {
+	 * "homeTeam.name": "text",
+	 * "awayTeam.name": "text"
+	 * },
+	 * {
+	 * name: "team_name_text_index",
+	 * weights: {
+	 * "homeTeam.name": 10,
+	 * "awayTeam.name": 10
+	 * }
+	 * }
+	 * );
+	 * * Find the best matching match for the given team names.
+	 * * Expects the search term to contain two team names (e.g., "America de Cali Racing Club Montevideo").
+	 * * Returns a single match where both teams are present, or null if no match is found.
 	 *
 	 * @param name
 	 * @return
 	 */
 	@Override
-	public List<SofaMatchDto> findSofaScheduledMatchByName(String name) {
+	public List<SofaMatchDto> findSofaScheduledMatchesByName(String name) {
 		if (name == null || name.trim().isEmpty()) {
 			log.warn("Search name is null or empty.");
 			return null;
@@ -106,6 +124,66 @@ public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepos
 				.collect(Collectors.toList());
 	}
 
+	@Override
+	public SofaMatchDto findSofaScheduledMatchByName(String name) {
+		if (name == null || name.trim().isEmpty()) {
+			log.warn("Search name is null or empty.");
+			return null;
+		}
+
+		// Tách chuỗi tìm kiếm thành hai tên đội bóng
+		String[] teamNames = splitTeamNames(name);
+		if (teamNames.length != 2) {
+			log.warn("Search term must contain exactly two team names: {}", name);
+			return null;
+		}
+
+		String normalizedTeam1 = normalizeTeamName(teamNames[0]);
+		String normalizedTeam2 = normalizeTeamName(teamNames[1]);
+
+		if (normalizedTeam1.isEmpty() || normalizedTeam2.isEmpty()) {
+			log.warn("Invalid team names after normalization: team1={}, team2={}", normalizedTeam1, normalizedTeam2);
+			return null;
+		}
+
+		log.info("Searching for match between teams: {} vs {}", normalizedTeam1, normalizedTeam2);
+
+		// Tạo text criteria cho từng đội bóng
+		TextCriteria team1CriteriaHome = TextCriteria.forDefaultLanguage()
+				.matching(normalizedTeam1);
+		TextCriteria team1CriteriaAway = TextCriteria.forDefaultLanguage()
+				.matching(normalizedTeam1);
+		TextCriteria team2CriteriaHome = TextCriteria.forDefaultLanguage()
+				.matching(normalizedTeam2);
+		TextCriteria team2CriteriaAway = TextCriteria.forDefaultLanguage()
+				.matching(normalizedTeam2);
+
+		// Tạo query để tìm trận đấu có cả hai đội
+		Query query = new Query().addCriteria(
+				new Criteria().orOperator(
+						// Trường hợp: Team1 là homeTeam, Team2 là awayTeam
+						new Criteria().andOperator(
+								Criteria.where("homeTeam.name").is(team1CriteriaHome),
+								Criteria.where("awayTeam.name").is(team2CriteriaAway)
+						),
+						// Trường hợp: Team1 là awayTeam, Team2 là homeTeam
+						new Criteria().andOperator(
+								Criteria.where("homeTeam.name").is(team2CriteriaHome),
+								Criteria.where("awayTeam.name").is(team1CriteriaAway)
+						)
+				)
+		).limit(1); // Chỉ lấy 1 kết quả phù hợp nhất
+
+		SofaScheduledMatchEntity entity = mongoTemplate.findOne(query, SofaScheduledMatchEntity.class);
+		if (entity == null) {
+			log.info("No match found for teams: {} vs {}", normalizedTeam1, normalizedTeam2);
+			return null;
+		}
+
+		log.info("Found match for teams: {} vs {}, matchId: {}", normalizedTeam1, normalizedTeam2, entity.getMatchId());
+		return SofaMatchConverter.toDto(entity);
+	}
+
 
 	private String normalizeTeamName(String name) {
 		if (name == null) {
@@ -117,4 +195,24 @@ public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepos
 				.replaceAll("[^a-z0-9\\s]", "") // Loại bỏ ký tự đặc biệt
 				.trim(); // Loại bỏ khoảng trắng thừa
 	}
+
+	private String[] splitTeamNames(String searchTerm) {
+		// Chuẩn hóa chuỗi tìm kiếm
+		String normalized = searchTerm.trim().replaceAll("\\s+", " ");
+		String[] words = normalized.split(" ");
+
+		// Nếu chuỗi có ít hơn 2 từ, không thể tách thành hai đội
+		if (words.length < 2) {
+			return new String[]{};
+		}
+
+		// Heuristic đơn giản: Chia chuỗi thành hai phần gần bằng nhau
+		int midPoint = words.length / 2;
+		String team1 = String.join(" ", Arrays.copyOfRange(words, 0, midPoint));
+		String team2 = String.join(" ", Arrays.copyOfRange(words, midPoint, words.length));
+
+		return new String[]{team1, team2};
+	}
+
+
 }

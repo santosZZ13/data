@@ -2,6 +2,7 @@ package org.data.service.sf;
 
 import lombok.AllArgsConstructor;
 import org.data.dto.sf.GetScheduledMatchByName;
+import org.data.dto.sf.GetScheduledMatchesByName;
 import org.data.dto.sf.SaveScheduledMatchDto;
 import org.data.repository.sofa.SofaScheduledMatchRepository;
 import org.springframework.stereotype.Service;
@@ -21,9 +22,18 @@ public class SofaScheduledMatchServiceImpl implements SofaScheduledMatchService 
 	}
 
 	@Override
-	public GetScheduledMatchByName.Response findMatchesByName(String name) {
+	public GetScheduledMatchesByName.Response findMatchesByName(String name) {
+		return GetScheduledMatchesByName.Response.builder()
+				.matches(sofaScheduledMatchRepository.findSofaScheduledMatchesByName(name))
+				.build();
+	}
+
+	@Override
+	public GetScheduledMatchByName.Response findMatchByName(String name) {
 		return GetScheduledMatchByName.Response.builder()
 				.matches(sofaScheduledMatchRepository.findSofaScheduledMatchByName(name))
 				.build();
 	}
+
+
 }

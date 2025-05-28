@@ -1,6 +1,7 @@
 package org.data.service.sf;
 
 import org.data.dto.sf.GetScheduledMatchByName;
+import org.data.dto.sf.GetScheduledMatchesByName;
 import org.data.dto.sf.SaveScheduledMatchDto;
 
 public interface SofaScheduledMatchService {
@@ -18,5 +19,7 @@ public interface SofaScheduledMatchService {
 	 * @param name the name of the match to search for
 	 * @return a response containing the matches found
 	 */
-	GetScheduledMatchByName.Response findMatchesByName(String name);
+	GetScheduledMatchesByName.Response findMatchesByName(String name);
+
+	GetScheduledMatchByName.Response findMatchByName(String name);
 }
