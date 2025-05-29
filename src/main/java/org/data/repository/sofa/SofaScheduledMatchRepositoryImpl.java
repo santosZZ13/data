@@ -6,6 +6,7 @@ import org.data.converter.sf.SofaMatchConverter;
 import org.data.dto.common.SofaMatchDto;
 import org.data.persistent.entity.SofaScheduledMatchEntity;
 import org.data.persistent.repository.SofaScheduledMatchMongoRepository;
+import org.data.util.NormalizeTeamName;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -110,7 +111,7 @@ public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepos
 			return null;
 		}
 
-		String normalizedName = normalizeTeamName(name);
+		String normalizedName = NormalizeTeamName.normalize(name);
 
 		TextCriteria textCriteria = TextCriteria.forDefaultLanguage()
 				.matching(normalizedName);
@@ -131,7 +132,7 @@ public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepos
 			return null;
 		}
 
-		String normalizedName = normalizeTeamName(name);
+		String normalizedName = NormalizeTeamName.normalize(name);
 		log.info("Searching for matches with normalized team name: {}", normalizedName);
 		Query query = new Query().addCriteria(
 				new Criteria().orOperator(
@@ -145,15 +146,4 @@ public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepos
 				.collect(Collectors.toList());
 	}
 
-
-	private String normalizeTeamName(String name) {
-		if (name == null) {
-			return "";
-		}
-		// Chuyển về lowercase, loại bỏ ký tự đặc biệt, hậu tố
-		return name.toLowerCase()
-				.replaceAll("fc|afc|serie a|2025", "") // Loại bỏ hậu tố và năm
-				.replaceAll("[^a-z0-9\\s]", "") // Loại bỏ ký tự đặc biệt
-				.trim(); // Loại bỏ khoảng trắng thừa
-	}
 }
