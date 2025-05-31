@@ -19,7 +19,7 @@ public class SofaController {
 
 	@PostMapping("/scheduled-matches")
 	public SaveScheduledMatchDto.Response saveScheduledMatches(@RequestBody SaveScheduledMatchDto.Request request) {
-		log.info("Saving scheduled matches: {}", request.getMatches().size());
+		log.info("Received request to save scheduled matches with {} matches", request.getMatches().size());
 		return sofaScheduledMatchService.saveScheduledMatches(request);
 	}
 

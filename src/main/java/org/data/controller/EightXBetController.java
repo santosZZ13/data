@@ -3,6 +3,7 @@ package org.data.controller;
 import lombok.AllArgsConstructor;
 import org.data.dto.ex.GetMatchesExByDateDto;
 import org.data.dto.ex.ImportMatchesJsonFile;
+import org.data.dto.ex.MatchWithSofaDto;
 import org.data.dto.ex.SaveMatchesDto;
 import org.data.service.ex.ExService;
 import org.springframework.data.repository.query.Param;
@@ -37,10 +38,9 @@ public class EightXBetController {
 		return exService.getMatchesByDate(date, true);
 	}
 
-
-//	@PostMapping("/matchesNotFavorite")
-//	public SaveMatchesDto.Response saveMatchesNotFavorite(@RequestBody SaveMatchesDto.Request request) {
-//		return exService.saveMatchesFavorite(request, false);
-//	}
+	@PostMapping("/matchesWithSofa")
+	public MatchWithSofaDto.Response getMatchesWithSofa(@RequestBody MatchWithSofaDto.Request request) {
+		return exService.getMatchesWithSofa(request);
+	}
 
 }

@@ -2,8 +2,10 @@ package org.data.service.ex;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
+import org.data.dto.common.MatchedMatchesDto;
 import org.data.dto.ex.GetMatchesExByDateDto;
 import org.data.dto.ex.ImportMatchesJsonFile;
+import org.data.dto.ex.MatchWithSofaDto;
 import org.data.dto.ex.SaveMatchesDto;
 import org.data.dto.common.ExBetMatchDto;
 import org.data.repository.ex.ExBetRepository;
@@ -97,6 +99,18 @@ public class ExServiceImpl implements ExService {
 		}
 
 		return exBetMatchResponseDtos;
+	}
+
+	@Override
+	public MatchWithSofaDto.Response getMatchesWithSofa(MatchWithSofaDto.Request request) {
+		List<MatchedMatchesDto> result = new ArrayList<>();
+		for (ExBetMatchDto matchDto : request.getMatches()) {
+			MatchedMatchesDto matchedMatch = exBetRepository.getMatchedMatch(matchDto);
+			result.add(matchedMatch);
+		}
+		return MatchWithSofaDto.Response.builder()
+				.matches(result)
+				.build();
 	}
 
 	public int saveToDB(List<ExBetMatchDto> exBetMatchResponseDtos) {

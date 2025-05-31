@@ -3,6 +3,8 @@ package org.data.persistent.entity;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.data.persistent.entity.base.BaseEntity;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -13,6 +15,9 @@ import java.util.Objects;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
+@CompoundIndexes({
+		@CompoundIndex(name = "matchId_idx", def = "{'matchId': 1}", unique = true)
+})
 public class SofaScheduledMatchEntity extends BaseEntity {
 	private String id;
 	private Integer matchId;

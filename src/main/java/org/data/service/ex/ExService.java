@@ -2,6 +2,7 @@ package org.data.service.ex;
 
 import org.data.dto.ex.GetMatchesExByDateDto;
 import org.data.dto.ex.ImportMatchesJsonFile;
+import org.data.dto.ex.MatchWithSofaDto;
 import org.data.dto.ex.SaveMatchesDto;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -11,4 +12,6 @@ public interface ExService {
 	GetMatchesExByDateDto.Response getMatchesByDate(String[] date, boolean isFavorite);
 
 	SaveMatchesDto.Response saveMatchesFavorite(SaveMatchesDto.Request request, boolean isFavorite);
+
+	MatchWithSofaDto.Response getMatchesWithSofa(MatchWithSofaDto.Request request);
 }

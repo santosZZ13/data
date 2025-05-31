@@ -13,7 +13,7 @@ public class NormalizeTeamName {
 		normalized = Normalizer.normalize(normalized, Normalizer.Form.NFKD)
 				.replaceAll("\\p{M}", ""); // Loại bỏ dấu (giữ lại ký tự cơ bản)
 
-		normalized = normalized.replaceAll("\\b(fc|sc|afc|cf|u21|u19|reserves|ii|iii|if)\\b\\s*", "")
+		normalized = normalized.replaceAll("\\b(club|fc|sc|afc|cf|u21|u19|reserves|ii|iii|if)\\b\\s*", "")
 				.replaceAll("\\s+", " ")
 				.trim();
 

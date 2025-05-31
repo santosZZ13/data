@@ -19,6 +19,7 @@ public class MongoConfig {
 	public AbstractMongoEventListener<Object> auditingMongoEventListener() {
 		return new AbstractMongoEventListener<Object>() {
 
+			// This method is called before an entity is converted to a MongoDB document.
 			@Override
 			public void onBeforeConvert(@NotNull BeforeConvertEvent<Object> event) {
 				Object source = event.getSource();
@@ -31,6 +32,7 @@ public class MongoConfig {
 				}
 			}
 
+			// This method is called before an entity is saved to the database.
 			@Override
 			public void onBeforeSave(@NotNull BeforeSaveEvent<Object> event) {
 				Object source = event.getSource();
