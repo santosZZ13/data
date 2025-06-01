@@ -10,9 +10,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ExBetMatchDto {
+	private int id;
 	private String tournamentName;
 	private String kickoffTime; // Changed to String for simplicity
-	private int matchId;
 	private int homeId;
 	private String homeName;
 	private int awayId;

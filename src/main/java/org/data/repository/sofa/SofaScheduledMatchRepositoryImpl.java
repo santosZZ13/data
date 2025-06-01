@@ -4,27 +4,33 @@ import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.data.converter.sf.SofaMatchConverter;
 import org.data.dto.common.SofaMatchDto;
+import org.data.dto.common.TeamDto;
 import org.data.persistent.entity.SofaScheduledMatchEntity;
 import org.data.persistent.repository.SofaScheduledMatchMongoRepository;
+import org.data.repository.team.TeamRepository;
 import org.data.util.NormalizeTeamName;
+import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.TextCriteria;
-import org.springframework.data.mongodb.core.query.TextQuery;
+import org.springframework.data.mongodb.core.query.*;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Repository
 @AllArgsConstructor
 @Log4j2
 public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepository {
 	private final SofaScheduledMatchMongoRepository sofaScheduledMatchMongoRepository;
+	private final TeamRepository teamRepository;
 	private final MongoTemplate mongoTemplate;
 
 	//TODO: Optimize this method to reduce the number of database calls
+
+	/**
+	 * @param matchesDto
+	 */
 	@Override
 	public void saveSofaScheduledMatches(List<SofaMatchDto> matchesDto) {
 		log.info("Starting to save {} matches.", matchesDto.size());
@@ -33,55 +39,102 @@ public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepos
 			return;
 		}
 
-		Map<Integer, SofaMatchDto> uniqueMatchesDto = new LinkedHashMap<>();
-		matchesDto.forEach(matchDto -> {
-			if (matchDto.getMatchId() != null) {
-				uniqueMatchesDto.putIfAbsent(matchDto.getMatchId(), matchDto);
-			} else {
-				log.warn("Match with null matchId, skipping: {}", matchDto);
-			}
-		});
+		saveTeamDto(matchesDto);
+
+		Map<Integer, SofaMatchDto> uniqueMatchesDto = matchesDto.stream()
+				.filter(matchDto -> matchDto.getMatchId() != null)
+				.collect(Collectors.toMap(
+						SofaMatchDto::getMatchId,
+						matchDto -> matchDto,
+						(existing, replacement) -> existing, LinkedHashMap::new)
+				);
 
 		List<Integer> matchDtoIds = new ArrayList<>(uniqueMatchesDto.keySet());
 		if (matchDtoIds.isEmpty()) {
 			log.warn("No valid match IDs to process.");
 			return;
 		}
+
 		Query query = new Query(Criteria.where("matchId").in(matchDtoIds));
 		List<SofaScheduledMatchEntity> existingMatchesEntitiesDB = mongoTemplate.find(query, SofaScheduledMatchEntity.class);
-		Map<Integer, SofaScheduledMatchEntity> existingMatchEntitiesMap = new LinkedHashMap<>();
-		for (SofaScheduledMatchEntity entity : existingMatchesEntitiesDB) {
-			existingMatchEntitiesMap.put(entity.getMatchId(), entity);
-		}
+		Map<Integer, SofaScheduledMatchEntity> existingMatchEntitiesMap = existingMatchesEntitiesDB.stream()
+				.collect(Collectors.toMap(
+						SofaScheduledMatchEntity::getMatchId,
+						entity -> entity,
+						(e1, e2) -> e1, LinkedHashMap::new)
+				);
 
 		List<SofaScheduledMatchEntity> entitiesToSave = new ArrayList<>();
 		for (SofaMatchDto sofaMatchDto : uniqueMatchesDto.values()) {
-			log.debug("Processing match: {}", sofaMatchDto.getMatchId());
 			SofaScheduledMatchEntity matchEntityFromDto = SofaMatchConverter.toEntity(sofaMatchDto);
 			SofaScheduledMatchEntity existingEntityMatch = existingMatchEntitiesMap.get(sofaMatchDto.getMatchId());
 
-			if (existingEntityMatch == null) {
-				log.info("Saving new match with matchId: {}. Details: {}", sofaMatchDto.getMatchId(), matchEntityFromDto);
-				entitiesToSave.add(matchEntityFromDto);
-			} else {
-				if (!existingEntityMatch.equals(matchEntityFromDto)) {
-					logTheDifference(matchEntityFromDto, existingEntityMatch);
-					log.info("Updating existing match with matchId: {}", sofaMatchDto.getMatchId());
-					matchEntityFromDto.setId(existingEntityMatch.getId()); // Giữ ID của bản ghi cũ
-					entitiesToSave.add(matchEntityFromDto);
-				} else {
-					log.debug("No changes for match with matchId: {}, skipping update.", sofaMatchDto.getMatchId());
+			if (existingEntityMatch == null || !existingEntityMatch.equals(matchEntityFromDto)) {
+				if (existingEntityMatch != null) {
+					matchEntityFromDto.setId(existingEntityMatch.getId());
 				}
+				entitiesToSave.add(matchEntityFromDto);
 			}
 		}
-		if (!entitiesToSave.isEmpty()) {
-			// Save all new or updated matches in a single batch operation
-			log.info("Saving {} matches to the database.", entitiesToSave.size());
-			sofaScheduledMatchMongoRepository.saveAll(entitiesToSave);
-		}
 
-		log.info("Finished saving matches. Total saved: {}", entitiesToSave.size());
+		// Sử dụng Bulk Write Operations để lưu dữ liệu
+		if (!entitiesToSave.isEmpty()) {
+			log.info("Preparing to save or update {} matches.", entitiesToSave.size());
+			int batchSize = 500;
+			for (int i = 0; i < entitiesToSave.size(); i += batchSize) {
+				List<SofaScheduledMatchEntity> batch = entitiesToSave.subList(i, Math.min(i + batchSize, entitiesToSave.size()));
+				// Sử dụng BulkOperations để upsert
+				BulkOperations bulkOps = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, SofaScheduledMatchEntity.class);
+				for (SofaScheduledMatchEntity entity : batch) {
+					Query upsertQuery = new Query(Criteria.where("matchId").is(entity.getMatchId()));
+					Update update = new Update()
+							.set("matchId", entity.getMatchId())
+							.set("startTimestamp", entity.getStartTimestamp())
+							.set("tournamentInfo", entity.getTournamentInfo())
+							.set("sessionInfo", entity.getSessionInfo())
+							.set("roundInfo", entity.getRoundInfo())
+							.set("status", entity.getStatus())
+							.set("homeTeam", entity.getHomeTeam())
+							.set("awayTeam", entity.getAwayTeam())
+							.set("homeScore", entity.getHomeScore())
+							.set("awayScore", entity.getAwayScore());
+					bulkOps.upsert(upsertQuery, update);
+				}
+				bulkOps.execute();
+				log.info("Saved batch of {} matches (total processed: {}).", batch.size(), Math.min(i + batchSize, entitiesToSave.size()));
+			}
+		}
+		log.info("Finished saving matches. Total processed: {} at {}", entitiesToSave.size(), new Date());
 	}
+
+	private void saveTeamDto(List<SofaMatchDto> matchesDto) {
+		if (matchesDto.isEmpty()) {
+			return;
+		}
+		log.info("Starting to save {} teams from matches", matchesDto.size() * 2);
+		List<TeamDto> teams = matchesDto.stream()
+				.flatMap(matchDto -> Stream.of(matchDto.getHomeTeam(), matchDto.getAwayTeam()))
+				.filter(Objects::nonNull)
+				.distinct()
+				.map(team -> {
+					TeamDto.SofaTeamDto sofaTeamDto = TeamDto.SofaTeamDto.builder()
+							.teamId(team.getId())
+							.name(team.getName())
+							.country(team.getCountry())
+							.normalizedName(NormalizeTeamName.normalize(team.getName()))
+							.shortName(team.getShortName())
+							.build();
+					return TeamDto.builder()
+							.sofaTeamDto(sofaTeamDto)
+							.exBetTeamDto(null)
+							.build();
+				})
+				.collect(Collectors.toList());
+
+		log.info("Saving {} unique teams.", teams.size());
+		teamRepository.saveTeamsFromSofa(teams);
+	}
+
 
 	/**
 	 * Logs the differences between the DTO and the entity from the database.
@@ -220,8 +273,8 @@ public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepos
 		log.info("Searching for matches with normalized team name: {}", normalizedName);
 		Query query = new Query().addCriteria(
 				new Criteria().orOperator(
-						Criteria.where("homeNormalizedName").regex(normalizedName, "i"),
-						Criteria.where("awayNormalizedName").regex(normalizedName, "i")
+						Criteria.where("homeTeam.normalizedName").regex(normalizedName, "i"),
+						Criteria.where("awayTeam.normalizedName").regex(normalizedName, "i")
 				)
 		);
 		List<SofaScheduledMatchEntity> sofaScheduledMatchEntities = mongoTemplate.find(query, SofaScheduledMatchEntity.class);

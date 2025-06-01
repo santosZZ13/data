@@ -11,16 +11,24 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class MatchedMatchesDto {
 	private int id;
-	private int awayId;
+	private String tournamentName;
+	private String kickoffTime;
+	private String homeName;
 	private String awayName;
 	private int homeId;
-	private String homeName;
-	private String kickoffTime;
-	private String tournamentName;
-	private Integer sofaMatchId;
+	private int awayId;
 	private Boolean isMatched;
-	private Integer sofaHomeId;
-	private Integer sofaAwayId;
-	private String sofaHomeName;
-	private String sofaAwayName;
+	private SofaData sofaData;
+
+	@Builder
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class SofaData {
+		private Integer sofaMatchId;
+		private Integer sofaHomeId;
+		private Integer sofaAwayId;
+		private String sofaHomeName;
+		private String sofaAwayName;
+	}
 }

@@ -28,8 +28,6 @@ public class SofaScheduledMatchEntity extends BaseEntity {
 	private StatusEntity status;
 	private TeamEntity homeTeam;
 	private TeamEntity awayTeam;
-	private String homeNormalizedName;
-	private String awayNormalizedName;
 	private ScoreEntity homeScore;
 	private ScoreEntity awayScore;
 
@@ -109,6 +107,8 @@ public class SofaScheduledMatchEntity extends BaseEntity {
 		private Integer id;
 		private String name;
 		private String country;
+		private String normalizedName;
+		private String shortName;
 
 		@Override
 		public boolean equals(Object o) {

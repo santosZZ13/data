@@ -11,5 +11,5 @@ public interface ExBetRepository {
 
 	List<GetMatchesExByDateDto.ExBetMatchDto> getExBetByDate(String[] date, boolean isFavorite);
 
-	MatchedMatchesDto getMatchedMatch(ExBetMatchDto matchDto);
+	MatchedMatchesDto getMatchedMatch(ExBetMatchDto exBetMatchDto);
 }

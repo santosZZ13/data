@@ -15,7 +15,6 @@ import org.data.util.NormalizeTeamName;
 import org.data.util.TimeUtil;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,7 +30,7 @@ public class ExBetRepositoryImpl implements ExBetRepository {
 	public int saveExBetMatchDto(List<ExBetMatchDto> matchesDto) {
 		List<ExBetMatchEntity> exBetMatchEntities = matchesDto.stream().map(
 						exBetMatchDto -> ExBetMatchEntity.builder()
-								.matchId(exBetMatchDto.getMatchId())
+								.matchId(exBetMatchDto.getId())
 								.tournamentName(exBetMatchDto.getTournamentName())
 								.homeId(exBetMatchDto.getHomeId())
 								.homeName(exBetMatchDto.getHomeName())
@@ -96,9 +95,9 @@ public class ExBetRepositoryImpl implements ExBetRepository {
 	}
 
 	@Override
-	public MatchedMatchesDto getMatchedMatch(ExBetMatchDto matchDto) {
-		String normalizedHomeName = NormalizeTeamName.normalize(matchDto.getHomeName());
-		String normalizedAwayName = NormalizeTeamName.normalize(matchDto.getAwayName());
+	public MatchedMatchesDto getMatchedMatch(ExBetMatchDto exBetMatchDto) {
+		String normalizedHomeName = NormalizeTeamName.normalize(exBetMatchDto.getHomeName());
+		String normalizedAwayName = NormalizeTeamName.normalize(exBetMatchDto.getAwayName());
 
 		List<SofaMatchDto> candidates = sofaScheduledMatchRepository.findSofaScheduledMatchByName(normalizedHomeName);
 		if (candidates == null || candidates.isEmpty()) {
@@ -106,26 +105,26 @@ public class ExBetRepositoryImpl implements ExBetRepository {
 		}
 
 		if (candidates == null || candidates.isEmpty()) {
-			return notFoundMatch(matchDto);
+			return notFoundMatch(exBetMatchDto);
 		}
 
-		LocalDateTime kickoffTime = TimeUtil.convertStringToLocalDateTime(matchDto.getKickoffTime());
-		assert kickoffTime != null;
-		LocalDateTime startTime = kickoffTime.minusMinutes(30);
-		LocalDateTime endTime = kickoffTime.plusMinutes(30);
-
-		candidates = candidates.stream()
-				.filter(candidate -> {
-					LocalDateTime sofaKickoffTime = TimeUtil.convertStringToLocalDateTime(candidate.getStartTimestamp());
-					assert sofaKickoffTime != null;
-					return sofaKickoffTime.isAfter(startTime) && sofaKickoffTime.isBefore(endTime);
-				})
-				.collect(Collectors.toList());
+//		LocalDateTime kickoffTime = TimeUtil.convertStringToLocalDateTime(matchDto.getKickoffTime());
+//		assert kickoffTime != null;
+//		LocalDateTime startTime = kickoffTime.minusMinutes(30);
+//		LocalDateTime endTime = kickoffTime.plusMinutes(30);
+//
+//		candidates = candidates.stream()
+//				.filter(candidate -> {
+//					LocalDateTime sofaKickoffTime = TimeUtil.convertStringToLocalDateTime(candidate.getStartTimestamp());
+//					assert sofaKickoffTime != null;
+//					return sofaKickoffTime.isAfter(startTime) && sofaKickoffTime.isBefore(endTime);
+//				})
+//				.collect(Collectors.toList());
 
 		// Nếu không còn ứng viên sau khi lọc thời gian
-		if (candidates.isEmpty()) {
-			return notFoundMatch(matchDto);
-		}
+//		if (candidates.isEmpty()) {
+//			return notFoundMatch(matchDto);
+//		}
 
 		// Dùng LevenshteinMatcher để chọn best match
 		SofaMatchDto bestMatch = null;
@@ -133,16 +132,13 @@ public class ExBetRepositoryImpl implements ExBetRepository {
 		int threshold = 3;
 
 		for (SofaMatchDto sofaMatch : candidates) {
-			String sofaHome = (sofaMatch.getHomeNormalizedName());
-			String sofaAway = (sofaMatch.getAwayNormalizedName());
+			String sofaHome = sofaMatch.getHomeTeam().getNormalizedName();
+			String sofaAway = sofaMatch.getAwayTeam().getNormalizedName();
 
-			// Kiểm tra đội nhà của 8xbet
 			int homeDistance = LevenshteinMatcher.calculateLevenshteinDistance(normalizedHomeName, sofaHome);
 			int awayDistance = LevenshteinMatcher.calculateLevenshteinDistance(normalizedHomeName, sofaAway);
 
-			// Nếu đội nhà 8xbet khớp với đội nhà hoặc đội khách SofaScore
 			if (homeDistance <= threshold || awayDistance <= threshold) {
-				// Kiểm tra đội còn lại
 				String otherTeam = homeDistance <= threshold ? normalizedAwayName : normalizedHomeName;
 				String otherSofaTeam = homeDistance <= threshold ? sofaAway : sofaHome;
 				int otherDistance = LevenshteinMatcher.calculateLevenshteinDistance(otherTeam, otherSofaTeam);
@@ -155,31 +151,18 @@ public class ExBetRepositoryImpl implements ExBetRepository {
 		}
 
 		if (bestMatch != null) {
-			log.info("Matched 8xbet match {} vs {} with SofaScore match {} vs {}",
-					matchDto.getHomeName(), matchDto.getAwayName(), bestMatch.getHomeTeam().getName(), bestMatch.getAwayTeam().getName());
-			return MatchedMatchesDto.builder()
-					.id(matchDto.getMatchId())
-					.homeId(matchDto.getHomeId())
-					.homeName(matchDto.getHomeName())
-					.awayId(matchDto.getAwayId())
-					.awayName(matchDto.getAwayName())
-					.kickoffTime(matchDto.getKickoffTime())
-					.tournamentName(matchDto.getTournamentName())
-					.sofaMatchId(bestMatch.getMatchId())
-					.isMatched(true)
-					.sofaHomeName(bestMatch.getHomeTeam().getName())
-					.sofaAwayName(bestMatch.getAwayTeam().getName())
-					.build();
+			log.info("Found SofaScore match for 8xbet match: {} vs {} with SofaScore match: {} vs {}",
+					exBetMatchDto.getHomeName(), exBetMatchDto.getAwayName(), bestMatch.getHomeTeam().getName(), bestMatch.getAwayTeam().getName());
+			return foundMatch(exBetMatchDto, bestMatch);
 		} else {
-			log.info("No SofaScore match found for 8xbet match: {} vs {}", matchDto.getHomeName(), matchDto.getAwayName());
-			return notFoundMatch(matchDto);
+			log.info("No SofaScore match found for 8xbet match: {} vs {}", exBetMatchDto.getHomeName(), exBetMatchDto.getAwayName());
+			return notFoundMatch(exBetMatchDto);
 		}
 	}
 
 	private MatchedMatchesDto notFoundMatch(ExBetMatchDto matchDto) {
-		log.info("No SofaScore match found within time range for 8xbet match: {} vs {}", matchDto.getHomeName(), matchDto.getAwayName());
 		return MatchedMatchesDto.builder()
-				.id(matchDto.getMatchId())
+				.id(matchDto.getId())
 				.homeId(matchDto.getHomeId())
 				.homeName(matchDto.getHomeName())
 				.awayId(matchDto.getAwayId())
@@ -187,6 +170,28 @@ public class ExBetRepositoryImpl implements ExBetRepository {
 				.kickoffTime(matchDto.getKickoffTime())
 				.tournamentName(matchDto.getTournamentName())
 				.isMatched(false)
+				.build();
+	}
+
+	private MatchedMatchesDto foundMatch(ExBetMatchDto exBetMatchDto, SofaMatchDto sofaMatch) {
+		MatchedMatchesDto.SofaData sofaData = MatchedMatchesDto.SofaData.builder()
+				.sofaHomeId(sofaMatch.getHomeTeam().getId())
+				.sofaAwayId(sofaMatch.getAwayTeam().getId())
+				.sofaHomeName(sofaMatch.getHomeTeam().getName())
+				.sofaAwayName(sofaMatch.getAwayTeam().getName())
+				.sofaMatchId(sofaMatch.getMatchId())
+				.build();
+
+		return MatchedMatchesDto.builder()
+				.id(exBetMatchDto.getId())
+				.homeId(exBetMatchDto.getHomeId())
+				.homeName(exBetMatchDto.getHomeName())
+				.awayId(exBetMatchDto.getAwayId())
+				.awayName(exBetMatchDto.getAwayName())
+				.kickoffTime(exBetMatchDto.getKickoffTime())
+				.tournamentName(exBetMatchDto.getTournamentName())
+				.isMatched(Boolean.TRUE)
+				.sofaData(sofaData)
 				.build();
 	}
 }

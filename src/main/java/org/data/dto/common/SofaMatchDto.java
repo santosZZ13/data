@@ -7,8 +7,6 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SofaMatchDto {
-	private String homeNormalizedName;
-	private String awayNormalizedName;
 	private Integer matchId;
 	private String startTimestamp;
 	private TournamentDto tournamentInfo;
@@ -63,6 +61,8 @@ public class SofaMatchDto {
 		private Integer id;
 		private String name;
 		private String country;
+		private String normalizedName;
+		private String shortName;
 	}
 
 	@Builder

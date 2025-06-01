@@ -82,7 +82,7 @@ public class ExServiceImpl implements ExService {
 			String tournamentName = tournament.getName();
 			for (ExBetMatchResponse match : tournament.getMatches()) {
 				ExBetMatchDto exBetMatchResponseDto = ExBetMatchDto.builder()
-						.matchId(match.getIid())
+						.id(match.getIid())
 						.tournamentName(tournamentName)
 						.kickoffTime(TimeUtil.convertUnixTimestampToLocalDateTime(match.getKickoffTime()).toString())
 						.homeId(match.getHome().getId())
@@ -104,8 +104,8 @@ public class ExServiceImpl implements ExService {
 	@Override
 	public MatchWithSofaDto.Response getMatchesWithSofa(MatchWithSofaDto.Request request) {
 		List<MatchedMatchesDto> result = new ArrayList<>();
-		for (ExBetMatchDto matchDto : request.getMatches()) {
-			MatchedMatchesDto matchedMatch = exBetRepository.getMatchedMatch(matchDto);
+		for (ExBetMatchDto exBetMatchDto : request.getMatches()) {
+			MatchedMatchesDto matchedMatch = exBetRepository.getMatchedMatch(exBetMatchDto);
 			result.add(matchedMatch);
 		}
 		return MatchWithSofaDto.Response.builder()
