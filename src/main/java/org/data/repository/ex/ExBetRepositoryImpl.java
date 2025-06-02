@@ -70,6 +70,7 @@ public class ExBetRepositoryImpl implements ExBetRepository {
 					)
 					.stream()
 					.map(exBetMatchEntity -> GetMatchesExByDateDto.ExBetMatchDto.builder()
+							.id(exBetMatchEntity.getMatchId())
 							.tournamentName(exBetMatchEntity.getTournamentName())
 							.kickoffTime(exBetMatchEntity.getKickoffTime())
 							.homeId(exBetMatchEntity.getHomeId())

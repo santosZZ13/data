@@ -31,6 +31,7 @@ public interface GetMatchesExByDateDto {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class ExBetMatchDto {
+		private int id;
 		private String tournamentName;
 		private LocalDateTime kickoffTime;
 		private int homeId;
