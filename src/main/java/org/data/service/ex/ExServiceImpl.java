@@ -3,10 +3,7 @@ package org.data.service.ex;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import org.data.dto.common.MatchedMatchesDto;
-import org.data.dto.ex.GetMatchesExByDateDto;
-import org.data.dto.ex.ImportMatchesJsonFile;
-import org.data.dto.ex.MatchWithSofaDto;
-import org.data.dto.ex.SaveMatchesDto;
+import org.data.dto.ex.*;
 import org.data.dto.common.ExBetMatchDto;
 import org.data.repository.ex.ExBetRepository;
 import org.data.response.ex.ExBetMatchResponse;
@@ -115,5 +112,14 @@ public class ExServiceImpl implements ExService {
 
 	public int saveToDB(List<ExBetMatchDto> exBetMatchResponseDtos) {
 		return exBetRepository.saveExBetMatchDto(exBetMatchResponseDtos);
+	}
+
+	@Override
+	public SaveMatchExDto.Response saveMatches(SaveMatchExDto.Request request) {
+		exBetRepository.saveExBetMatchDto(request.getMatches());
+		return SaveMatchExDto.Response.builder()
+				.message("Matches saved successfully")
+				.totalMatches(request.getMatches().size())
+				.build();
 	}
 }

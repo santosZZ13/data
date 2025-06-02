@@ -39,7 +39,7 @@ public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepos
 			return;
 		}
 
-		saveTeamDto(matchesDto);
+//		saveTeamDto(matchesDto);
 
 		Map<Integer, SofaMatchDto> uniqueMatchesDto = matchesDto.stream()
 				.filter(matchDto -> matchDto.getMatchId() != null)

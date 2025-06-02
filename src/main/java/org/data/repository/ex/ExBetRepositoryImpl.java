@@ -56,7 +56,6 @@ public class ExBetRepositoryImpl implements ExBetRepository {
 			}
 		}
 		exBetMatchMongoRepository.saveAll(exBetMatchEntitiesToSave);
-
 		return exBetMatchEntitiesToSave.size();
 	}
 
@@ -193,5 +192,10 @@ public class ExBetRepositoryImpl implements ExBetRepository {
 				.isMatched(Boolean.TRUE)
 				.sofaData(sofaData)
 				.build();
+	}
+
+	@Override
+	public void saveMatchedMatches(List<MatchedMatchesDto> matchedMatchesDtos) {
+
 	}
 }

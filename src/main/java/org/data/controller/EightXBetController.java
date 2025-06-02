@@ -1,10 +1,7 @@
 package org.data.controller;
 
 import lombok.AllArgsConstructor;
-import org.data.dto.ex.GetMatchesExByDateDto;
-import org.data.dto.ex.ImportMatchesJsonFile;
-import org.data.dto.ex.MatchWithSofaDto;
-import org.data.dto.ex.SaveMatchesDto;
+import org.data.dto.ex.*;
 import org.data.service.ex.ExService;
 import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.*;
@@ -23,11 +20,6 @@ public class EightXBetController {
 		return exService.getDataFile(request);
 	}
 
-	@GetMapping("/matches")
-	public GetMatchesExByDateDto.Response getMachesByDate(@Param("date") String[] date) {
-		return exService.getMatchesByDate(date, false);
-	}
-
 	@PostMapping("/matchesFavorite")
 	public SaveMatchesDto.Response saveMatchesFavorite(@RequestBody SaveMatchesDto.Request request) {
 		return exService.saveMatchesFavorite(request, true);
@@ -43,4 +35,13 @@ public class EightXBetController {
 		return exService.getMatchesWithSofa(request);
 	}
 
+	@GetMapping("/matches")
+	public GetMatchesExByDateDto.Response getMachesByDate(@Param("date") String[] date) {
+		return exService.getMatchesByDate(date, false);
+	}
+
+	@PostMapping("/matches")
+	public SaveMatchExDto.Response importMatchesJsonFile(@RequestBody SaveMatchExDto.Request request) {
+		return exService.saveMatches(request);
+	}
 }
