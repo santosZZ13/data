@@ -79,6 +79,11 @@ connection:
     url: http://localhost:8080/
 
 
-sofascore:
-  api:
+api:
+  sofa:
     base-url: https://www.sofascore.com/api/v1
+    timeout: 5000
+
+#sofascore:
+#  api:
+#    base-url: https://www.sofascore.com/api/v1

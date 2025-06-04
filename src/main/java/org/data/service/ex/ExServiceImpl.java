@@ -9,7 +9,7 @@ import org.data.repository.ex.ExBetRepository;
 import org.data.response.ex.ExBetMatchResponse;
 import org.data.response.ex.ExBetResponse;
 import org.data.response.ex.ExBetTournamentResponse;
-import org.data.util.TimeUtil;
+import org.data.util.utils.TimeUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -111,15 +111,27 @@ public class ExServiceImpl implements ExService {
 	}
 
 	public int saveToDB(List<ExBetMatchDto> exBetMatchResponseDtos) {
-		return exBetRepository.saveExBetMatchDto(exBetMatchResponseDtos);
+//		return exBetRepository.saveExBetMatchDto(exBetMatchResponseDtos);
+		return 0;
 	}
 
 	@Override
 	public SaveMatchExDto.Response saveMatches(SaveMatchExDto.Request request) {
-		exBetRepository.saveExBetMatchDto(request.getMatches());
+
+		String date = request.getDate();
+		/**
+		 * Step1: Lấy tất cả trận đầu 8xbet ngày "date" từ DB
+		 *
+		 *
+		 */
+
+
+
+
+
+		List<MatchedMatchesDto> matchedMatchesDtos = exBetRepository.saveExBetMatchDto(request.getMatches());
 		return SaveMatchExDto.Response.builder()
-				.message("Matches saved successfully")
-				.totalMatches(request.getMatches().size())
+				.matches(matchedMatchesDtos)
 				.build();
 	}
 }

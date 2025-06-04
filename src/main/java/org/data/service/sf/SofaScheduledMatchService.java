@@ -2,6 +2,7 @@ package org.data.service.sf;
 
 import org.data.dto.sf.GetScheduledMatchByName;
 import org.data.dto.sf.GetScheduledMatchesByName;
+import org.data.dto.sf.GetSofaMatchesByDate;
 import org.data.dto.sf.SaveScheduledMatchDto;
 
 public interface SofaScheduledMatchService {
@@ -22,4 +23,6 @@ public interface SofaScheduledMatchService {
 	GetScheduledMatchesByName.Response findMatchesByName(String name);
 
 	GetScheduledMatchByName.Response findMatchByName(String name);
+
+	GetSofaMatchesByDate.Response getMatchesByDate(String date);
 }

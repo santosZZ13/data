@@ -1,6 +1,6 @@
 package org.data.exception;
 
-import org.data.common.exception.ApiException;
+import org.data.exception.exceptionHandler.ApiException;
 
 public class NotFoundEventException extends ApiException {
 	public NotFoundEventException(String message, String code, String shortDesc) {

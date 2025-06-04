@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.data.dto.sf.GetScheduledMatchByName;
 import org.data.dto.sf.GetScheduledMatchesByName;
+import org.data.dto.sf.GetSofaMatchesByDate;
 import org.data.dto.sf.SaveScheduledMatchDto;
 import org.data.service.sf.SofaScheduledMatchService;
 import org.springframework.web.bind.annotation.*;
@@ -26,5 +27,10 @@ public class SofaController {
 	@GetMapping("/find-matches")
 	public GetScheduledMatchByName.Response findMatchesByName(@RequestParam String name) {
 		return sofaScheduledMatchService.findMatchByName(name);
+	}
+
+	@GetMapping("/matches")
+	public GetSofaMatchesByDate.Response getMatchesByDate(@RequestParam("date") String date) {
+		return sofaScheduledMatchService.getMatchesByDate(date);
 	}
 }

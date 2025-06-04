@@ -12,7 +12,7 @@ import org.data.persistent.repository.ExBetMatchMongoRepository;
 import org.data.repository.sofa.SofaScheduledMatchRepository;
 import org.data.util.LevenshteinMatcher;
 import org.data.util.NormalizeTeamName;
-import org.data.util.TimeUtil;
+import org.data.util.utils.TimeUtil;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -27,36 +27,42 @@ public class ExBetRepositoryImpl implements ExBetRepository {
 	private final ExBetMatchMongoRepository exBetMatchMongoRepository;
 	private final SofaScheduledMatchRepository sofaScheduledMatchRepository;
 
-	public int saveExBetMatchDto(List<ExBetMatchDto> matchesDto) {
-		List<ExBetMatchEntity> exBetMatchEntities = matchesDto.stream().map(
-						exBetMatchDto -> ExBetMatchEntity.builder()
-								.matchId(exBetMatchDto.getId())
-								.tournamentName(exBetMatchDto.getTournamentName())
-								.homeId(exBetMatchDto.getHomeId())
-								.homeName(exBetMatchDto.getHomeName())
-								.awayId(exBetMatchDto.getAwayId())
-								.awayName(exBetMatchDto.getAwayName())
-								.kickoffTime(TimeUtil.convertStringToLocalDateTime(exBetMatchDto.getKickoffTime()))
-								.isFavorite(exBetMatchDto.isFavorite())
-								.round(ExBetMatchEntity.RoundEntity
-										.builder()
-										.roundName(exBetMatchDto.getRound().getRoundName())
-										.roundType(exBetMatchDto.getRound().getRoundType())
-										.build())
-								.build()
-				)
-				.collect(Collectors.toList());
+	public List<MatchedMatchesDto> saveExBetMatchDto(List<ExBetMatchDto> matchesDto) {
 
-		List<ExBetMatchEntity> exBetMatchEntitiesDB = exBetMatchMongoRepository.findAll();
-		List<ExBetMatchEntity> exBetMatchEntitiesToSave = new ArrayList<>();
-		for (ExBetMatchEntity exBetMatchEntity : exBetMatchEntities) {
-			if (exBetMatchEntitiesDB.stream().noneMatch(
-					exBetMatchEntityDB -> exBetMatchEntityDB.getMatchId() == exBetMatchEntity.getMatchId())) {
-				exBetMatchEntitiesToSave.add(exBetMatchEntity);
-			}
-		}
-		exBetMatchMongoRepository.saveAll(exBetMatchEntitiesToSave);
-		return exBetMatchEntitiesToSave.size();
+
+		List<ExBetMatchEntity> exBetMatchEntities = exBetMatchMongoRepository.findAll();
+
+
+		//		List<ExBetMatchEntity> exBetMatchEntitiesFromDto = matchesDto.stream().map(
+//						exBetMatchDto -> ExBetMatchEntity.builder()
+//								.matchId(exBetMatchDto.getId())
+//								.tournamentName(exBetMatchDto.getTournamentName())
+//								.homeId(exBetMatchDto.getHomeId())
+//								.homeName(exBetMatchDto.getHomeName())
+//								.awayId(exBetMatchDto.getAwayId())
+//								.awayName(exBetMatchDto.getAwayName())
+//								.kickoffTime(TimeUtil.convertStringToLocalDateTime(exBetMatchDto.getKickoffTime()))
+//								.isFavorite(exBetMatchDto.isFavorite())
+//								.round(ExBetMatchEntity.RoundEntity
+//										.builder()
+//										.roundName(exBetMatchDto.getRound().getRoundName())
+//										.roundType(exBetMatchDto.getRound().getRoundType())
+//										.build())
+//								.build()
+//				)
+//				.collect(Collectors.toList());
+//
+//		List<ExBetMatchEntity> exBetMatchEntitiesToSave = new ArrayList<>();
+//		List<ExBetMatchEntity> exBetMatchEntitiesDB = exBetMatchMongoRepository.findAll();
+//		for (ExBetMatchEntity exBetMatchEntity : exBetMatchEntitiesFromDto) {
+//			if (exBetMatchEntitiesDB.stream().noneMatch(
+//					exBetMatchEntityDB -> exBetMatchEntityDB.getMatchId() == exBetMatchEntity.getMatchId())) {
+//				exBetMatchEntitiesToSave.add(exBetMatchEntity);
+//			}
+//		}
+//		exBetMatchMongoRepository.saveAll(exBetMatchEntitiesToSave);
+//		return exBetMatchEntitiesToSave.size();
+		return null;
 	}
 
 

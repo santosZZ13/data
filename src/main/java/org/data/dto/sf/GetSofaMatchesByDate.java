@@ -1,15 +1,14 @@
-package org.data.dto.ex;
+package org.data.dto.sf;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.data.dto.common.ExBetMatchDto;
-import org.data.dto.common.MatchedMatchesDto;
+import org.data.dto.common.SofaMatchDto;
 
 import java.util.List;
 
-public interface SaveMatchExDto {
+public interface GetSofaMatchesByDate {
 
 	@Builder
 	@Data
@@ -17,13 +16,14 @@ public interface SaveMatchExDto {
 	@NoArgsConstructor
 	class Request {
 		private String date;
-		List<ExBetMatchDto> matches;
 	}
+
 	@Builder
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class Response {
-		private List<MatchedMatchesDto> matches;
+		private int size;
+		private List<SofaMatchDto> matches;
 	}
 }

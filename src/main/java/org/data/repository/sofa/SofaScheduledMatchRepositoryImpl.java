@@ -8,7 +8,9 @@ import org.data.dto.common.TeamDto;
 import org.data.persistent.entity.SofaScheduledMatchEntity;
 import org.data.persistent.repository.SofaScheduledMatchMongoRepository;
 import org.data.repository.team.TeamRepository;
+import org.data.response.sf.parent.SofaMatchResponseDetail;
 import org.data.util.NormalizeTeamName;
+import org.data.util.service.SofaApiService;
 import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.*;
@@ -23,6 +25,7 @@ import java.util.stream.Stream;
 @Log4j2
 public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepository {
 	private final SofaScheduledMatchMongoRepository sofaScheduledMatchMongoRepository;
+	private final SofaApiService sofaApiService;
 	private final TeamRepository teamRepository;
 	private final MongoTemplate mongoTemplate;
 
@@ -281,6 +284,14 @@ public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepos
 		return sofaScheduledMatchEntities.stream()
 				.map(SofaMatchConverter::toDto)
 				.collect(Collectors.toList());
+	}
+
+	@Override
+	public List<SofaMatchDto> getMatchesByDate(String date) {
+		List<SofaMatchResponseDetail> sofaMatchByDate = sofaApiService.getSofaMatchByDate(date);
+
+
+		return List.of();
 	}
 
 }

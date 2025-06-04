@@ -3,7 +3,7 @@ package org.data.converter.sf;
 import org.data.dto.common.SofaMatchDto;
 import org.data.persistent.entity.SofaScheduledMatchEntity;
 import org.data.util.NormalizeTeamName;
-import org.data.util.TimeUtil;
+import org.data.util.utils.TimeUtil;
 
 public class SofaMatchConverter {
 	public static SofaScheduledMatchEntity toEntity(SofaMatchDto dto) {

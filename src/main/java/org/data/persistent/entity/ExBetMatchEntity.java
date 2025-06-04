@@ -24,7 +24,20 @@ public class ExBetMatchEntity extends BaseEntity {
 	private String awayName;
 	private RoundEntity round;
 	private boolean isFavorite;
+	private Boolean isMatched;
+	private SofaDataEntity sofaDataEntity;
 
+	@Builder
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class SofaDataEntity {
+		private Integer sofaMatchId;
+		private Integer sofaHomeId;
+		private Integer sofaAwayId;
+		private String sofaHomeName;
+		private String sofaAwayName;
+	}
 	@Builder
 	@Data
 	@AllArgsConstructor

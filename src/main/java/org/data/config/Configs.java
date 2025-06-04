@@ -1,35 +1,39 @@
 package org.data.config;
 
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.ComponentScans;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 @Configuration
-@ComponentScans({@ComponentScan("org.data.job")})
+@AllArgsConstructor
 public class Configs {
 
+	private final ApiConfig apiConfig;
+
+
 	@Bean
-	public RestTemplate restTemplate(RestTemplateBuilder restTemplateBuilder) {
-		ClientHttpRequestInterceptor interceptor = (request, body, execution) -> {
-			request.getHeaders().add("user-agent", "Mozilla/5.0");
-			request.getHeaders().add("referer", "https://8xbet00.cc/");
-			request.getHeaders().add("x-checksum", "13d730b032dda17d6a440904f27560d7df77cd0b20e56a78153be8ade717e129");
-			return execution.execute(request, body);
-		};
-		return restTemplateBuilder.additionalInterceptors(interceptor).build();
+	public RestTemplate restTemplate() {
+		SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+//		requestFactory.setConnectTimeout(apiConfig.getTimeout());
+//		requestFactory.setReadTimeout(apiConfig.getTimeout());
+		return new RestTemplate(requestFactory);
 	}
 
 	@Bean
 	public MongoTemplate mongoTemplate(MongoDatabaseFactory databaseFactory, MappingMongoConverter converter) {
 		converter.setTypeMapper(new DefaultMongoTypeMapper(null));
 		return new MongoTemplate(databaseFactory, converter);
+	}
+
+	@Bean
+	public ObjectMapper objectMapper() {
+		return new ObjectMapper();
 	}
 }

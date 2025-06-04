@@ -1,11 +1,15 @@
 package org.data.service.sf;
 
 import lombok.AllArgsConstructor;
+import org.data.dto.common.SofaMatchDto;
 import org.data.dto.sf.GetScheduledMatchByName;
 import org.data.dto.sf.GetScheduledMatchesByName;
+import org.data.dto.sf.GetSofaMatchesByDate;
 import org.data.dto.sf.SaveScheduledMatchDto;
 import org.data.repository.sofa.SofaScheduledMatchRepository;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @AllArgsConstructor
@@ -35,5 +39,12 @@ public class SofaScheduledMatchServiceImpl implements SofaScheduledMatchService 
 				.build();
 	}
 
-
+	@Override
+	public GetSofaMatchesByDate.Response getMatchesByDate(String date) {
+		List<SofaMatchDto> matchesByDate = sofaScheduledMatchRepository.getMatchesByDate(date);
+		return GetSofaMatchesByDate.Response.builder()
+				.matches(matchesByDate)
+				.size(matchesByDate.size())
+				.build();
+	}
 }

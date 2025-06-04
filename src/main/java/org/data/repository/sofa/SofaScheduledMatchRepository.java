@@ -10,4 +10,6 @@ public interface SofaScheduledMatchRepository {
 	List<SofaMatchDto> findSofaScheduledMatchesByName(String name);
 
 	List<SofaMatchDto> findSofaScheduledMatchByName(String name);
+
+	List<SofaMatchDto> getMatchesByDate(String date);
 }
