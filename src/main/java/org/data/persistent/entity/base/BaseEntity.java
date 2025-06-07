@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Data
 @SuperBuilder
@@ -18,10 +19,10 @@ public abstract class BaseEntity implements Serializable {
 
 	@CreatedDate
 	@Field("created_at")
-	public LocalDateTime createdAt;
+	public ZonedDateTime createdAt;
 
 	@LastModifiedDate
 	@Field("updated_at")
-	public LocalDateTime updatedAt;
+	public ZonedDateTime updatedAt;
 
 }

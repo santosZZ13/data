@@ -1,28 +1,34 @@
-package org.data.converter.sf;
+package org.data.converter;
 
+import lombok.extern.log4j.Log4j2;
 import org.data.dto.common.SofaMatchDto;
 import org.data.persistent.entity.SofaScheduledMatchEntity;
+import org.data.response.sf.parent.SofaMatchResponseDetailDto;
 import org.data.util.NormalizeTeamName;
-import org.data.util.utils.TimeUtil;
+import org.data.util.utils.DateUtils;
 
+import java.time.ZonedDateTime;
+
+@Log4j2
 public class SofaMatchConverter {
-	public static SofaScheduledMatchEntity toEntity(SofaMatchDto dto) {
+	public static SofaScheduledMatchEntity toEntity(SofaMatchResponseDetailDto dto) {
 		if (dto == null) {
 			return null;
 		}
 
+		ZonedDateTime startTimestamp = DateUtils.toUtcZonedDateTime(dto.getStartTimestamp());
 		return SofaScheduledMatchEntity.builder()
 				.matchId(dto.getMatchId())
 //				.homeNormalizedName(NormalizeTeamName.normalize(dto.getHomeTeam() != null ? dto.getHomeTeam().getName() : null))
 //				.awayNormalizedName(NormalizeTeamName.normalize(dto.getAwayTeam() != null ? dto.getAwayTeam().getName() : null))
-				.startTimestamp(TimeUtil.convertStringToLocalDateTimeFormalWithZone(dto.getStartTimestamp()))
-				.tournamentInfo(dto.getTournamentInfo() != null ? SofaScheduledMatchEntity.TournamentEntity.builder()
-						.id(dto.getTournamentInfo().getId())
-						.name(dto.getTournamentInfo().getName())
+				.startTimestamp(startTimestamp)
+				.tournamentInfo(dto.getTournament() != null ? SofaScheduledMatchEntity.TournamentEntity.builder()
+						.id(dto.getTournament().getId())
+						.name(dto.getTournament().getName())
 						.build() : null)
-				.sessionInfo(dto.getSessionInfo() != null ? SofaScheduledMatchEntity.SessionEntity.builder()
-						.id(dto.getSessionInfo().getId())
-						.name(dto.getSessionInfo().getName())
+				.sessionInfo(dto.getSeason() != null ? SofaScheduledMatchEntity.SessionEntity.builder()
+						.id(dto.getSeason() .getId())
+						.name(dto.getSeason() .getName())
 						.build() : null)
 				.roundInfo(dto.getRoundInfo() != null ? SofaScheduledMatchEntity.RoundEntity.builder()
 						.round(dto.getRoundInfo().getRound())
@@ -34,14 +40,12 @@ public class SofaMatchConverter {
 				.homeTeam(dto.getHomeTeam() != null ? SofaScheduledMatchEntity.TeamEntity.builder()
 						.id(dto.getHomeTeam().getId())
 						.name(dto.getHomeTeam().getName())
-						.country(dto.getHomeTeam().getCountry())
 						.normalizedName(NormalizeTeamName.normalize(dto.getHomeTeam() != null ? dto.getHomeTeam().getName() : null))
 						.shortName(dto.getHomeTeam().getShortName() != null ? dto.getHomeTeam().getShortName() : null)
 						.build() : null)
 				.awayTeam(dto.getAwayTeam() != null ? SofaScheduledMatchEntity.TeamEntity.builder()
 						.id(dto.getAwayTeam().getId())
 						.name(dto.getAwayTeam().getName())
-						.country(dto.getAwayTeam().getCountry())
 						.normalizedName(NormalizeTeamName.normalize(dto.getAwayTeam() != null ? dto.getAwayTeam().getName() : null))
 						.shortName(dto.getAwayTeam().getShortName() != null ? dto.getAwayTeam().getShortName() : null)
 						.build() : null)
@@ -79,7 +83,7 @@ public class SofaMatchConverter {
 //				.homeNormalizedName(entity.getHomeNormalizedName())
 //				.awayNormalizedName(entity.getAwayNormalizedName())
 				.matchId(entity.getMatchId())
-				.startTimestamp(TimeUtil.convertLocalDateTimeToString(entity.getStartTimestamp()))
+				.startTimestamp(entity.getStartTimestamp())
 				.tournamentInfo(entity.getTournamentInfo() != null ? SofaMatchDto.TournamentDto.builder()
 						.id(entity.getTournamentInfo().getId())
 						.name(entity.getTournamentInfo().getName())
@@ -98,14 +102,12 @@ public class SofaMatchConverter {
 				.homeTeam(entity.getHomeTeam() != null ? SofaMatchDto.TeamDto.builder()
 						.id(entity.getHomeTeam().getId())
 						.name(entity.getHomeTeam().getName())
-						.country(entity.getHomeTeam().getCountry())
 						.normalizedName(entity.getHomeTeam().getNormalizedName())
 						.shortName(entity.getHomeTeam().getShortName() != null ? entity.getHomeTeam().getShortName() : null)
 						.build() : null)
 				.awayTeam(entity.getAwayTeam() != null ? SofaMatchDto.TeamDto.builder()
 						.id(entity.getAwayTeam().getId())
 						.name(entity.getAwayTeam().getName())
-						.country(entity.getAwayTeam().getCountry())
 						.normalizedName(entity.getAwayTeam().getNormalizedName())
 						.shortName(entity.getAwayTeam().getShortName() != null ? entity.getAwayTeam().getShortName() : null)
 						.build() : null)

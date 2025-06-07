@@ -1,8 +1,8 @@
 package org.data.util.utils;
 
-import java.time.Instant;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 
 /**
  *
@@ -55,7 +55,6 @@ public class DateUtils {
 		return toUtcISOString(Instant.now());
 	}
 
-
 	/**
 	 * Chuyển timestamp (số giây) sang UTC ISO string
 	 *
@@ -77,6 +76,46 @@ public class DateUtils {
 			return null;
 		}
 		return DATE_FORMATTER.format(instant);
+	}
+
+	/**
+	 * Định dạng ngày (không bao gồm thời gian) với múi giờ tùy chỉnh
+	 *
+	 * @param instant - Thời gian (Instant)
+	 * @param zoneId  - Múi giờ (ví dụ: "GMT+07:00")
+	 * @return Chuỗi ngày ở định dạng "yyyy-MM-dd"
+	 */
+	public static String formatDate(Instant instant, String zoneId) {
+		if (instant == null || zoneId == null) {
+			return null;
+		}
+		return DateTimeFormatter.ofPattern(DATE_FORMAT)
+				.withZone(ZoneId.of(zoneId))
+				.format(instant);
+	}
+
+	/**
+	 * Chuyển timestamp (số giây) sang LocalDateTime ở UTC
+	 *
+	 * @param startTimestamp - Timestamp (số giây từ 1970-01-01)
+	 * @return LocalDateTime ở UTC
+	 */
+	public static LocalDateTime toUtcLocalDateTime(Long startTimestamp) {
+		if (Objects.isNull(startTimestamp)) {
+			return null;
+		}
+		return Instant.ofEpochSecond(startTimestamp)
+				.atZone(ZoneId.of("UTC"))
+				.toLocalDateTime();
+	}
+
+
+	public static ZonedDateTime toUtcZonedDateTime(Long startTimestamp) {
+		if (Objects.isNull(startTimestamp)) {
+			return null;
+		}
+		return Instant.ofEpochSecond(startTimestamp)
+				.atZone(ZoneId.of("UTC"));
 	}
 
 	/**

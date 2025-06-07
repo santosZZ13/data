@@ -1,5 +1,6 @@
 package org.data.response.sf.child;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,7 +19,8 @@ public class ScoreResponse {
 	@JsonPropertyDescription("Second Half")
 	private Integer period2;
 	@JsonPropertyDescription("Full Time")
-	private Integer normaltime;
+	@JsonProperty("normaltime")
+	private Integer normalTime;
 	@JsonPropertyDescription("Extra Time 1st Half")
 	private Integer extra1;
 	@JsonPropertyDescription("Extra Time 2nd Half")
@@ -27,4 +29,5 @@ public class ScoreResponse {
 	private Integer overtime;
 	private Integer penalties;
 	private Boolean scoreEmpty;
+	private Integer aggregated;
 }

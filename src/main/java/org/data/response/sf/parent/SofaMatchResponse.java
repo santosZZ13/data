@@ -12,6 +12,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SofaMatchResponse {
-	private List<SofaMatchResponseDetail> events;
+	private List<SofaMatchResponseDetailDto> events;
 	private Boolean hasNextPage;
 }

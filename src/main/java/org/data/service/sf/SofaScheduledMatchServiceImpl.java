@@ -1,12 +1,12 @@
 package org.data.service.sf;
 
 import lombok.AllArgsConstructor;
-import org.data.dto.common.SofaMatchDto;
 import org.data.dto.sf.GetScheduledMatchByName;
 import org.data.dto.sf.GetScheduledMatchesByName;
 import org.data.dto.sf.GetSofaMatchesByDate;
 import org.data.dto.sf.SaveScheduledMatchDto;
 import org.data.repository.sofa.SofaScheduledMatchRepository;
+import org.data.response.sf.parent.SofaMatchResponseDetailDto;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,10 +19,11 @@ public class SofaScheduledMatchServiceImpl implements SofaScheduledMatchService 
 
 	@Override
 	public SaveScheduledMatchDto.Response saveScheduledMatches(SaveScheduledMatchDto.Request request) {
-		sofaScheduledMatchRepository.saveSofaScheduledMatches(request.getMatches());
-		return SaveScheduledMatchDto.Response.builder()
-				.message("Scheduled matches saved successfully")
-				.build();
+//		sofaScheduledMatchRepository.saveSofaScheduledMatches(request.getMatches());
+//		return SaveScheduledMatchDto.Response.builder()
+//				.message("Scheduled matches saved successfully")
+//				.build();
+		return null;
 	}
 
 	@Override
@@ -41,7 +42,7 @@ public class SofaScheduledMatchServiceImpl implements SofaScheduledMatchService 
 
 	@Override
 	public GetSofaMatchesByDate.Response getMatchesByDate(String date) {
-		List<SofaMatchDto> matchesByDate = sofaScheduledMatchRepository.getMatchesByDate(date);
+		List<SofaMatchResponseDetailDto> matchesByDate = sofaScheduledMatchRepository.getMatchesByDate(date);
 		return GetSofaMatchesByDate.Response.builder()
 				.matches(matchesByDate)
 				.size(matchesByDate.size())

@@ -2,13 +2,13 @@ package org.data.repository.sofa;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.data.converter.sf.SofaMatchConverter;
+import org.data.converter.SofaMatchConverter;
 import org.data.dto.common.SofaMatchDto;
 import org.data.dto.common.TeamDto;
 import org.data.persistent.entity.SofaScheduledMatchEntity;
 import org.data.persistent.repository.SofaScheduledMatchMongoRepository;
 import org.data.repository.team.TeamRepository;
-import org.data.response.sf.parent.SofaMatchResponseDetail;
+import org.data.response.sf.parent.SofaMatchResponseDetailDto;
 import org.data.util.NormalizeTeamName;
 import org.data.util.service.SofaApiService;
 import org.springframework.data.mongodb.core.BulkOperations;
@@ -35,7 +35,7 @@ public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepos
 	 * @param matchesDto
 	 */
 	@Override
-	public void saveSofaScheduledMatches(List<SofaMatchDto> matchesDto) {
+	public void saveSofaScheduledMatches(List<SofaMatchResponseDetailDto> matchesDto) {
 		log.info("Starting to save {} matches.", matchesDto.size());
 		if (matchesDto.isEmpty()) {
 			log.warn("No matches to save.");
@@ -44,10 +44,10 @@ public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepos
 
 //		saveTeamDto(matchesDto);
 
-		Map<Integer, SofaMatchDto> uniqueMatchesDto = matchesDto.stream()
+		Map<Integer, SofaMatchResponseDetailDto> uniqueMatchesDto = matchesDto.stream()
 				.filter(matchDto -> matchDto.getMatchId() != null)
 				.collect(Collectors.toMap(
-						SofaMatchDto::getMatchId,
+						SofaMatchResponseDetailDto::getMatchId,
 						matchDto -> matchDto,
 						(existing, replacement) -> existing, LinkedHashMap::new)
 				);
@@ -68,7 +68,7 @@ public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepos
 				);
 
 		List<SofaScheduledMatchEntity> entitiesToSave = new ArrayList<>();
-		for (SofaMatchDto sofaMatchDto : uniqueMatchesDto.values()) {
+		for (SofaMatchResponseDetailDto sofaMatchDto : uniqueMatchesDto.values()) {
 			SofaScheduledMatchEntity matchEntityFromDto = SofaMatchConverter.toEntity(sofaMatchDto);
 			SofaScheduledMatchEntity existingEntityMatch = existingMatchEntitiesMap.get(sofaMatchDto.getMatchId());
 
@@ -161,20 +161,16 @@ public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepos
 		if (!Objects.equals(entityFromDB.getHomeTeam(), entityFromDto.getHomeTeam())) {
 			differences.append("homeTeam: [id: ").append(entityFromDB.getHomeTeam().getId())
 					.append(", name: ").append(entityFromDB.getHomeTeam().getName())
-					.append(", country: ").append(entityFromDB.getHomeTeam().getCountry())
 					.append("] → [id: ").append(entityFromDto.getHomeTeam().getId())
-					.append(", name: ").append(entityFromDto.getHomeTeam().getName())
-					.append(", country: ").append(entityFromDto.getHomeTeam().getCountry()).append("], ");
+					.append(", name: ").append(entityFromDto.getHomeTeam().getName());
 		}
 
 		// So sánh awayTeam
 		if (!Objects.equals(entityFromDB.getAwayTeam(), entityFromDto.getAwayTeam())) {
 			differences.append("awayTeam: [id: ").append(entityFromDB.getAwayTeam().getId())
 					.append(", name: ").append(entityFromDB.getAwayTeam().getName())
-					.append(", country: ").append(entityFromDB.getAwayTeam().getCountry())
 					.append("] → [id: ").append(entityFromDto.getAwayTeam().getId())
-					.append(", name: ").append(entityFromDto.getAwayTeam().getName())
-					.append(", country: ").append(entityFromDto.getAwayTeam().getCountry()).append("], ");
+					.append(", name: ").append(entityFromDto.getAwayTeam().getName());
 		}
 
 		// So sánh homeScore
@@ -287,11 +283,10 @@ public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepos
 	}
 
 	@Override
-	public List<SofaMatchDto> getMatchesByDate(String date) {
-		List<SofaMatchResponseDetail> sofaMatchByDate = sofaApiService.getSofaMatchByDate(date);
-
-
-		return List.of();
+	public List<SofaMatchResponseDetailDto> getMatchesByDate(String date) {
+		List<SofaMatchResponseDetailDto> sofaMatchByDate = sofaApiService.getSofaMatchByDate(date);
+		saveSofaScheduledMatches(sofaMatchByDate);
+		return sofaMatchByDate;
 	}
 
 }

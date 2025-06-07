@@ -63,26 +63,11 @@ logging:
     org.springframework.data.mongodb.core.MongoTemplate: info
 
 
-
-
-connection:
-  eightxbet:
-    url: https://001xm4z27x2jy1u-api.pj51m7rx.com
-    headers:
-      user-Agent: Mozilla/5.0
-      referer: https://8xbet00.cc/
-      x-checksum: 13d730b032dda17d6a440904f27560d7df77cd0b20e56a78153be8ade717e129
-
-  sofasocre:
-    url: https://www.sofascore.com/api/v1
-  local:
-    url: http://localhost:8080/
-
-
 api:
   sofa:
     base-url: https://www.sofascore.com/api/v1
     timeout: 5000
+
 
 #sofascore:
 #  api:

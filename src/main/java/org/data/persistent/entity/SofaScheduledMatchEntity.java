@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Objects;
 
 @Document(collection = "sofa_scheduled_matches")
@@ -21,7 +22,7 @@ import java.util.Objects;
 public class SofaScheduledMatchEntity extends BaseEntity {
 	private String id;
 	private Integer matchId;
-	private LocalDateTime startTimestamp;
+	private ZonedDateTime startTimestamp; // Đổi từ LocalDateTime sang ZonedDateTime
 	private TournamentEntity tournamentInfo;
 	private SessionEntity sessionInfo;
 	private RoundEntity roundInfo;
@@ -106,7 +107,6 @@ public class SofaScheduledMatchEntity extends BaseEntity {
 	public static class TeamEntity {
 		private Integer id;
 		private String name;
-		private String country;
 		private String normalizedName;
 		private String shortName;
 
@@ -116,12 +116,12 @@ public class SofaScheduledMatchEntity extends BaseEntity {
 				return false;
 			}
 			TeamEntity that = (TeamEntity) o;
-			return Objects.equals(id, that.id) && Objects.equals(name, that.name) && Objects.equals(country, that.country);
+			return Objects.equals(id, that.id) && Objects.equals(name, that.name);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(id, name, country);
+			return Objects.hash(id, name);
 		}
 	}
 

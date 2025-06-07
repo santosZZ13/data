@@ -1,5 +1,6 @@
 package org.data.response.sf.child;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,14 +10,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TournamentResponse {
 	private String name;
-	private String slug;
-	private CategoryResponse category;
-	private UniqueTournamentResponse uniqueTournament;
-	private Integer priority;
-	private Boolean isGroup;
-	private Boolean isLive;
 	private Integer id;
-	private FieldTranslationsResponse fieldTranslations; // Thêm trường mới
 }

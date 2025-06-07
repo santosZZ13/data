@@ -2,13 +2,16 @@ package org.data.dto.common;
 
 import lombok.*;
 
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+
 @Builder
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class SofaMatchDto {
 	private Integer matchId;
-	private String startTimestamp;
+	private ZonedDateTime startTimestamp;
 	private TournamentDto tournamentInfo;
 	private SessionDto sessionInfo;
 	private RoundDto roundInfo;

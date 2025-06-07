@@ -3,13 +3,15 @@ package org.data.util.service;
 import lombok.AllArgsConstructor;
 import org.data.config.ApiConfig;
 import org.data.response.sf.parent.SofaMatchResponse;
-import org.data.response.sf.parent.SofaMatchResponseDetail;
+import org.data.response.sf.parent.SofaMatchResponseDetailDto;
 import org.data.util.request.RestClient;
-import org.data.util.utils.DateUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -30,7 +32,7 @@ public class SofaApiService {
 	 * @param date - Ngày cần lấy (định dạng "yyyy-MM-dd")
 	 * @return Danh sách trận đấu
 	 */
-	public List<SofaMatchResponseDetail> getSofaMatchByDate(String date) {
+	public List<SofaMatchResponseDetailDto> getSofaMatchByDate(String date) {
 		try {
 
 			String scheduledEventUrl = apiConfig.getSofaBaseUrl() + String.format(SCHEDULED_EVENTS_PATTERN, date);
@@ -54,22 +56,22 @@ public class SofaApiService {
 					SofaMatchResponse.class
 			);
 
-			List<SofaMatchResponseDetail> sofaMatchResponseDetails = new ArrayList<>();
+			List<SofaMatchResponseDetailDto> sofaMatchResponseDetailDtos = new ArrayList<>();
 			if (!Objects.isNull(sofaMatchResponse) && Objects.nonNull(sofaMatchResponse.getEvents())) {
-				sofaMatchResponseDetails.addAll(sofaMatchResponse.getEvents());
+				sofaMatchResponseDetailDtos.addAll(sofaMatchResponse.getEvents());
 			}
 
 			if (Objects.nonNull(sofaMatchInverseResponse) && Objects.nonNull(sofaMatchInverseResponse.getEvents())) {
-				sofaMatchResponseDetails.addAll(sofaMatchInverseResponse.getEvents());
+				sofaMatchResponseDetailDtos.addAll(sofaMatchInverseResponse.getEvents());
 			}
 
-			return sofaMatchResponseDetails.stream()
+			return sofaMatchResponseDetailDtos.stream()
 					.filter(event -> {
 						if (event.getStartTimestamp() == null) {
 							return false;
 						}
-						String eventDate = DateUtils.formatDate(Instant.ofEpochSecond(event.getStartTimestamp()));
-						return date.equals(eventDate);
+						ZonedDateTime eventDateTime = ZonedDateTime.ofInstant(Instant.ofEpochSecond(event.getStartTimestamp()), ZoneId.systemDefault());
+						return date.equals(eventDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
 					})
 					.collect(Collectors.toList());
 		} catch (Exception e) {
