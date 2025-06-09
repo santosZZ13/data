@@ -10,7 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api/exBet")
-	@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:3000")
 public class EightXBetController {
 
 	private final ExService exService;
@@ -35,13 +35,14 @@ public class EightXBetController {
 		return exService.getMatchesWithSofa(request);
 	}
 
-	@GetMapping("/matches")
-	public GetMatchesExByDateDto.Response getMachesByDate(@Param("date") String[] date) {
-		return exService.getMatchesByDate(date, false);
-	}
+//	@GetMapping("/matches")
+//	public GetMatchesExByDateDto.Response getMachesByDate(@Param("date") String[] date) {
+//		return exService.getMatchesByDate(date, false);
+//	}
 
 	@PostMapping("/matches")
-	public SaveMatchExDto.Response importMatchesJsonFile(@RequestBody SaveMatchExDto.Request request) {
-		return exService.saveMatches(request);
+	public SaveMatchExDto.Response saveMatches(@RequestParam String date, @RequestBody SaveMatchExDto.Request request) {
+		SaveMatchExDto.Response response = exService.saveMatches(request, date);
+		return response;
 	}
 }

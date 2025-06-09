@@ -19,8 +19,6 @@ public class SofaMatchConverter {
 		ZonedDateTime startTimestamp = DateUtils.toUtcZonedDateTime(dto.getStartTimestamp());
 		return SofaScheduledMatchEntity.builder()
 				.matchId(dto.getMatchId())
-//				.homeNormalizedName(NormalizeTeamName.normalize(dto.getHomeTeam() != null ? dto.getHomeTeam().getName() : null))
-//				.awayNormalizedName(NormalizeTeamName.normalize(dto.getAwayTeam() != null ? dto.getAwayTeam().getName() : null))
 				.startTimestamp(startTimestamp)
 				.tournamentInfo(dto.getTournament() != null ? SofaScheduledMatchEntity.TournamentEntity.builder()
 						.id(dto.getTournament().getId())
@@ -80,8 +78,6 @@ public class SofaMatchConverter {
 		if (entity == null) return null;
 
 		return SofaMatchDto.builder()
-//				.homeNormalizedName(entity.getHomeNormalizedName())
-//				.awayNormalizedName(entity.getAwayNormalizedName())
 				.matchId(entity.getMatchId())
 				.startTimestamp(entity.getStartTimestamp())
 				.tournamentInfo(entity.getTournamentInfo() != null ? SofaMatchDto.TournamentDto.builder()

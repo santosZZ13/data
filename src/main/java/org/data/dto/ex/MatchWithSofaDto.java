@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.data.dto.common.ExBetMatchDto;
+import org.data.dto.common.ExBetMatchResponseDto;
 import org.data.dto.common.MatchedMatchesDto;
 
 import java.util.List;
@@ -16,7 +16,7 @@ public interface MatchWithSofaDto {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class Request {
-		List<ExBetMatchDto> matches;
+		List<ExBetMatchResponseDto> matches;
 	}
 
 	@Builder

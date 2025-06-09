@@ -2,14 +2,14 @@ package org.data.service.ex;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
+import org.data.dto.common.ExBetMatchDto;
 import org.data.dto.common.MatchedMatchesDto;
 import org.data.dto.ex.*;
-import org.data.dto.common.ExBetMatchDto;
+import org.data.dto.common.ExBetMatchResponseDto;
 import org.data.repository.ex.ExBetRepository;
-import org.data.response.ex.ExBetMatchResponse;
 import org.data.response.ex.ExBetResponse;
 import org.data.response.ex.ExBetTournamentResponse;
-import org.data.util.utils.TimeUtil;
+import org.data.util.utils.DateUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -32,7 +34,7 @@ public class ExServiceImpl implements ExService {
 			ExBetResponse exBetResponse = objectMapper.readValue(inputStream, ExBetResponse.class);
 			ExBetResponse.Data data = exBetResponse.getData();
 			List<ExBetTournamentResponse> tournaments = data.getTournaments();
-			List<ExBetMatchDto> exBetMatchResponseDtos = convertToExBetMatchResponseDto(tournaments);
+			List<ExBetMatchResponseDto> exBetMatchResponseDtos = convertToExBetMatchResponseDto(tournaments);
 			int saveToDB = saveToDB(exBetMatchResponseDtos);
 			return ImportMatchesJsonFile.Response.builder()
 					.matches(exBetMatchResponseDtos)
@@ -47,18 +49,19 @@ public class ExServiceImpl implements ExService {
 
 	@Override
 	public GetMatchesExByDateDto.Response getMatchesByDate(String[] date, boolean isFavorite) {
-		List<GetMatchesExByDateDto.ExBetMatchDto> exBetByDate = exBetRepository.getExBetByDate(date, isFavorite);
-		return GetMatchesExByDateDto.Response.builder()
-				.matches(exBetByDate)
-				.build();
+//		List<GetMatchesExByDateDto.ExBetMatchDto> exBetByDate = exBetRepository.getExBetByDate(date, isFavorite);
+//		return GetMatchesExByDateDto.Response.builder()
+//				.matches(exBetByDate)
+//				.build();
+		return null;
 	}
 
 	// Implementation for saving matches will go here
 	@Override
 	public SaveMatchesDto.Response saveMatchesFavorite(SaveMatchesDto.Request request, boolean isFavorite) {
-		List<ExBetMatchDto> matchesDto = request.getMatches();
+		List<ExBetMatchResponseDto> matchesDto = request.getMatches();
 		if (matchesDto != null && !matchesDto.isEmpty()) {
-			for (ExBetMatchDto match : matchesDto) {
+			for (ExBetMatchResponseDto match : matchesDto) {
 				match.setFavorite(isFavorite);
 			}
 			int savedCount = saveToDB(matchesDto);
@@ -73,36 +76,37 @@ public class ExServiceImpl implements ExService {
 	}
 
 
-	private List<ExBetMatchDto> convertToExBetMatchResponseDto(List<ExBetTournamentResponse> tournaments) {
-		List<ExBetMatchDto> exBetMatchResponseDtos = new ArrayList<>();
-		for (ExBetTournamentResponse tournament : tournaments) {
-			String tournamentName = tournament.getName();
-			for (ExBetMatchResponse match : tournament.getMatches()) {
-				ExBetMatchDto exBetMatchResponseDto = ExBetMatchDto.builder()
-						.id(match.getIid())
-						.tournamentName(tournamentName)
-						.kickoffTime(TimeUtil.convertUnixTimestampToLocalDateTime(match.getKickoffTime()).toString())
-						.homeId(match.getHome().getId())
-						.homeName(match.getHome().getName())
-						.awayId(match.getAway().getId())
-						.awayName(match.getAway().getName())
-						.round(ExBetMatchDto.RoundDto.builder()
-								.roundName(match.getRound().getRoundName())
-								.roundType(match.getRound().getRoundType())
-								.build())
-						.build();
-				exBetMatchResponseDtos.add(exBetMatchResponseDto);
-			}
-		}
-
-		return exBetMatchResponseDtos;
+	private List<ExBetMatchResponseDto> convertToExBetMatchResponseDto(List<ExBetTournamentResponse> tournaments) {
+//		List<ExBetMatchDto> exBetMatchResponseDtos = new ArrayList<>();
+//		for (ExBetTournamentResponse tournament : tournaments) {
+//			String tournamentName = tournament.getName();
+//			for (ExBetMatchResponse match : tournament.getMatches()) {
+//				ExBetMatchDto exBetMatchResponseDto = ExBetMatchDto.builder()
+//						.id(match.getIid())
+//						.tournamentName(tournamentName)
+//						.kickoffTime(TimeUtil.convertUnixTimestampToLocalDateTime(match.getKickoffTime()))
+//						.homeId(match.getHome().getId())
+//						.homeName(match.getHome().getName())
+//						.awayId(match.getAway().getId())
+//						.awayName(match.getAway().getName())
+//						.round(ExBetMatchDto.RoundDto.builder()
+//								.roundName(match.getRound().getRoundName())
+//								.roundType(match.getRound().getRoundType())
+//								.build())
+//						.build();
+//				exBetMatchResponseDtos.add(exBetMatchResponseDto);
+//			}
+//		}
+//
+//		return exBetMatchResponseDtos;
+		return null;
 	}
 
 	@Override
 	public MatchWithSofaDto.Response getMatchesWithSofa(MatchWithSofaDto.Request request) {
 		List<MatchedMatchesDto> result = new ArrayList<>();
-		for (ExBetMatchDto exBetMatchDto : request.getMatches()) {
-			MatchedMatchesDto matchedMatch = exBetRepository.getMatchedMatch(exBetMatchDto);
+		for (ExBetMatchResponseDto exBetMatchResponseDto : request.getMatches()) {
+			MatchedMatchesDto matchedMatch = exBetRepository.getMatchedMatch(exBetMatchResponseDto);
 			result.add(matchedMatch);
 		}
 		return MatchWithSofaDto.Response.builder()
@@ -110,28 +114,73 @@ public class ExServiceImpl implements ExService {
 				.build();
 	}
 
-	public int saveToDB(List<ExBetMatchDto> exBetMatchResponseDtos) {
+	public int saveToDB(List<ExBetMatchResponseDto> exBetMatchResponseDtos) {
 //		return exBetRepository.saveExBetMatchDto(exBetMatchResponseDtos);
 		return 0;
 	}
 
 	@Override
-	public SaveMatchExDto.Response saveMatches(SaveMatchExDto.Request request) {
+	public SaveMatchExDto.Response saveMatches(SaveMatchExDto.Request request, String date) {
+		// Kiểm tra date hợp lệ
+		if (date == null || !date.matches("\\d{4}-\\d{2}-\\d{2}")) {
+			throw new IllegalArgumentException("Invalid date format. Expected YYYY-MM-DD.");
+		}
 
-		String date = request.getDate();
-		/**
-		 * Step1: Lấy tất cả trận đầu 8xbet ngày "date" từ DB
-		 *
-		 *
-		 */
+		List<ExBetMatchResponseDto> exBetMatchResponseFromDB = exBetRepository.getExBetByDate(date);
+
+		// Lấy danh sách trận đấu từ request
+		List<ExBetMatchDto> matchesFromRequest = request.getMatches();
+		if (matchesFromRequest == null || matchesFromRequest.isEmpty()) {
+			return SaveMatchExDto.Response.builder()
+					.matches(exBetMatchResponseFromDB)
+					.build();
+		}
+
+		// Tìm các trận trong DB nhưng không có trong request (diff)
+		Set<Integer> requestMatchIds = matchesFromRequest.stream()
+				.map(ExBetMatchDto::getId)
+				.collect(Collectors.toSet());
+
+		List<Integer> endedMatchIds = exBetMatchResponseFromDB.stream()
+				.map(ExBetMatchResponseDto::getId)
+				.filter(id -> !requestMatchIds.contains(id))
+				.toList();
 
 
+		// Cập nhật status của các trận diff thành "ended"
+		if (!endedMatchIds.isEmpty()) {
+			exBetRepository.updateStatusByIds(endedMatchIds, "ended");
+		}
 
+		// Lưu/cập nhật các trận từ request
+		exBetRepository.saveExBetMatchDto(toExBetMatchResponseDto(matchesFromRequest));
 
-
-		List<MatchedMatchesDto> matchedMatchesDtos = exBetRepository.saveExBetMatchDto(request.getMatches());
+		// Lấy lại danh sách tất cả trận đấu từ DB cho ngày date để trả về
+		List<ExBetMatchResponseDto> allMatches = exBetRepository.getExBetByDate(date);
 		return SaveMatchExDto.Response.builder()
-				.matches(matchedMatchesDtos)
+				.matches(allMatches)
 				.build();
+	}
+
+	private List<ExBetMatchResponseDto> toExBetMatchResponseDto(List<ExBetMatchDto> exBetMatchDtos) {
+		List<ExBetMatchResponseDto> exBetMatchResponseDtos = new ArrayList<>();
+		exBetMatchDtos.forEach(exBetMatchDto ->  {
+			ExBetMatchResponseDto build = ExBetMatchResponseDto.builder()
+					.id(exBetMatchDto.getId())
+					.tournamentName(exBetMatchDto.getTournamentName())
+					.kickoffTime(exBetMatchDto.getKickoffTime())
+					.homeId(exBetMatchDto.getHomeId())
+					.homeName(exBetMatchDto.getHomeName())
+					.awayId(exBetMatchDto.getAwayId())
+					.awayName(exBetMatchDto.getAwayName())
+					.status("scheduled")
+					.round(exBetMatchDto.getRound())
+					.isMatched(false)
+					.sofaData(null)
+					.build();
+			exBetMatchResponseDtos.add(build);
+		});
+
+		return exBetMatchResponseDtos;
 	}
 }

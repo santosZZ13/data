@@ -41,9 +41,7 @@ public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepos
 			log.warn("No matches to save.");
 			return;
 		}
-
 //		saveTeamDto(matchesDto);
-
 		Map<Integer, SofaMatchResponseDetailDto> uniqueMatchesDto = matchesDto.stream()
 				.filter(matchDto -> matchDto.getMatchId() != null)
 				.collect(Collectors.toMap(

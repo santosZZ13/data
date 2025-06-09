@@ -11,16 +11,18 @@ import java.time.ZonedDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class MatchedMatchesDto {
+public class ExBetMatchResponseDto {
 	private int id;
 	private String tournamentName;
-	private ZonedDateTime kickoffTime;
-	private String homeName;
-	private String awayName;
+	private long kickoffTime;
 	private int homeId;
+	private String homeName;
 	private int awayId;
-	private Boolean isMatched;
+	private boolean isFavorite;
+	private String awayName;
 	private String status;
+	private RoundDto round;
+	private Boolean isMatched;
 	private SofaData sofaData;
 
 	@Builder
@@ -33,5 +35,14 @@ public class MatchedMatchesDto {
 		private Integer sofaAwayId;
 		private String sofaHomeName;
 		private String sofaAwayName;
+	}
+
+	@Builder
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class RoundDto {
+		private String roundName;
+		private String roundType;
 	}
 }

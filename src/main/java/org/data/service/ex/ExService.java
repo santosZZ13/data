@@ -12,5 +12,5 @@ public interface ExService {
 
 	MatchWithSofaDto.Response getMatchesWithSofa(MatchWithSofaDto.Request request);
 
-	SaveMatchExDto.Response saveMatches(SaveMatchExDto.Request request);
+	SaveMatchExDto.Response saveMatches(SaveMatchExDto.Request request, String date);
 }
