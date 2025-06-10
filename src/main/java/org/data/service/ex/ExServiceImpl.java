@@ -2,13 +2,17 @@ package org.data.service.ex;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
-import org.data.dto.common.ExBetMatchRequestDto;
-import org.data.dto.common.MatchedMatchesDto;
+import lombok.extern.log4j.Log4j2;
+import org.data.dto.common.*;
 import org.data.dto.ex.*;
-import org.data.dto.common.ExBetMatchResponseDto;
 import org.data.repository.ex.ExBetRepository;
+import org.data.repository.sofa.SofaRepository;
 import org.data.response.ex.ExBetResponse;
 import org.data.response.ex.ExBetTournamentResponse;
+import org.data.response.sf.parent.SofaMatchResponseDetailDto;
+import org.data.util.LevenshteinMatcher;
+import org.data.util.NormalizeTeamName;
+import org.data.util.service.SofaApiService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,14 +20,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
+@Log4j2
 public class ExServiceImpl implements ExService {
 
 	private final ExBetRepository exBetRepository;
+	private final SofaRepository sofaRepository;
+	private final SofaApiService sofaApiService;
 
 	@Override
 	public ImportMatchesJsonFile.Response getDataFile(MultipartFile file) {
@@ -136,9 +141,69 @@ public class ExServiceImpl implements ExService {
 		updateEndedMatches(matchesFromRequest, exBetMatchResponseFromDB);
 		exBetRepository.saveExBetMatchDto(toExBetMatchResponseDto(matchesFromRequest));
 
-		List<ExBetMatchResponseDto> allMatches = exBetRepository.getExBetByDate(date);
+		List<ExBetMatchResponseDto> exBetMatchesByDate = exBetRepository.getExBetByDate(date);
+
+		for (ExBetMatchResponseDto exBetMatchResponseDto : exBetMatchesByDate) {
+			String normalizedHomeName = NormalizeTeamName.normalize(exBetMatchResponseDto.getHomeName());
+			String normalizedAwayName = NormalizeTeamName.normalize(exBetMatchResponseDto.getAwayName());
+
+			List<SofaMatchDto> candidates = sofaRepository.findSofaMatchByName(normalizedHomeName);
+			if (candidates == null || candidates.isEmpty()) {
+				candidates = sofaRepository.findSofaMatchByName(normalizedAwayName);
+			}
+
+			if (candidates == null || candidates.isEmpty()) {
+				exBetMatchResponseDto.setIsMatched(false);
+				exBetMatchResponseDto.setSofaData(null);
+			}
+
+			SofaMatchDto bestMatch = null;
+			int minDistance = Integer.MAX_VALUE;
+			int threshold = 3;
+
+			for (SofaMatchDto sofaMatch : candidates) {
+				String sofaHome = sofaMatch.getHomeTeam().getNormalizedName();
+				String sofaAway = sofaMatch.getAwayTeam().getNormalizedName();
+
+				int homeDistance = LevenshteinMatcher.calculateLevenshteinDistance(normalizedHomeName, sofaHome);
+				int awayDistance = LevenshteinMatcher.calculateLevenshteinDistance(normalizedHomeName, sofaAway);
+
+				if (homeDistance <= threshold || awayDistance <= threshold) {
+					String otherTeam = homeDistance <= threshold ? normalizedAwayName : normalizedHomeName;
+					String otherSofaTeam = homeDistance <= threshold ? sofaAway : sofaHome;
+					int otherDistance = LevenshteinMatcher.calculateLevenshteinDistance(otherTeam, otherSofaTeam);
+
+					if (otherDistance <= threshold && (homeDistance + otherDistance) < minDistance) {
+						minDistance = homeDistance + otherDistance;
+						bestMatch = sofaMatch;
+					}
+				}
+			}
+
+			if (bestMatch != null) {
+				log.info("Found SofaScore match for 8xbet match: {} vs {} with SofaScore match: {} vs {}",
+						exBetMatchResponseDto.getHomeName(), exBetMatchResponseDto.getAwayName(), bestMatch.getHomeTeam().getName(), bestMatch.getAwayTeam().getName());
+
+				ExBetMatchCommonDto.SofaData sofa = ExBetMatchCommonDto.SofaData.builder()
+						.sofaMatchId(bestMatch.getMatchId())
+						.sofaHomeId(bestMatch.getHomeTeam().getId())
+						.sofaAwayId(bestMatch.getAwayTeam().getId())
+						.sofaHomeName(bestMatch.getHomeTeam().getName())
+						.sofaAwayName(bestMatch.getAwayTeam().getName())
+						.build();
+
+				exBetMatchResponseDto.setSofaData(sofa);
+				exBetMatchResponseDto.setIsMatched(Boolean.TRUE);
+			} else {
+				log.info("No SofaScore match found for 8xbet match: {} vs {}", exBetMatchResponseDto.getHomeName(), exBetMatchResponseDto.getAwayName());
+				exBetMatchResponseDto.setIsMatched(false);
+				exBetMatchResponseDto.setSofaData(null);
+			}
+		}
+
+
 		return SaveExBetMatchDto.Response.builder()
-				.matches(allMatches)
+				.matches(exBetMatchesByDate)
 				.build();
 	}
 

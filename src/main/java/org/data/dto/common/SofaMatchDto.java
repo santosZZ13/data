@@ -2,7 +2,6 @@ package org.data.dto.common;
 
 import lombok.*;
 
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 
 @Builder

@@ -5,12 +5,12 @@ import org.data.response.sf.parent.SofaMatchResponseDetailDto;
 
 import java.util.List;
 
-public interface SofaScheduledMatchRepository {
+public interface SofaRepository {
 	void saveSofaScheduledMatches(List<SofaMatchResponseDetailDto> matchesDto);
 
 	List<SofaMatchDto> findSofaScheduledMatchesByName(String name);
 
-	List<SofaMatchDto> findSofaScheduledMatchByName(String name);
+	List<SofaMatchDto> findSofaMatchByName(String name);
 
 	List<SofaMatchResponseDetailDto> getMatchesByDate(String date);
 }

@@ -9,7 +9,7 @@ import org.data.dto.common.ExBetMatchResponseDto;
 import org.data.persistent.entity.ExBetMatchEntity;
 import org.data.persistent.repository.ExBetCustomRepository;
 import org.data.persistent.repository.ExBetMongoRepository;
-import org.data.repository.sofa.SofaScheduledMatchRepository;
+import org.data.repository.sofa.SofaRepository;
 import org.data.util.LevenshteinMatcher;
 import org.data.util.NormalizeTeamName;
 import org.springframework.data.mongodb.core.BulkOperations;
@@ -31,7 +31,7 @@ public class ExBetRepositoryImpl implements ExBetRepository {
 
 	private final ExBetMongoRepository exBetMongoRepository;
 	private final ExBetCustomRepository exBetCustomRepository;
-	private final SofaScheduledMatchRepository sofaScheduledMatchRepository;
+	private final SofaRepository sofaRepository;
 	private final MongoTemplate mongoTemplate;
 
 	public void saveExBetMatchDto(List<ExBetMatchResponseDto> exBetMatchResponseDto) {
@@ -98,9 +98,9 @@ public class ExBetRepositoryImpl implements ExBetRepository {
 		String normalizedHomeName = NormalizeTeamName.normalize(exBetMatchResponseDto.getHomeName());
 		String normalizedAwayName = NormalizeTeamName.normalize(exBetMatchResponseDto.getAwayName());
 
-		List<SofaMatchDto> candidates = sofaScheduledMatchRepository.findSofaScheduledMatchByName(normalizedHomeName);
+		List<SofaMatchDto> candidates = sofaRepository.findSofaMatchByName(normalizedHomeName);
 		if (candidates == null || candidates.isEmpty()) {
-			candidates = sofaScheduledMatchRepository.findSofaScheduledMatchByName(normalizedAwayName);
+			candidates = sofaRepository.findSofaMatchByName(normalizedAwayName);
 		}
 
 		if (candidates == null || candidates.isEmpty()) {

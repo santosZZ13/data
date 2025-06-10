@@ -23,7 +23,7 @@ import java.util.stream.Stream;
 @Repository
 @AllArgsConstructor
 @Log4j2
-public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepository {
+public class SofaRepositoryImpl implements SofaRepository {
 	private final SofaScheduledMatchMongoRepository sofaScheduledMatchMongoRepository;
 	private final SofaApiService sofaApiService;
 	private final TeamRepository teamRepository;
@@ -260,7 +260,7 @@ public class SofaScheduledMatchRepositoryImpl implements SofaScheduledMatchRepos
 	}
 
 	@Override
-	public List<SofaMatchDto> findSofaScheduledMatchByName(String name) {
+	public List<SofaMatchDto> findSofaMatchByName(String name) {
 		if (name == null || name.trim().isEmpty()) {
 			log.warn("Search name is null or empty.");
 			return null;
