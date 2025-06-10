@@ -21,17 +21,5 @@ public class MatchedMatchesDto {
 	private int awayId;
 	private Boolean isMatched;
 	private String status;
-	private SofaData sofaData;
-
-	@Builder
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	public static class SofaData {
-		private Integer sofaMatchId;
-		private Integer sofaHomeId;
-		private Integer sofaAwayId;
-		private String sofaHomeName;
-		private String sofaAwayName;
-	}
+	private ExBetMatchCommonDto.SofaData sofaData;
 }

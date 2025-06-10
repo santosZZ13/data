@@ -40,8 +40,9 @@ public class EightXBetController {
 //		return exService.getMatchesByDate(date, false);
 //	}
 
+
 	@PostMapping("/matches")
-	public SaveMatchExDto.Response saveMatches(@RequestParam String date, @RequestBody SaveMatchExDto.Request request) {
+	public SaveExBetMatchDto.Response saveMatches(@RequestParam String date, @RequestBody SaveExBetMatchDto.Request request) {
 		return exService.saveMatches(request, date);
 	}
 }

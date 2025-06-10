@@ -1,6 +1,7 @@
 package org.data.converter;
 
 import lombok.extern.log4j.Log4j2;
+import org.data.dto.common.ExBetMatchCommonDto;
 import org.data.dto.common.ExBetMatchResponseDto;
 import org.data.persistent.entity.ExBetMatchEntity;
 import org.data.util.utils.DateUtils;
@@ -26,7 +27,7 @@ public class ExBetMatchConverter {
 					.isMatched(entity.getIsMatched())
 					.sofaData(
 							entity.getSofaDataEntity() == null ? null :
-									ExBetMatchResponseDto.SofaData
+									ExBetMatchCommonDto.SofaData
 											.builder()
 											.sofaMatchId(entity.getSofaDataEntity().getSofaMatchId())
 											.sofaHomeId(entity.getSofaDataEntity().getSofaHomeId())
@@ -36,7 +37,7 @@ public class ExBetMatchConverter {
 											.build()
 
 					)
-					.round(ExBetMatchResponseDto.RoundDto.builder()
+					.round(ExBetMatchCommonDto.RoundDto.builder()
 							.roundName(entity.getRound().getRoundName())
 							.roundType(entity.getRound().getRoundType())
 							.build()

@@ -7,11 +7,11 @@ import org.data.dto.common.MatchedMatchesDto;
 import org.data.dto.common.SofaMatchDto;
 import org.data.dto.common.ExBetMatchResponseDto;
 import org.data.persistent.entity.ExBetMatchEntity;
-import org.data.persistent.repository.ExBetMatchMongoRepository;
+import org.data.persistent.repository.ExBetCustomRepository;
+import org.data.persistent.repository.ExBetMongoRepository;
 import org.data.repository.sofa.SofaScheduledMatchRepository;
 import org.data.util.LevenshteinMatcher;
 import org.data.util.NormalizeTeamName;
-import org.data.util.utils.DateUtils;
 import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -29,19 +29,19 @@ import java.util.stream.Collectors;
 @Log4j2
 public class ExBetRepositoryImpl implements ExBetRepository {
 
-	private final ExBetMatchMongoRepository exBetMatchMongoRepository;
+	private final ExBetMongoRepository exBetMongoRepository;
+	private final ExBetCustomRepository exBetCustomRepository;
 	private final SofaScheduledMatchRepository sofaScheduledMatchRepository;
 	private final MongoTemplate mongoTemplate;
 
-
-	public void saveExBetMatchDto(List<ExBetMatchResponseDto> matchesDto) {
-		log.info("Starting to save {} matches from EightXBet", matchesDto.size());
-		if (matchesDto.isEmpty()) {
+	public void saveExBetMatchDto(List<ExBetMatchResponseDto> exBetMatchResponseDto) {
+		log.info("Starting to save {} matches from EightXBet", exBetMatchResponseDto.size());
+		if (exBetMatchResponseDto.isEmpty()) {
 			log.warn("No matches to save.");
 			return;
 		}
 
-		Map<Integer, ExBetMatchResponseDto> uniqueMatchesDto = matchesDto.stream()
+		Map<Integer, ExBetMatchResponseDto> uniqueMatchesDto = exBetMatchResponseDto.stream()
 				.filter(matchDto -> matchDto.getId() != 0)
 				.collect(Collectors.toMap(
 						ExBetMatchResponseDto::getId,
@@ -56,21 +56,12 @@ public class ExBetRepositoryImpl implements ExBetRepository {
 			return;
 		}
 
-		Query query = new Query(Criteria.where("matchId").in(matchDtoIds));
-		List<ExBetMatchEntity> existingMatchesEntitiesDB = mongoTemplate.find(query, ExBetMatchEntity.class);
-		Map<Integer, ExBetMatchEntity> existingMatchEntitiesMap = existingMatchesEntitiesDB.stream()
-				.collect(Collectors.toMap(
-						ExBetMatchEntity::getMatchId,
-						entity -> entity,
-						(e1, e2) -> e1,
-						LinkedHashMap::new
-				));
-
+		Map<Integer, ExBetMatchEntity> entitiesMapFromDB = exBetCustomRepository.getEntitiesMap(matchDtoIds);
 		List<ExBetMatchEntity> entitiesToSave = new ArrayList<>();
 
 		for (ExBetMatchResponseDto matchDto : uniqueMatchesDto.values()) {
 			ExBetMatchEntity entityMatchFromDto = ExBetMatchConverter.toEntity(matchDto);
-			ExBetMatchEntity existingEntityMatch = existingMatchEntitiesMap.get(matchDto.getId());
+			ExBetMatchEntity existingEntityMatch = entitiesMapFromDB.get(matchDto.getId());
 			if (existingEntityMatch == null || !existingEntityMatch.equals(entityMatchFromDto)) {
 				if (existingEntityMatch != null) {
 					entityMatchFromDto.setId(existingEntityMatch.getId());
@@ -80,35 +71,12 @@ public class ExBetRepositoryImpl implements ExBetRepository {
 		}
 
 		if (!entitiesToSave.isEmpty()) {
-			log.info("Preparing to save or update {} matches.", entitiesToSave.size());
-			int batchSize = 500;
-			for (int i = 0; i < entitiesToSave.size(); i += batchSize) {
-				List<ExBetMatchEntity> batch = entitiesToSave.subList(i, Math.min(i + batchSize, entitiesToSave.size()));
-				BulkOperations bulkOps = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, ExBetMatchEntity.class);
-				for (ExBetMatchEntity entity : batch) {
-					Query upsertQuery = new Query(Criteria.where("matchId").is(entity.getMatchId()));
-					Update update = new Update()
-							.set("matchId", entity.getMatchId())
-							.set("tournamentName", entity.getTournamentName())
-							.set("kickoffTime", entity.getKickoffTime())
-							.set("homeId", entity.getHomeId())
-							.set("homeName", entity.getHomeName())
-							.set("awayId", entity.getAwayId())
-							.set("awayName", entity.getAwayName())
-							.set("isFavorite", entity.isFavorite())
-							.set("round", entity.getRound())
-							.set("status", entity.getStatus())
-							.set("isMatched", entity.getIsMatched())
-							.set("sofaDataEntity", entity.getSofaDataEntity());
-					bulkOps.upsert(upsertQuery, update);
-				}
-				bulkOps.execute();
-				log.info("Saved batch of {} matches (total processed: {}).", batch.size(), Math.min(i + batchSize, entitiesToSave.size()));
-			}
+			exBetCustomRepository.saveAll(entitiesToSave);
 		}
 
 		log.info("Finished saving matches. Total processed: {} at {}", entitiesToSave.size(), new Date());
 	}
+
 
 	@Override
 	public List<ExBetMatchResponseDto> getExBetByDate(String date) {
@@ -116,52 +84,12 @@ public class ExBetRepositoryImpl implements ExBetRepository {
 			log.warn("Invalid date format: {}. Expected YYYY-MM-DD.", date);
 			return List.of();
 		}
-
-		// Chuyển date thành khoảng thời gian UTC
 		ZonedDateTime startOfDay = ZonedDateTime.parse(date + "T00:00:00Z", DateTimeFormatter.ISO_ZONED_DATE_TIME);
 		ZonedDateTime endOfDay = ZonedDateTime.parse(date + "T23:59:59Z", DateTimeFormatter.ISO_ZONED_DATE_TIME);
-
-		// Truy vấn MongoDB
-		return exBetMatchMongoRepository.findAllByKickoffTimeBetween(startOfDay, endOfDay)
+		return exBetMongoRepository.findAllByKickoffTimeBetween(startOfDay, endOfDay)
 				.stream()
 				.map(ExBetMatchConverter::toDto)
 				.collect(Collectors.toList());
-	}
-
-	@Override
-	public List<ExBetMatchResponseDto> getExBetByDate(String[] date, boolean isFavorite) {
-		return null;
-//		List<ExBetMatchDto> allMatchesByDate = new ArrayList<>();
-//		for (String dt : date) {
-//			List<ExBetMatchDto> matches = exBetMatchMongoRepository.findAllByKickoffTimeBetween(
-//							TimeUtil.convertStringToLocalDateTimeFormal(dt + " 00:00:00"),
-//							TimeUtil.convertStringToLocalDateTimeFormal(dt + " 23:59:59")
-//					)
-//					.stream()
-//					.map(exBetMatchEntity -> ExBetMatchDto.builder()
-//							.id(exBetMatchEntity.getMatchId())
-//							.tournamentName(exBetMatchEntity.getTournamentName())
-//							.kickoffTime(exBetMatchEntity.getKickoffTime())
-//							.homeId(exBetMatchEntity.getHomeId())
-//							.homeName(exBetMatchEntity.getHomeName())
-//							.awayId(exBetMatchEntity.getAwayId())
-//							.awayName(exBetMatchEntity.getAwayName())
-//							.isFavorite(exBetMatchEntity.isFavorite())
-//							.round(RoundDto.builder()
-//									.roundName(exBetMatchEntity.getRound().getRoundName())
-//									.roundType(exBetMatchEntity.getRound().getRoundType())
-//									.build())
-//							.build()).toList();
-//
-//			allMatchesByDate.addAll(matches);
-////			ZonedDateTime startTimestamp = DateUtils.toUtcZonedDateTime(dto.getStartTimestamp());
-//		}
-//		if (isFavorite) {
-//			allMatchesByDate = allMatchesByDate.stream()
-//					.filter(ExBetMatchDto::isFavorite)
-//					.collect(Collectors.toList());
-//		}
-//		return allMatchesByDate;
 	}
 
 
@@ -176,7 +104,8 @@ public class ExBetRepositoryImpl implements ExBetRepository {
 		}
 
 		if (candidates == null || candidates.isEmpty()) {
-			return notFoundMatch(exBetMatchResponseDto);
+			return null;
+//			return notFoundMatch(exBetMatchResponseDto);
 		}
 
 //		LocalDateTime kickoffTime = TimeUtil.convertStringToLocalDateTime(matchDto.getKickoffTime());
@@ -224,52 +153,50 @@ public class ExBetRepositoryImpl implements ExBetRepository {
 		if (bestMatch != null) {
 			log.info("Found SofaScore match for 8xbet match: {} vs {} with SofaScore match: {} vs {}",
 					exBetMatchResponseDto.getHomeName(), exBetMatchResponseDto.getAwayName(), bestMatch.getHomeTeam().getName(), bestMatch.getAwayTeam().getName());
-			return foundMatch(exBetMatchResponseDto, bestMatch);
+//			return foundMatch(exBetMatchResponseDto, bestMatch);
+			return null;
 		} else {
 			log.info("No SofaScore match found for 8xbet match: {} vs {}", exBetMatchResponseDto.getHomeName(), exBetMatchResponseDto.getAwayName());
-			return notFoundMatch(exBetMatchResponseDto);
+			return null;
+			//			return notFoundMatch(exBetMatchResponseDto);
 		}
 	}
 
-	private MatchedMatchesDto notFoundMatch(ExBetMatchResponseDto matchDto) {
-		return MatchedMatchesDto.builder()
-				.id(matchDto.getId())
-				.homeId(matchDto.getHomeId())
-				.homeName(matchDto.getHomeName())
-				.awayId(matchDto.getAwayId())
-				.awayName(matchDto.getAwayName())
-				.kickoffTime(DateUtils.toUtcZonedDateTime(matchDto.getKickoffTime()))
-				.tournamentName(matchDto.getTournamentName())
-				.isMatched(false)
-				.build();
-	}
+//	private MatchedMatchesDto notFoundMatch(ExBetMatchResponseDto matchDto) {
+//		return MatchedMatchesDto.builder()
+//				.id(matchDto.getId())
+//				.homeId(matchDto.getHomeId())
+//				.homeName(matchDto.getHomeName())
+//				.awayId(matchDto.getAwayId())
+//				.awayName(matchDto.getAwayName())
+//				.kickoffTime(DateUtils.toUtcZonedDateTime(matchDto.getKickoffTime()))
+//				.tournamentName(matchDto.getTournamentName())
+//				.isMatched(false)
+//				.build();
+//	}
 
-	private MatchedMatchesDto foundMatch(ExBetMatchResponseDto exBetMatchResponseDto, SofaMatchDto sofaMatch) {
-		MatchedMatchesDto.SofaData sofaData = MatchedMatchesDto.SofaData.builder()
-				.sofaHomeId(sofaMatch.getHomeTeam().getId())
-				.sofaAwayId(sofaMatch.getAwayTeam().getId())
-				.sofaHomeName(sofaMatch.getHomeTeam().getName())
-				.sofaAwayName(sofaMatch.getAwayTeam().getName())
-				.sofaMatchId(sofaMatch.getMatchId())
-				.build();
+//	private MatchedMatchesDto foundMatch(ExBetMatchResponseDto exBetMatchResponseDto, SofaMatchDto sofaMatch) {
+//		MatchedMatchesDto.SofaData sofaData = MatchedMatchesDto.SofaData.builder()
+//				.sofaHomeId(sofaMatch.getHomeTeam().getId())
+//				.sofaAwayId(sofaMatch.getAwayTeam().getId())
+//				.sofaHomeName(sofaMatch.getHomeTeam().getName())
+//				.sofaAwayName(sofaMatch.getAwayTeam().getName())
+//				.sofaMatchId(sofaMatch.getMatchId())
+//				.build();
+//
+//		return MatchedMatchesDto.builder()
+//				.id(exBetMatchResponseDto.getId())
+//				.homeId(exBetMatchResponseDto.getHomeId())
+//				.homeName(exBetMatchResponseDto.getHomeName())
+//				.awayId(exBetMatchResponseDto.getAwayId())
+//				.awayName(exBetMatchResponseDto.getAwayName())
+//				.kickoffTime(DateUtils.toUtcZonedDateTime(exBetMatchResponseDto.getKickoffTime()))
+//				.tournamentName(exBetMatchResponseDto.getTournamentName())
+//				.isMatched(Boolean.TRUE)
+//				.sofaData(sofaData)
+//				.build();
+//	}
 
-		return MatchedMatchesDto.builder()
-				.id(exBetMatchResponseDto.getId())
-				.homeId(exBetMatchResponseDto.getHomeId())
-				.homeName(exBetMatchResponseDto.getHomeName())
-				.awayId(exBetMatchResponseDto.getAwayId())
-				.awayName(exBetMatchResponseDto.getAwayName())
-				.kickoffTime(DateUtils.toUtcZonedDateTime(exBetMatchResponseDto.getKickoffTime()))
-				.tournamentName(exBetMatchResponseDto.getTournamentName())
-				.isMatched(Boolean.TRUE)
-				.sofaData(sofaData)
-				.build();
-	}
-
-	@Override
-	public void saveMatchedMatches(List<MatchedMatchesDto> matchedMatchesDtos) {
-
-	}
 
 	@Override
 	public void updateStatusByIds(List<Integer> matchIds, String status) {

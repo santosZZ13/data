@@ -18,31 +18,10 @@ public class ExBetMatchResponseDto {
 	private int homeId;
 	private String homeName;
 	private int awayId;
-	private boolean isFavorite;
 	private String awayName;
 	private String status;
-	private RoundDto round;
+	private boolean isFavorite;
 	private Boolean isMatched;
-	private SofaData sofaData;
-
-	@Builder
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	public static class SofaData {
-		private Integer sofaMatchId;
-		private Integer sofaHomeId;
-		private Integer sofaAwayId;
-		private String sofaHomeName;
-		private String sofaAwayName;
-	}
-
-	@Builder
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	public static class RoundDto {
-		private String roundName;
-		private String roundType;
-	}
+	private ExBetMatchCommonDto.RoundDto round;
+	private ExBetMatchCommonDto.SofaData sofaData;
 }

@@ -12,5 +12,12 @@ public interface ExService {
 
 	MatchWithSofaDto.Response getMatchesWithSofa(MatchWithSofaDto.Request request);
 
-	SaveMatchExDto.Response saveMatches(SaveMatchExDto.Request request, String date);
+	/**
+	 * Saves match information for a specified date.
+	 *
+	 * @param date the date to associate with the match data
+	 * @param request the request object containing match details to be saved
+	 * @return a response object containing the list of saved matches
+	 */
+	SaveExBetMatchDto.Response saveMatches(SaveExBetMatchDto.Request request, String date);
 }

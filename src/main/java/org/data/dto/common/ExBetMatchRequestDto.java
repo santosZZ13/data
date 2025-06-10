@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ExBetMatchDto {
+public class ExBetMatchRequestDto {
 	private int id;
 	private String tournamentName;
 	private long kickoffTime;
@@ -18,6 +18,5 @@ public class ExBetMatchDto {
 	private String homeName;
 	private int awayId;
 	private String awayName;
-	private boolean isFavorite;
-	private ExBetMatchResponseDto.RoundDto round;
+	private ExBetMatchCommonDto.RoundDto round;
 }
