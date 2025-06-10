@@ -116,6 +116,7 @@ public class ExBetRepositoryImpl implements ExBetRepository {
 			log.warn("Invalid date format: {}. Expected YYYY-MM-DD.", date);
 			return List.of();
 		}
+
 		// Chuyển date thành khoảng thời gian UTC
 		ZonedDateTime startOfDay = ZonedDateTime.parse(date + "T00:00:00Z", DateTimeFormatter.ISO_ZONED_DATE_TIME);
 		ZonedDateTime endOfDay = ZonedDateTime.parse(date + "T23:59:59Z", DateTimeFormatter.ISO_ZONED_DATE_TIME);

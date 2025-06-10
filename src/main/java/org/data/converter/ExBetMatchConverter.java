@@ -58,7 +58,7 @@ public class ExBetMatchConverter {
 					.awayId(dto.getAwayId())
 					.awayName(dto.getAwayName())
 					.isFavorite(dto.isFavorite())
-					.status(dto.getStatus() == null ? "scheduled" : dto.getStatus())
+					.status(dto.getStatus() == null ? "notstarted" : dto.getStatus())
 					.isMatched(dto.getIsMatched())
 					.sofaDataEntity(
 							dto.getSofaData() == null ? null :

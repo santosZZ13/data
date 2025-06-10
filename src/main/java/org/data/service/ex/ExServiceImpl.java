@@ -149,7 +149,7 @@ public class ExServiceImpl implements ExService {
 
 		// Cập nhật status của các trận diff thành "ended"
 		if (!endedMatchIds.isEmpty()) {
-			exBetRepository.updateStatusByIds(endedMatchIds, "ended");
+			exBetRepository.updateStatusByIds(endedMatchIds, "finished");
 		}
 
 		// Lưu/cập nhật các trận từ request
@@ -173,7 +173,7 @@ public class ExServiceImpl implements ExService {
 					.homeName(exBetMatchDto.getHomeName())
 					.awayId(exBetMatchDto.getAwayId())
 					.awayName(exBetMatchDto.getAwayName())
-					.status("scheduled")
+					.status("notstarted")
 					.round(exBetMatchDto.getRound())
 					.isMatched(false)
 					.sofaData(null)

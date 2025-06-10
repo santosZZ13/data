@@ -42,7 +42,6 @@ public class EightXBetController {
 
 	@PostMapping("/matches")
 	public SaveMatchExDto.Response saveMatches(@RequestParam String date, @RequestBody SaveMatchExDto.Request request) {
-		SaveMatchExDto.Response response = exService.saveMatches(request, date);
-		return response;
+		return exService.saveMatches(request, date);
 	}
 }
