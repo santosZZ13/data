@@ -33,4 +33,6 @@ public class SofaController {
 	public GetSofaMatchesByDate.Response getMatchesByDate(@RequestParam("date") String date) {
 		return sofaScheduledMatchService.getMatchesByDate(date);
 	}
+
+
 }

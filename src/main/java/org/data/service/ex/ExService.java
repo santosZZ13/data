@@ -20,4 +20,6 @@ public interface ExService {
 	 * @return a response object containing the list of saved matches
 	 */
 	SaveExBetMatchDto.Response saveMatches(SaveExBetMatchDto.Request request, String date);
+
+	GetAnalystDto.Response getAnalyst(GetAnalystDto.Request request);
 }

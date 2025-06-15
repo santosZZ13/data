@@ -3,6 +3,7 @@ package org.data.service.ex;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.data.cache.SofaCache;
 import org.data.dto.common.*;
 import org.data.dto.ex.*;
 import org.data.repository.ex.ExBetRepository;
@@ -12,14 +13,20 @@ import org.data.response.ex.ExBetTournamentResponse;
 import org.data.response.sf.parent.SofaMatchResponseDetailDto;
 import org.data.util.LevenshteinMatcher;
 import org.data.util.NormalizeTeamName;
+import org.data.util.analyzer.MatchAnalyzer;
 import org.data.util.service.SofaApiService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.data.util.analyzer.MatchAnalyzer.*;
 
 @Service
 @AllArgsConstructor
@@ -29,6 +36,8 @@ public class ExServiceImpl implements ExService {
 	private final ExBetRepository exBetRepository;
 	private final SofaRepository sofaRepository;
 	private final SofaApiService sofaApiService;
+	private final SofaCache sofaCache;
+	private final ExecutorService executorService;
 
 	@Override
 	public ImportMatchesJsonFile.Response getDataFile(MultipartFile file) {
@@ -129,23 +138,106 @@ public class ExServiceImpl implements ExService {
 			throw new IllegalArgumentException("Invalid date format. Expected YYYY-MM-DD.");
 		}
 
+		sofaRepository.getMatchesByDate(date);
+
 		List<ExBetMatchResponseDto> exBetMatchResponseFromDB = exBetRepository.getExBetByDate(date);
 		List<ExBetMatchRequestDto> matchesFromRequest = request.getMatches();
+		SaveExBetMatchDto.Response responses = new SaveExBetMatchDto.Response();
 
 		if (matchesFromRequest == null || matchesFromRequest.isEmpty()) {
-			return SaveExBetMatchDto.Response.builder()
-					.matches(exBetMatchResponseFromDB)
-					.build();
+			matchingMatches(exBetMatchResponseFromDB);
+			responses.setMatches(exBetMatchResponseFromDB);
+			return responses;
 		}
 
 		updateEndedMatches(matchesFromRequest, exBetMatchResponseFromDB);
 		exBetRepository.saveExBetMatchDto(toExBetMatchResponseDto(matchesFromRequest));
-
 		List<ExBetMatchResponseDto> exBetMatchesByDate = exBetRepository.getExBetByDate(date);
+		matchingMatches(exBetMatchesByDate);
+		responses.setMatches(exBetMatchesByDate);
+		return responses;
+	}
 
-		for (ExBetMatchResponseDto exBetMatchResponseDto : exBetMatchesByDate) {
-			String normalizedHomeName = NormalizeTeamName.normalize(exBetMatchResponseDto.getHomeName());
-			String normalizedAwayName = NormalizeTeamName.normalize(exBetMatchResponseDto.getAwayName());
+	@Override
+	public GetAnalystDto.Response getAnalyst(GetAnalystDto.Request request) {
+		List<GetAnalystDto.MatchAnalysisDto> analyzedMatches = new ArrayList<>();
+		List<ExBetMatchResponseDto> matches = request.getMatches();
+
+		Set<Integer> teamIds = matches.stream()
+				.flatMap(match -> Stream.of(
+						match.getSofaData().getSofaHomeId(),
+						match.getSofaData().getSofaAwayId())
+				)
+				.filter(Objects::nonNull)
+				.collect(Collectors.toSet());
+
+		Map<Integer, List<SofaMatchResponseDetailDto>> teamHistories = new HashMap<>();
+		List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+		for (Integer teamId : teamIds) {
+			CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+				List<SofaMatchResponseDetailDto> history = sofaCache.getTeamHistory(teamId);
+				if (history == null) {
+					history = sofaApiService.getSofaTeamId(teamId, 10);
+					sofaCache.putTeamHistory(teamId, history);
+				}
+				synchronized (teamHistories) {
+					teamHistories.put(teamId, history);
+				}
+			}, executorService);
+			futures.add(future);
+		}
+		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+
+		for (ExBetMatchResponseDto match : matches) {
+			Integer sofaHomeId = match.getSofaData().getSofaHomeId();
+			Integer sofaAwayId = match.getSofaData().getSofaAwayId();
+			if (sofaHomeId == null || sofaAwayId == null) {
+				continue; // Bỏ qua nếu không có sofa data
+			}
+
+			List<SofaMatchResponseDetailDto> sofaMatchesByHomeId = teamHistories.getOrDefault(sofaHomeId, List.of());
+			List<SofaMatchResponseDetailDto> sofaMatchesByAwayId = teamHistories.getOrDefault(sofaAwayId, List.of());
+
+			GetAnalystDto.TeamAnalysisDto homeTeamAnalysisDto = MatchAnalyzer.analyzeTeam(sofaHomeId, sofaMatchesByHomeId, true);
+			GetAnalystDto.TeamAnalysisDto awayTeamAnalysisDto = MatchAnalyzer.analyzeTeam(sofaAwayId, sofaMatchesByAwayId, false);
+
+			Double over15Index = MatchAnalyzer.calculateOver15Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
+			Double over25Index = MatchAnalyzer.calculateOver25Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
+			Double bttsIndex = MatchAnalyzer.calculateBttsIndex(homeTeamAnalysisDto, awayTeamAnalysisDto);
+			Double over05Index = MatchAnalyzer.calculateOver05Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
+			Double firstHalfOver05Index = MatchAnalyzer.calculateFirstHalfOver05Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
+			Double firstHalfOver15Index = MatchAnalyzer.calculateFirstHalfOver15Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
+			Double firstHalfBttsIndex = MatchAnalyzer.calculateFirstHalfBttsIndex(homeTeamAnalysisDto, awayTeamAnalysisDto);
+			String recommendedBet = MatchAnalyzer.determineRecommendedBet(over15Index, over25Index, bttsIndex, firstHalfOver05Index);
+			List<SofaMatchResponseDetailDto> headToHead = MatchAnalyzer.fetchHeadToHead(sofaHomeId, sofaAwayId);
+			GetAnalystDto.MatchAnalysisDto matchAnalysisDto = GetAnalystDto.MatchAnalysisDto.builder()
+					.match(match)
+					.homeTeamAnalysis(homeTeamAnalysisDto)
+					.awayTeamAnalysis(awayTeamAnalysisDto)
+					.over05Index(over05Index)
+					.over15Index(over15Index)
+					.over25Index(over25Index)
+					.bttsIndex(bttsIndex)
+					.firstHalfOver05Index(firstHalfOver05Index)
+					.firstHalfOver15Index(firstHalfOver15Index)
+					.firstHalfBttsIndex(firstHalfBttsIndex)
+//					.matchPriority(match.getTournamentId()) // Giả định tournamentId
+//					.headToHead(headToHeadDtos)
+					.recommendedBet(recommendedBet)
+					.build();
+			analyzedMatches.add(matchAnalysisDto);
+		}
+		return GetAnalystDto.Response.builder()
+				.analyzedMatches(analyzedMatches)
+				.build();
+	}
+
+	private void matchingMatches(List<ExBetMatchResponseDto> exBetMatchResponseDto) {
+		for (ExBetMatchResponseDto dto : exBetMatchResponseDto) {
+			String normalizedHomeName = NormalizeTeamName.normalize(dto.getHomeName());
+			String normalizedAwayName = NormalizeTeamName.normalize(dto.getAwayName());
 
 			List<SofaMatchDto> candidates = sofaRepository.findSofaMatchByName(normalizedHomeName);
 			if (candidates == null || candidates.isEmpty()) {
@@ -153,8 +245,8 @@ public class ExServiceImpl implements ExService {
 			}
 
 			if (candidates == null || candidates.isEmpty()) {
-				exBetMatchResponseDto.setIsMatched(false);
-				exBetMatchResponseDto.setSofaData(null);
+				dto.setIsMatched(false);
+				dto.setSofaData(null);
 			}
 
 			SofaMatchDto bestMatch = null;
@@ -182,7 +274,7 @@ public class ExServiceImpl implements ExService {
 
 			if (bestMatch != null) {
 				log.info("Found SofaScore match for 8xbet match: {} vs {} with SofaScore match: {} vs {}",
-						exBetMatchResponseDto.getHomeName(), exBetMatchResponseDto.getAwayName(), bestMatch.getHomeTeam().getName(), bestMatch.getAwayTeam().getName());
+						dto.getHomeName(), dto.getAwayName(), bestMatch.getHomeTeam().getName(), bestMatch.getAwayTeam().getName());
 
 				ExBetMatchCommonDto.SofaData sofa = ExBetMatchCommonDto.SofaData.builder()
 						.sofaMatchId(bestMatch.getMatchId())
@@ -192,21 +284,15 @@ public class ExServiceImpl implements ExService {
 						.sofaAwayName(bestMatch.getAwayTeam().getName())
 						.build();
 
-				exBetMatchResponseDto.setSofaData(sofa);
-				exBetMatchResponseDto.setIsMatched(Boolean.TRUE);
+				dto.setSofaData(sofa);
+				dto.setIsMatched(Boolean.TRUE);
 			} else {
-				log.info("No SofaScore match found for 8xbet match: {} vs {}", exBetMatchResponseDto.getHomeName(), exBetMatchResponseDto.getAwayName());
-				exBetMatchResponseDto.setIsMatched(false);
-				exBetMatchResponseDto.setSofaData(null);
+				log.info("No SofaScore match found for 8xbet match: {} vs {}", dto.getHomeName(), dto.getAwayName());
+				dto.setIsMatched(false);
+				dto.setSofaData(null);
 			}
 		}
-
-
-		return SaveExBetMatchDto.Response.builder()
-				.matches(exBetMatchesByDate)
-				.build();
 	}
-
 
 	private void updateEndedMatches(List<ExBetMatchRequestDto> exBetMatchRequestDto, List<ExBetMatchResponseDto> exBetMatchResponseDtoFromDB) {
 		List<Integer> requestMatchIds = exBetMatchRequestDto.stream()

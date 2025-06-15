@@ -45,4 +45,9 @@ public class EightXBetController {
 	public SaveExBetMatchDto.Response saveMatches(@RequestParam String date, @RequestBody SaveExBetMatchDto.Request request) {
 		return exService.saveMatches(request, date);
 	}
+
+	@PostMapping("/analyst")
+	public GetAnalystDto.Response getAnalyst(@RequestBody GetAnalystDto.Request request) {
+		return exService.getAnalyst(request);
+	}
 }

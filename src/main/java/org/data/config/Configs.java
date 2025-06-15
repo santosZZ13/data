@@ -11,6 +11,9 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 @Configuration
 @AllArgsConstructor
 public class Configs {
@@ -35,5 +38,10 @@ public class Configs {
 	@Bean
 	public ObjectMapper objectMapper() {
 		return new ObjectMapper();
+	}
+
+	@Bean
+	public ExecutorService executorService() {
+		return Executors.newFixedThreadPool(10); // Thread pool với 10 threads
 	}
 }
