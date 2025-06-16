@@ -115,119 +115,52 @@ public interface GetAnalystDto {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class TeamAnalysisDto {
-		/**
-		 * Name of the team.
-		 * Example: "Botafogo" or "Germany".
-		 */
 		private String teamName;
-
-		/**
-		 * Team ID from SofaScore or 8xBet.
-		 * Example: 1958 for Botafogo, 4711 for Germany.
-		 */
 		private Integer teamId;
-
-		/**
-		 * Rate of matches with over 1.5 goals in the full match, calculated as:
-		 * (Number of matches with >1.5 goals) / totalMatchesAnalyzed.
-		 * Example: 0.8 means 80% of matches had over 1.5 goals.
-		 */
 		private Double over15Rate;
-
-		/**
-		 * Rate of matches with over 2.5 goals in the full match, calculated as:
-		 * (Number of matches with >2.5 goals) / totalMatchesAnalyzed.
-		 * Example: 0.5 means 50% of matches had over 2.5 goals.
-		 */
 		private Double over25Rate;
-
-		/**
-		 * Rate of matches where both teams scored (BTTS) in the full match, calculated as:
-		 * (Number of matches with both teams scoring) / totalMatchesAnalyzed.
-		 * Example: 0.6 means 60% of matches had BTTS.
-		 */
 		private Double bttsRate;
-
-		/**
-		 * Average goals scored per match, calculated over recent matches.
-		 * Example: 2.0 means the team scores 2 goals per match on average.
-		 */
 		private Double averageGoalsScored;
-
-		/**
-		 * Average goals conceded per match, calculated over recent matches.
-		 * Example: 1.2 means the team concedes 1.2 goals per match on average.
-		 */
 		private Double averageGoalsConceded;
-
-		/**
-		 * Rate of matches with over 1.5 goals when playing at home, calculated as:
-		 * (Number of home matches with >1.5 goals) / totalHomeMatches.
-		 * Example: 0.9 means 90% of home matches had over 1.5 goals.
-		 */
-		private Double homeOver15Rate;
-
-		/**
-		 * Rate of matches with over 1.5 goals when playing away, calculated as:
-		 * (Number of away matches with >1.5 goals) / totalAwayMatches.
-		 * Example: 0.7 means 70% of away matches had over 1.5 goals.
-		 */
-		private Double awayOver15Rate;
-
-		/**
-		 * Rate of matches with over 0.5 goals in the first half, calculated as:
-		 * (Number of matches with >0.5 goals in first half) / totalMatchesAnalyzed.
-		 * Example: 0.75 means 75% of matches had at least one goal in the first half.
-		 */
 		private Double firstHalfOver05Rate;
-
-		/**
-		 * Rate of matches with over 1.5 goals in the first half, calculated as:
-		 * (Number of matches with >1.5 goals in first half) / totalMatchesAnalyzed.
-		 * Example: 0.3 means 30% of matches had over 1.5 goals in the first half.
-		 */
 		private Double firstHalfOver15Rate;
-
-		/**
-		 * Rate of matches where both teams scored in the first half, calculated as:
-		 * (Number of matches with both teams scoring in first half) / totalMatchesAnalyzed.
-		 * Example: 0.2 means 20% of matches had BTTS in the first half.
-		 */
 		private Double firstHalfBttsRate;
-
-		/**
-		 * Average goals scored in the first half per match, calculated over recent matches.
-		 * Example: 0.8 means the team scores 0.8 goals per first half on average.
-		 */
 		private Double firstHalfAverageGoalsScored;
-
-		/**
-		 * Average goals conceded in the first half per match, calculated over recent matches.
-		 * Example: 0.5 means the team concedes 0.5 goals per first half on average.
-		 */
 		private Double firstHalfAverageGoalsConceded;
-
-		/**
-		 * Recent form score based on the last 5 matches, calculated as:
-		 * 3 points for a win, 1 point for a draw, 0 points for a loss, averaged.
-		 * Example: 2.2 means the team averaged 2.2 points per match recently.
-		 */
 		private Double recentFormScore;
-
-		/**
-		 * Total number of matches analyzed for this team.
-		 * Example: 10 means statistics are based on 10 recent matches.
-		 */
 		private Integer totalMatchesAnalyzed;
-
-		/**
-		 * List of the team's 5 most recent matches with detailed outcomes.
-		 * Example: Includes match results, total goals, and betting outcomes.
-		 */
 		private Integer wins; // Số trận thắng
 		private Integer draws; // Số trận hòa
 		private Integer losses; // Số trận thua
 		private List<RecentMatchDto> recentMatches;
+
+		// Các chỉ số mới
+		private double homeOver15Rate;
+		private double awayOver15Rate;
+		private double homeOver25Rate;
+		private double awayOver25Rate;
+		private double homeBttsRate;
+		private double awayBttsRate;
+		private double homeFirstHalfOver05Rate;
+		private double awayFirstHalfOver05Rate;
+		private double homeFirstHalfOver15Rate;
+		private double awayFirstHalfOver15Rate;
+		private double homeFirstHalfBttsRate;
+		private double awayFirstHalfBttsRate;
+		private double homeAverageGoalsScored;
+		private double awayAverageGoalsScored;
+		private double homeAverageGoalsConceded;
+		private double awayAverageGoalsConceded;
+		private double homeFirstHalfAverageGoalsScored;
+		private double awayFirstHalfAverageGoalsScored;
+		private double homeFirstHalfAverageGoalsConceded;
+		private double awayFirstHalfAverageGoalsConceded;
+		private int homeWins;
+		private int awayWins;
+		private int homeDraws;
+		private int awayDraws;
+		private int homeLosses;
+		private int awayLosses;
 	}
 
 

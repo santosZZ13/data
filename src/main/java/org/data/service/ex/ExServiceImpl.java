@@ -212,6 +212,7 @@ public class ExServiceImpl implements ExService {
 			Double firstHalfBttsIndex = MatchAnalyzer.calculateFirstHalfBttsIndex(homeTeamAnalysisDto, awayTeamAnalysisDto);
 			String recommendedBet = MatchAnalyzer.determineRecommendedBet(over15Index, over25Index, bttsIndex, firstHalfOver05Index);
 			List<SofaMatchResponseDetailDto> headToHead = MatchAnalyzer.fetchHeadToHead(sofaHomeId, sofaAwayId);
+
 			GetAnalystDto.MatchAnalysisDto matchAnalysisDto = GetAnalystDto.MatchAnalysisDto.builder()
 					.match(match)
 					.homeTeamAnalysis(homeTeamAnalysisDto)

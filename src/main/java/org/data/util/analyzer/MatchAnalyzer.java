@@ -21,6 +21,14 @@ public class MatchAnalyzer {
 					.build();
 		}
 
+		// Lọc các trận sân nhà và sân khách
+		List<SofaMatchResponseDetailDto> homeMatches = history.stream()
+				.filter(match -> match.getHomeTeam().getId().equals(teamId))
+				.toList();
+		List<SofaMatchResponseDetailDto> awayMatches = history.stream()
+				.filter(match -> match.getAwayTeam().getId().equals(teamId))
+				.toList();
+
 		// Lọc 10 trận gần nhất trên sân nhà hoặc sân khách
 		List<SofaMatchResponseDetailDto> relevantMatches = history.stream()
 				.filter(match -> isHome ? match.getHomeTeam().getId().equals(teamId) : match.getAwayTeam().getId().equals(teamId))
@@ -130,8 +138,131 @@ public class MatchAnalyzer {
 
 		int losses = relevantMatchesSize - wins - draws;
 
+		// Tính các chỉ số mới cho sân nhà
+		int homeMatchesSize = homeMatches.size();
+		double homeOver15Rate = homeMatchesSize > 0 ? homeMatches.stream()
+				.filter(match -> getTotalGoals(match) > 1.5)
+				.count() / (double) homeMatchesSize : 0.0;
+		double homeOver25Rate = homeMatchesSize > 0 ? homeMatches.stream()
+				.filter(match -> getTotalGoals(match) > 2.5)
+				.count() / (double) homeMatchesSize : 0.0;
+		double homeBttsRate = homeMatchesSize > 0 ? homeMatches.stream()
+				.filter(match -> getHomeScore(match).getCurrent() > 0 && getAwayScore(match).getCurrent() > 0)
+				.count() / (double) homeMatchesSize : 0.0;
+		double homeFirstHalfOver05Rate = homeMatchesSize > 0 ? homeMatches.stream()
+				.filter(match ->
+						(getHomeScore(match).getPeriod1() != null ? getHomeScore(match).getPeriod1() : 0) +
+								(getAwayScore(match).getPeriod1() != null ? getAwayScore(match).getPeriod1() : 0) > 0.5
+				)
+				.count() / (double) homeMatchesSize : 0.0;
+		double homeFirstHalfOver15Rate = homeMatchesSize > 0 ? homeMatches.stream()
+				.filter(match ->
+						(getHomeScore(match).getPeriod1() != null ? getHomeScore(match).getPeriod1() : 0) +
+								(getAwayScore(match).getPeriod1() != null ? getAwayScore(match).getPeriod1() : 0) > 1.5
+				)
+				.count() / (double) homeMatchesSize : 0.0;
+		double homeFirstHalfBttsRate = homeMatchesSize > 0 ? homeMatches.stream()
+				.filter(match ->
+						(getHomeScore(match).getPeriod1() != null && getHomeScore(match).getPeriod1() > 0) &&
+								(getAwayScore(match).getPeriod1() != null && getAwayScore(match).getPeriod1() > 0)
+				)
+				.count() / (double) homeMatchesSize : 0.0;
+		double homeAverageGoalsScored = homeMatchesSize > 0 ? homeMatches.stream()
+				.mapToDouble(match -> getHomeScore(match).getCurrent() != null ? getHomeScore(match).getCurrent() : 0.0)
+				.average()
+				.orElse(0.0) : 0.0;
+		double homeAverageGoalsConceded = homeMatchesSize > 0 ? homeMatches.stream()
+				.mapToDouble(match -> getAwayScore(match).getCurrent() != null ? getAwayScore(match).getCurrent() : 0.0)
+				.average()
+				.orElse(0.0) : 0.0;
+		double homeFirstHalfAverageGoalsScored = homeMatchesSize > 0 ? homeMatches.stream()
+				.mapToDouble(match -> getHomeScore(match).getPeriod1() != null ? getHomeScore(match).getPeriod1() : 0)
+				.average()
+				.orElse(0.0) : 0.0;
+		double homeFirstHalfAverageGoalsConceded = homeMatchesSize > 0 ? homeMatches.stream()
+				.mapToDouble(match -> getAwayScore(match).getPeriod1() != null ? getAwayScore(match).getPeriod1() : 0)
+				.average()
+				.orElse(0.0) : 0.0;
+		int homeWins = homeMatchesSize > 0 ? (int) homeMatches.stream()
+				.filter(match -> {
+					int homeScore = getHomeScore(match).getCurrent() != null ? getHomeScore(match).getCurrent() : 0;
+					int awayScore = getAwayScore(match).getCurrent() != null ? getAwayScore(match).getCurrent() : 0;
+					return homeScore > awayScore;
+				})
+				.count() : 0;
+		int homeDraws = homeMatchesSize > 0 ? (int) homeMatches.stream()
+				.filter(match -> {
+					int homeScore = getHomeScore(match).getCurrent() != null ? getHomeScore(match).getCurrent() : 0;
+					int awayScore = getAwayScore(match).getCurrent() != null ? getAwayScore(match).getCurrent() : 0;
+					return homeScore == awayScore;
+				})
+				.count() : 0;
+		int homeLosses = homeMatchesSize > 0 ? homeMatchesSize - homeWins - homeDraws : 0;
+
+		// Tính các chỉ số mới cho sân khách
+		int awayMatchesSize = awayMatches.size();
+		double awayOver15Rate = awayMatchesSize > 0 ? awayMatches.stream()
+				.filter(match -> getTotalGoals(match) > 1.5)
+				.count() / (double) awayMatchesSize : 0.0;
+		double awayOver25Rate = awayMatchesSize > 0 ? awayMatches.stream()
+				.filter(match -> getTotalGoals(match) > 2.5)
+				.count() / (double) awayMatchesSize : 0.0;
+		double awayBttsRate = awayMatchesSize > 0 ? awayMatches.stream()
+				.filter(match -> getHomeScore(match).getCurrent() > 0 && getAwayScore(match).getCurrent() > 0)
+				.count() / (double) awayMatchesSize : 0.0;
+		double awayFirstHalfOver05Rate = awayMatchesSize > 0 ? awayMatches.stream()
+				.filter(match ->
+						(getHomeScore(match).getPeriod1() != null ? getHomeScore(match).getPeriod1() : 0) +
+								(getAwayScore(match).getPeriod1() != null ? getAwayScore(match).getPeriod1() : 0) > 0.5
+				)
+				.count() / (double) awayMatchesSize : 0.0;
+		double awayFirstHalfOver15Rate = awayMatchesSize > 0 ? awayMatches.stream()
+				.filter(match ->
+						(getHomeScore(match).getPeriod1() != null ? getHomeScore(match).getPeriod1() : 0) +
+								(getAwayScore(match).getPeriod1() != null ? getAwayScore(match).getPeriod1() : 0) > 1.5
+				)
+				.count() / (double) awayMatchesSize : 0.0;
+		double awayFirstHalfBttsRate = awayMatchesSize > 0 ? awayMatches.stream()
+				.filter(match ->
+						(getHomeScore(match).getPeriod1() != null && getHomeScore(match).getPeriod1() > 0) &&
+								(getAwayScore(match).getPeriod1() != null && getAwayScore(match).getPeriod1() > 0)
+				)
+				.count() / (double) awayMatchesSize : 0.0;
+		double awayAverageGoalsScored = awayMatchesSize > 0 ? awayMatches.stream()
+				.mapToDouble(match -> getAwayScore(match).getCurrent() != null ? getAwayScore(match).getCurrent() : 0.0)
+				.average()
+				.orElse(0.0) : 0.0;
+		double awayAverageGoalsConceded = awayMatchesSize > 0 ? awayMatches.stream()
+				.mapToDouble(match -> getHomeScore(match).getCurrent() != null ? getHomeScore(match).getCurrent() : 0.0)
+				.average()
+				.orElse(0.0) : 0.0;
+		double awayFirstHalfAverageGoalsScored = awayMatchesSize > 0 ? awayMatches.stream()
+				.mapToDouble(match -> getAwayScore(match).getPeriod1() != null ? getAwayScore(match).getPeriod1() : 0)
+				.average()
+				.orElse(0.0) : 0.0;
+		double awayFirstHalfAverageGoalsConceded = awayMatchesSize > 0 ? awayMatches.stream()
+				.mapToDouble(match -> getHomeScore(match).getPeriod1() != null ? getHomeScore(match).getPeriod1() : 0)
+				.average()
+				.orElse(0.0) : 0.0;
+		int awayWins = awayMatchesSize > 0 ? (int) awayMatches.stream()
+				.filter(match -> {
+					int homeScore = getHomeScore(match).getCurrent() != null ? getHomeScore(match).getCurrent() : 0;
+					int awayScore = getAwayScore(match).getCurrent() != null ? getAwayScore(match).getCurrent() : 0;
+					return awayScore > homeScore;
+				})
+				.count() : 0;
+		int awayDraws = awayMatchesSize > 0 ? (int) awayMatches.stream()
+				.filter(match -> {
+					int homeScore = getHomeScore(match).getCurrent() != null ? getHomeScore(match).getCurrent() : 0;
+					int awayScore = getAwayScore(match).getCurrent() != null ? getAwayScore(match).getCurrent() : 0;
+					return homeScore == awayScore;
+				})
+				.count() : 0;
+		int awayLosses = awayMatchesSize > 0 ? awayMatchesSize - awayWins - awayDraws : 0;
+
 		// Chuyển đổi recent matches
-		List<GetAnalystDto.RecentMatchDto> recentMatches = convertRecentMatches(relevantMatches, teamId);
+		List<GetAnalystDto.RecentMatchDto> recentMatches = convertRecentMatches(history, teamId);
+
 
 		return GetAnalystDto.TeamAnalysisDto.builder()
 				.teamId(teamId)
@@ -141,19 +272,46 @@ public class MatchAnalyzer {
 				.over15Rate(over15Count / relevantMatchesSize)
 				.over25Rate(over25Count / relevantMatchesSize)
 				.bttsRate(bttsCount / relevantMatchesSize)
-				.averageGoalsScored(avgGoalsScored)
-				.averageGoalsConceded(avgGoalsConceded)
 				.firstHalfOver05Rate(firstHalfOver05Count / relevantMatchesSize)
 				.firstHalfOver15Rate(firstHalfOver15Count / relevantMatchesSize)
 				.firstHalfBttsRate(firstHalfBttsCount / relevantMatchesSize)
+				.averageGoalsScored(avgGoalsScored)
+				.averageGoalsConceded(avgGoalsConceded)
 				.firstHalfAverageGoalsScored(firstHalfAvgGoalsScored)
 				.firstHalfAverageGoalsConceded(firstHalfAvgGoalsConceded)
 				.recentFormScore(recentFormScore)
-				.totalMatchesAnalyzed(relevantMatchesSize)
-				.recentMatches(recentMatches)
 				.wins(wins)
 				.draws(draws)
 				.losses(losses)
+				// Chỉ số mới
+				.homeOver15Rate(homeOver15Rate)
+				.awayOver15Rate(awayOver15Rate)
+				.homeOver25Rate(homeOver25Rate)
+				.awayOver25Rate(awayOver25Rate)
+				.homeBttsRate(homeBttsRate)
+				.awayBttsRate(awayBttsRate)
+				.homeFirstHalfOver05Rate(homeFirstHalfOver05Rate)
+				.awayFirstHalfOver05Rate(awayFirstHalfOver05Rate)
+				.homeFirstHalfOver15Rate(homeFirstHalfOver15Rate)
+				.awayFirstHalfOver15Rate(awayFirstHalfOver15Rate)
+				.homeFirstHalfBttsRate(homeFirstHalfBttsRate)
+				.awayFirstHalfBttsRate(awayFirstHalfBttsRate)
+				.homeAverageGoalsScored(homeAverageGoalsScored)
+				.awayAverageGoalsScored(awayAverageGoalsScored)
+				.homeAverageGoalsConceded(homeAverageGoalsConceded)
+				.awayAverageGoalsConceded(awayAverageGoalsConceded)
+				.homeFirstHalfAverageGoalsScored(homeFirstHalfAverageGoalsScored)
+				.awayFirstHalfAverageGoalsScored(awayFirstHalfAverageGoalsScored)
+				.homeFirstHalfAverageGoalsConceded(homeFirstHalfAverageGoalsConceded)
+				.awayFirstHalfAverageGoalsConceded(awayFirstHalfAverageGoalsConceded)
+				.homeWins(homeWins)
+				.awayWins(awayWins)
+				.homeDraws(homeDraws)
+				.awayDraws(awayDraws)
+				.homeLosses(homeLosses)
+				.awayLosses(awayLosses)
+				.totalMatchesAnalyzed(relevantMatchesSize)
+				.recentMatches(recentMatches)
 				.build();
 	}
 
