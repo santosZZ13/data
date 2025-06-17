@@ -14,6 +14,7 @@ import org.data.response.sf.parent.SofaMatchResponseDetailDto;
 import org.data.util.LevenshteinMatcher;
 import org.data.util.NormalizeTeamName;
 import org.data.util.analyzer.MatchAnalyzer;
+import org.data.util.analyzer.TeamAnalyzer;
 import org.data.util.service.SofaApiService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -200,19 +201,21 @@ public class ExServiceImpl implements ExService {
 			List<SofaMatchResponseDetailDto> sofaMatchesByHomeId = teamHistories.getOrDefault(sofaHomeId, List.of());
 			List<SofaMatchResponseDetailDto> sofaMatchesByAwayId = teamHistories.getOrDefault(sofaAwayId, List.of());
 
-			GetAnalystDto.TeamAnalysisDto homeTeamAnalysisDto = MatchAnalyzer.analyzeTeam(sofaHomeId, sofaMatchesByHomeId, true);
-			GetAnalystDto.TeamAnalysisDto awayTeamAnalysisDto = MatchAnalyzer.analyzeTeam(sofaAwayId, sofaMatchesByAwayId, false);
+			GetAnalystDto.TeamAnalysisDto homeTeamAnalysisDto = MatchAnalyzer.analyzeTeam(sofaHomeId, sofaMatchesByHomeId);
+			GetAnalystDto.TeamAnalysisDto awayTeamAnalysisDto = MatchAnalyzer.analyzeTeam(sofaAwayId, sofaMatchesByAwayId);
 
-			Double over15Index = MatchAnalyzer.calculateOver15Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
-			Double over25Index = MatchAnalyzer.calculateOver25Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
-			Double bttsIndex = MatchAnalyzer.calculateBttsIndex(homeTeamAnalysisDto, awayTeamAnalysisDto);
-			Double over05Index = MatchAnalyzer.calculateOver05Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
-			Double firstHalfOver05Index = MatchAnalyzer.calculateFirstHalfOver05Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
-			Double firstHalfOver15Index = MatchAnalyzer.calculateFirstHalfOver15Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
-			Double firstHalfBttsIndex = MatchAnalyzer.calculateFirstHalfBttsIndex(homeTeamAnalysisDto, awayTeamAnalysisDto);
-			String recommendedBet = MatchAnalyzer.determineRecommendedBet(over15Index, over25Index, bttsIndex, firstHalfOver05Index);
+			Double over15Index = TeamAnalyzer.calculateOver15Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
+			Double over25Index = TeamAnalyzer.calculateOver25Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
+			Double bttsIndex = TeamAnalyzer.calculateBttsIndex(homeTeamAnalysisDto, awayTeamAnalysisDto);
+			Double over05Index = TeamAnalyzer.calculateOver05Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
+			Double firstHalfOver05Index = TeamAnalyzer.calculateFirstHalfOver05Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
+			Double firstHalfOver15Index = TeamAnalyzer.calculateFirstHalfOver15Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
+			Double firstHalfBttsIndex = TeamAnalyzer.calculateFirstHalfBttsIndex(homeTeamAnalysisDto, awayTeamAnalysisDto);
+			String recommendedBet = TeamAnalyzer.determineRecommendedBet(over15Index, over25Index, bttsIndex, firstHalfOver05Index);
 			List<SofaMatchResponseDetailDto> headToHead = MatchAnalyzer.fetchHeadToHead(sofaHomeId, sofaAwayId);
-
+			if (headToHead.isEmpty()) {
+				log.warn("No head-to-head data found for teams {} vs {}", sofaHomeId, sofaAwayId);
+			}
 			GetAnalystDto.MatchAnalysisDto matchAnalysisDto = GetAnalystDto.MatchAnalysisDto.builder()
 					.match(match)
 					.homeTeamAnalysis(homeTeamAnalysisDto)
