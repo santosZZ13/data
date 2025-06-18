@@ -9,6 +9,7 @@ import org.data.dto.ex.*;
 import org.data.exception.AnalysisProcessingException;
 import org.data.exception.ExternalServiceException;
 import org.data.exception.InvalidRequestException;
+import org.data.exception.TeamNotFoundException;
 import org.data.repository.ex.ExBetRepository;
 import org.data.repository.sofa.SofaRepository;
 import org.data.response.ex.ExBetResponse;
@@ -27,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -139,10 +141,6 @@ public class ExServiceImpl implements ExService {
 
 	@Override
 	public SaveExBetMatchDto.Response saveMatches(SaveExBetMatchDto.Request request, String date) {
-		if (date == null || !date.matches("\\d{4}-\\d{2}-\\d{2}")) {
-			throw new InvalidRequestException("Invalid date format. Expected YYYY-MM-DD.", ErrorCodeRegistry.INVALID_DATE);
-		}
-
 		sofaRepository.getMatchesByDate(date);
 
 		List<ExBetMatchResponseDto> exBetMatchResponseFromDB = exBetRepository.getExBetByDate(date);
@@ -276,18 +274,44 @@ public class ExServiceImpl implements ExService {
 
 		for (Integer teamId : teamIds) {
 			CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-				List<SofaMatchResponseDetailDto> history = sofaCache.getTeamHistory(teamId);
-				if (history == null) {
-					history = sofaApiService.getSofaTeamId(teamId, 10);
-					sofaCache.putTeamHistory(teamId, history);
-				}
-				synchronized (teamHistories) {
-					teamHistories.put(teamId, history);
+				try {
+					List<SofaMatchResponseDetailDto> history = sofaCache.getTeamHistory(teamId);
+					if (history == null) {
+						history = sofaApiService.getSofaTeamId(teamId, 10);
+						if (history == null) {
+							throw new TeamNotFoundException(
+									String.format("No history found for team ID: %d", teamId),
+									ErrorCodeRegistry.NOT_FOUND_EVENT
+							);
+						}
+						sofaCache.putTeamHistory(teamId, history);
+					}
+					synchronized (teamHistories) {
+						teamHistories.put(teamId, history);
+					}
+				} catch (Exception e) {
+					throw new ExternalServiceException(
+							String.format("Failed to fetch history for team ID: %d", teamId),
+							ErrorCodeRegistry.EXTERNAL_SERVICE_ERROR
+					);
 				}
 			}, executorService);
 			futures.add(future);
 		}
-		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+		try {
+			CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+		} catch (CompletionException e) {
+			if (e.getCause() instanceof ExternalServiceException || e.getCause() instanceof TeamNotFoundException) {
+				throw (RuntimeException) e.getCause();
+			}
+
+			throw new ExternalServiceException(
+					ErrorCodeRegistry.EXTERNAL_SERVICE_ERROR,
+					"Failed to fetch team histories",
+					e
+			);
+		}
 		return teamHistories;
 	}
 

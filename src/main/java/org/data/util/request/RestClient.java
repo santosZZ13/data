@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.data.config.ApiConfig;
+import org.data.exception.ExternalServiceException;
 import org.data.exception.exceptionHandler.ApiException;
+import org.data.util.response.ErrorCodeRegistry;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -40,14 +42,17 @@ public class RestClient<T> {
 			ResponseEntity<String> response = restTemplate.exchange(url, method, requestEntity, String.class);
 
 			if (!response.getStatusCode().is2xxSuccessful()) {
-//				throw new ApiException(
-//						"API request failed with status: " + response.getStatusCode(),
-//						String.valueOf(response.getStatusCode().value())
-//				);
+				throw new ExternalServiceException(
+						"API request failed with status: " + response.getStatusCode(),
+						ErrorCodeRegistry.EXTERNAL_SERVICE_ERROR
+				);
 			}
 
 			if (response.getBody() == null) {
-//				throw new ApiException("API response body is null", String.valueOf(response.getStatusCode().value()), null);
+				throw new ExternalServiceException(
+						"API response body is null",
+						ErrorCodeRegistry.EXTERNAL_SERVICE_ERROR
+				);
 			}
 
 			log.info("API request successful, parsing response...");
@@ -55,11 +60,18 @@ public class RestClient<T> {
 
 		} catch (RestClientException e) {
 			log.error("Error during API request: {}", e.getMessage(), e);
-//			throw new ApiException("Failed to execute API request", String.valueOf(500), e);
+			throw new ExternalServiceException(
+					ErrorCodeRegistry.EXTERNAL_SERVICE_ERROR,
+					"Failed to execute API request",
+					e
+			);
 		} catch (Exception e) {
 			log.error("Error parsing API response: {}", e.getMessage(), e);
-//			throw new ApiException("Failed to parse API response", String.valueOf(500), e);
+			throw new ExternalServiceException(
+					ErrorCodeRegistry.EXTERNAL_SERVICE_ERROR,
+					"Failed to parse API response",
+					e
+			);
 		}
-		return null;
 	}
 }

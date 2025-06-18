@@ -124,6 +124,23 @@
             <artifactId>caffeine</artifactId>
             <version>3.1.8</version>
         </dependency>
+        <!-- Spring Retry -->
+        <dependency>
+            <groupId>org.springframework.retry</groupId>
+            <artifactId>spring-retry</artifactId>
+<!--            <version>2.0.6</version>-->
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-aspects</artifactId>
+<!--            <version>6.1.12</version>-->
+        </dependency>
+        <!-- Sentry -->
+<!--        <dependency>-->
+<!--            <groupId>io.sentry</groupId>-->
+<!--            <artifactId>sentry-spring-boot-starter</artifactId>-->
+<!--            <version>7.14.0</version>-->
+<!--        </dependency>-->
     </dependencies>
 
     <build>

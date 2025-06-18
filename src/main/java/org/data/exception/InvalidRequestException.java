@@ -1,8 +1,11 @@
 package org.data.exception;
 
 import org.data.exception.exceptionHandler.ApiException;
+import org.data.util.annotation.ErrorStatus;
 import org.data.util.response.ErrorCodeRegistry;
+import org.springframework.http.HttpStatus;
 
+@ErrorStatus(HttpStatus.BAD_REQUEST)
 public class InvalidRequestException extends ApiException {
 	public InvalidRequestException(String message, ErrorCodeRegistry errorCode) {
 		super(message, errorCode);

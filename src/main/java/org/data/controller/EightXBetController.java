@@ -1,8 +1,10 @@
 package org.data.controller;
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.data.dto.ex.*;
 import org.data.service.ex.ExService;
+import org.data.util.annotation.ValidDate;
 import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -42,12 +44,13 @@ public class EightXBetController {
 
 
 	@PostMapping("/matches")
-	public SaveExBetMatchDto.Response saveMatches(@RequestParam String date, @RequestBody SaveExBetMatchDto.Request request) {
+	public SaveExBetMatchDto.Response saveMatches(@RequestParam("date") @ValidDate String date,
+												  @RequestBody SaveExBetMatchDto.Request request) {
 		return exService.saveMatches(request, date);
 	}
 
 	@PostMapping("/analyst")
-	public GetAnalystDto.Response getAnalyst(@RequestBody GetAnalystDto.Request request) {
+	public GetAnalystDto.Response getAnalyst(@RequestBody @Valid GetAnalystDto.Request request) {
 		return exService.getAnalyst(request);
 	}
 }
