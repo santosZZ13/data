@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class FieldErrorWrapper {
+public class FieldErrorResponse {
 	private String errorCode;
 	private String field;
 	private String message;

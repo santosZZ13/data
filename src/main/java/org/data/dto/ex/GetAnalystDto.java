@@ -1,5 +1,7 @@
 package org.data.dto.ex;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,6 +16,8 @@ public interface GetAnalystDto {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class Request {
+		@NotNull(message = "Matches cannot be null")
+		@NotEmpty(message = "Matches cannot be empty")
 		private List<ExBetMatchResponseDto> matches;
 	}
 

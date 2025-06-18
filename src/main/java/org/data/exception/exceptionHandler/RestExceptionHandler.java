@@ -7,7 +7,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -23,63 +22,54 @@ import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
 @ControllerAdvice
 @Log4j2
-public class CustomRestExceptionHandler extends ResponseEntityExceptionHandler {
+public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
 	@ExceptionHandler({Exception.class})
-	public ResponseEntity<Object> handAll(@NotNull Exception ex, WebRequest request, HttpServletResponse response) {
+	public ResponseEntity<Object> handAll(Exception ex,
+										  WebRequest request,
+										  HttpServletResponse response) {
+		log.error("Unexpected error occurred", ex);
 		ResponseError responseError = ResponseError.builder()
-				.code("")
-				.shortDesc(ex.getMessage())
-				.message(ex.getMessage())
+				.code("INTERNAL_ERROR")
+				.message("An unexpected error occurred. Please try again later.")
 				.build();
-		return new ResponseEntity<>(
-				responseError,
-				new HttpHeaders(),
-				INTERNAL_SERVER_ERROR
-		);
+		return new ResponseEntity<>(responseError, new HttpHeaders(), INTERNAL_SERVER_ERROR);
 	}
 
 
 	@ExceptionHandler({ApiException.class})
 	public ResponseEntity<Object> handlerApiException(@NotNull ApiException ex, WebRequest request) {
 		final String code = ex.getCode();
-		final String shortDesc = ex.getShortDesc();
 		final String message = ex.getMessage();
 		ResponseError responseError = ResponseError.builder()
 				.code(code)
-				.shortDesc(shortDesc)
 				.message(message)
 				.build();
-		return new ResponseEntity<>(GenericResponseSuccessWrapper.builder()
-				.success(Boolean.FALSE)
-				.data(responseError)
-				.build(), new HttpHeaders(), BAD_REQUEST);
+		return new ResponseEntity<>(responseError, new HttpHeaders(), BAD_REQUEST);
 	}
+
 
 	@Override
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(@NotNull MethodArgumentNotValidException ex,
 																  @NotNull HttpHeaders headers,
 																  @NotNull HttpStatusCode status, @NotNull WebRequest request) {
 		BindingResult bindingResult = ex.getBindingResult();
-		List<FieldError> fieldErrors = bindingResult.getFieldErrors();
-		List<FieldErrorWrapper> fieldErrorWrappers = new ArrayList<>();
-
+		List<org.springframework.validation.FieldError> fieldErrors = bindingResult.getFieldErrors();
+		List<FieldErrorResponse> fieldErrorResponseWrappers = new ArrayList<>();
 		fieldErrors.forEach(fieldError -> {
-			FieldErrorWrapper fieldErrorWrapper = new FieldErrorWrapper();
+			FieldErrorResponse fieldErrorResponseWrapper = new FieldErrorResponse();
 			String errorCode = getErrorCode(fieldError.getArguments());
-			fieldErrorWrapper.setErrorCode(errorCode);
-			fieldErrorWrapper.setField(fieldError.getField());
-			fieldErrorWrapper.setMessage(fieldError.getDefaultMessage());
-			fieldErrorWrappers.add(fieldErrorWrapper);
+			fieldErrorResponseWrapper.setErrorCode(errorCode);
+			fieldErrorResponseWrapper.setField(fieldError.getField());
+			fieldErrorResponseWrapper.setMessage(fieldError.getDefaultMessage());
+			fieldErrorResponseWrappers.add(fieldErrorResponseWrapper);
 		});
 
-		ResponseEntity<GenericResponseErrorWrapper> validationFailed = ResponseEntity.badRequest().body(GenericResponseErrorWrapper
-				.builder()
-				.errors(fieldErrorWrappers)
+		log.warn("Validation failed: {}", fieldErrorResponseWrappers);
+		return new ResponseEntity<>(ArgumentNotValidResponse.builder()
+				.errors(fieldErrorResponseWrappers)
 				.message("Validation failed")
-				.build());
-
-		return new ResponseEntity<>(validationFailed, new HttpHeaders(), BAD_REQUEST);
+				.build(), new HttpHeaders(), BAD_REQUEST);
 	}
 
 	private String getErrorCode(Object[] arguments) {

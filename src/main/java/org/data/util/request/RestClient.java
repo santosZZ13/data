@@ -40,15 +40,14 @@ public class RestClient<T> {
 			ResponseEntity<String> response = restTemplate.exchange(url, method, requestEntity, String.class);
 
 			if (!response.getStatusCode().is2xxSuccessful()) {
-				throw new ApiException(
-						"API request failed with status: " + response.getStatusCode(),
-						String.valueOf(response.getStatusCode().value()),
-						response.getBody()
-				);
+//				throw new ApiException(
+//						"API request failed with status: " + response.getStatusCode(),
+//						String.valueOf(response.getStatusCode().value())
+//				);
 			}
 
 			if (response.getBody() == null) {
-				throw new ApiException("API response body is null", String.valueOf(response.getStatusCode().value()), null);
+//				throw new ApiException("API response body is null", String.valueOf(response.getStatusCode().value()), null);
 			}
 
 			log.info("API request successful, parsing response...");
@@ -56,10 +55,11 @@ public class RestClient<T> {
 
 		} catch (RestClientException e) {
 			log.error("Error during API request: {}", e.getMessage(), e);
-			throw new ApiException("Failed to execute API request", String.valueOf(500), e.getMessage(), e);
+//			throw new ApiException("Failed to execute API request", String.valueOf(500), e);
 		} catch (Exception e) {
 			log.error("Error parsing API response: {}", e.getMessage(), e);
-			throw new ApiException("Failed to parse API response", String.valueOf(500), e.getMessage(), e);
+//			throw new ApiException("Failed to parse API response", String.valueOf(500), e);
 		}
+		return null;
 	}
 }

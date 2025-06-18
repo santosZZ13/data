@@ -2,22 +2,20 @@ package org.data.exception.exceptionHandler;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.data.util.response.ErrorCodeRegistry;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class ApiException extends RuntimeException {
 	private final String code;
-	private final String shortDesc;
 
-	public ApiException(String message, String code, String shortDesc) {
+	public ApiException(String message, ErrorCodeRegistry errorCode) {
 		super(message);
-		this.code = code;
-		this.shortDesc = shortDesc;
+		this.code = errorCode.getCode();
 	}
 
-	public ApiException(String code, String shortDesc, String message, Throwable cause) {
+	public ApiException(ErrorCodeRegistry errorCode, String message, Throwable cause) {
 		super(message, cause);
-		this.code = code;
-		this.shortDesc = shortDesc;
+		this.code = errorCode.getCode();
 	}
 }

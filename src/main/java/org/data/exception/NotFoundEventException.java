@@ -1,13 +1,14 @@
 package org.data.exception;
 
 import org.data.exception.exceptionHandler.ApiException;
+import org.data.util.response.ErrorCodeRegistry;
 
 public class NotFoundEventException extends ApiException {
-	public NotFoundEventException(String message, String code, String shortDesc) {
-		super(message, code, shortDesc);
+	public NotFoundEventException(String message, ErrorCodeRegistry errorCode) {
+		super(message, errorCode);
 	}
 
-	public NotFoundEventException(String code, String shortDesc, String message, Throwable cause) {
-		super(code, shortDesc, message, cause);
+	public NotFoundEventException(ErrorCodeRegistry errorCode, String message, Throwable cause) {
+		super(errorCode, message, cause);
 	}
 }

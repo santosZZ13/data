@@ -1,13 +1,13 @@
 package org.data.exception.exceptionHandler;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
-@AllArgsConstructor
 @Builder
-public class ResponseError {
-	private String code;
+public class ArgumentNotValidResponse {
 	private String message;
+	private List<FieldErrorResponse> errors;
 }

@@ -6,6 +6,9 @@ import lombok.extern.log4j.Log4j2;
 import org.data.cache.SofaCache;
 import org.data.dto.common.*;
 import org.data.dto.ex.*;
+import org.data.exception.AnalysisProcessingException;
+import org.data.exception.ExternalServiceException;
+import org.data.exception.InvalidRequestException;
 import org.data.repository.ex.ExBetRepository;
 import org.data.repository.sofa.SofaRepository;
 import org.data.response.ex.ExBetResponse;
@@ -15,6 +18,7 @@ import org.data.util.LevenshteinMatcher;
 import org.data.util.NormalizeTeamName;
 import org.data.util.analyzer.MatchAnalyzer;
 import org.data.util.analyzer.TeamAnalyzer;
+import org.data.util.response.ErrorCodeRegistry;
 import org.data.util.service.SofaApiService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -136,7 +140,7 @@ public class ExServiceImpl implements ExService {
 	@Override
 	public SaveExBetMatchDto.Response saveMatches(SaveExBetMatchDto.Request request, String date) {
 		if (date == null || !date.matches("\\d{4}-\\d{2}-\\d{2}")) {
-			throw new IllegalArgumentException("Invalid date format. Expected YYYY-MM-DD.");
+			throw new InvalidRequestException("Invalid date format. Expected YYYY-MM-DD.", ErrorCodeRegistry.INVALID_DATE);
 		}
 
 		sofaRepository.getMatchesByDate(date);
@@ -161,17 +165,112 @@ public class ExServiceImpl implements ExService {
 
 	@Override
 	public GetAnalystDto.Response getAnalyst(GetAnalystDto.Request request) {
-		List<GetAnalystDto.MatchAnalysisDto> analyzedMatches = new ArrayList<>();
-		List<ExBetMatchResponseDto> matches = request.getMatches();
+		try {
+			if (request.getMatches() == null || request.getMatches().isEmpty()) {
+				throw new InvalidRequestException("Matches list cannot be null or empty", ErrorCodeRegistry.INVALID_REQUEST);
+			}
+			List<ExBetMatchResponseDto> matches = request.getMatches();
+			List<GetAnalystDto.MatchAnalysisDto> analyzedMatches = new ArrayList<>();
+			Set<Integer> teamIds = getIds(matches);
+			Map<Integer, List<SofaMatchResponseDetailDto>> teamHistories = getHistories(teamIds);
 
-		Set<Integer> teamIds = matches.stream()
-				.flatMap(match -> Stream.of(
-						match.getSofaData().getSofaHomeId(),
-						match.getSofaData().getSofaAwayId())
-				)
+			for (ExBetMatchResponseDto match : matches) {
+				if (match.getSofaData() == null) {
+					log.warn("No SofaScore data for match: {} vs {}", match.getHomeName(), match.getAwayName());
+					continue;
+				}
+
+				Integer sofaHomeId = match.getSofaData().getSofaHomeId();
+				Integer sofaAwayId = match.getSofaData().getSofaAwayId();
+				if (sofaHomeId == null || sofaAwayId == null) {
+					log.warn("Missing team IDs for match: {} vs {}", match.getHomeName(), match.getAwayName());
+					continue;
+				}
+
+				List<SofaMatchResponseDetailDto> historiesForHome = teamHistories.getOrDefault(sofaHomeId, List.of());
+				List<SofaMatchResponseDetailDto> historiesForAway = teamHistories.getOrDefault(sofaAwayId, List.of());
+
+				GetAnalystDto.TeamAnalysisDto homeTeamAnalysisDto = getTeamAnalysis(sofaHomeId, match, historiesForHome);
+				GetAnalystDto.TeamAnalysisDto awayTeamAnalysisDto = getTeamAnalysis(sofaAwayId, match, historiesForAway);
+
+				Double over05Index = TeamAnalyzer.calculateOver05Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
+				Double over15Index = TeamAnalyzer.calculateOver15Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
+				Double over25Index = TeamAnalyzer.calculateOver25Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
+				Double bttsIndex = TeamAnalyzer.calculateBttsIndex(homeTeamAnalysisDto, awayTeamAnalysisDto);
+				Double firstHalfOver05Index = TeamAnalyzer.calculateFirstHalfOver05Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
+				Double firstHalfOver15Index = TeamAnalyzer.calculateFirstHalfOver15Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
+				Double firstHalfBttsIndex = TeamAnalyzer.calculateFirstHalfBttsIndex(homeTeamAnalysisDto, awayTeamAnalysisDto);
+				String recommendedBet = TeamAnalyzer.determineRecommendedBet(over15Index, over25Index, bttsIndex, firstHalfOver05Index);
+				List<SofaMatchResponseDetailDto> headToHead = fetchHeadToHead(sofaHomeId, sofaAwayId);
+				if (headToHead.isEmpty()) {
+					log.warn("No head-to-head data found for teams {} vs {}", sofaHomeId, sofaAwayId);
+				}
+				GetAnalystDto.MatchAnalysisDto matchAnalysisDto = GetAnalystDto.MatchAnalysisDto.builder()
+						.match(match)
+						.homeTeamAnalysis(homeTeamAnalysisDto)
+						.awayTeamAnalysis(awayTeamAnalysisDto)
+						.over05Index(over05Index)
+						.over15Index(over15Index)
+						.over25Index(over25Index)
+						.bttsIndex(bttsIndex)
+						.firstHalfOver05Index(firstHalfOver05Index)
+						.firstHalfOver15Index(firstHalfOver15Index)
+						.firstHalfBttsIndex(firstHalfBttsIndex)
+//					.matchPriority(match.getTournamentId()) // Giả định tournamentId
+//					.headToHead(headToHeadDtos)
+						.recommendedBet(recommendedBet)
+						.build();
+				analyzedMatches.add(matchAnalysisDto);
+			}
+			return GetAnalystDto.Response.builder()
+					.analyzedMatches(analyzedMatches)
+					.build();
+		} catch (ExternalServiceException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new AnalysisProcessingException("Failed to process match analysis", ErrorCodeRegistry.ANALYSIS_ERROR, e);
+		}
+
+	}
+
+	private GetAnalystDto.TeamAnalysisDto getTeamAnalysis(Integer teamId,
+														  ExBetMatchResponseDto match,
+														  List<SofaMatchResponseDetailDto> histories) {
+		GetAnalystDto.TeamAnalysisDto analysisDto = null;
+		try {
+			if (histories == null || histories.isEmpty()) {
+				analysisDto = GetAnalystDto.TeamAnalysisDto.builder()
+						.teamId(teamId)
+						.totalMatchesAnalyzed(0)
+						.build();
+			} else {
+				GetAnalystDto.TeamStats statsHomeSofa = calculateStats(histories, teamId);
+				List<GetAnalystDto.RecentMatchDto> recentMatchesHomeSofa = convertRecentMatches(histories, teamId);
+				String teamHomeNameSofa = match.getSofaData().getSofaHomeName();
+				analysisDto = GetAnalystDto.TeamAnalysisDto.builder()
+						.teamId(teamId)
+						.teamName(teamHomeNameSofa)
+						.stats(statsHomeSofa)
+						.totalMatchesAnalyzed(histories.size())
+						.recentMatches(recentMatchesHomeSofa)
+						.build();
+			}
+			return analysisDto;
+		} catch (RuntimeException ex) {
+			log.warn("Error in getting the analysis for teamId: {}", teamId);
+			throw new RuntimeException(String.format("Error in getting the analysis for teamId: %s", teamId));
+		}
+	}
+
+
+	private Set<Integer> getIds(List<ExBetMatchResponseDto> matches) {
+		return matches.stream()
+				.flatMap(match -> Stream.of(match.getSofaData().getSofaHomeId(), match.getSofaData().getSofaAwayId()))
 				.filter(Objects::nonNull)
 				.collect(Collectors.toSet());
+	}
 
+	private Map<Integer, List<SofaMatchResponseDetailDto>> getHistories(Set<Integer> teamIds) {
 		Map<Integer, List<SofaMatchResponseDetailDto>> teamHistories = new HashMap<>();
 		List<CompletableFuture<Void>> futures = new ArrayList<>();
 
@@ -189,53 +288,7 @@ public class ExServiceImpl implements ExService {
 			futures.add(future);
 		}
 		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-
-
-		for (ExBetMatchResponseDto match : matches) {
-			Integer sofaHomeId = match.getSofaData().getSofaHomeId();
-			Integer sofaAwayId = match.getSofaData().getSofaAwayId();
-			if (sofaHomeId == null || sofaAwayId == null) {
-				continue; // Bỏ qua nếu không có sofa data
-			}
-
-			List<SofaMatchResponseDetailDto> sofaMatchesByHomeId = teamHistories.getOrDefault(sofaHomeId, List.of());
-			List<SofaMatchResponseDetailDto> sofaMatchesByAwayId = teamHistories.getOrDefault(sofaAwayId, List.of());
-
-			GetAnalystDto.TeamAnalysisDto homeTeamAnalysisDto = MatchAnalyzer.analyzeTeam(sofaHomeId, sofaMatchesByHomeId);
-			GetAnalystDto.TeamAnalysisDto awayTeamAnalysisDto = MatchAnalyzer.analyzeTeam(sofaAwayId, sofaMatchesByAwayId);
-
-			Double over15Index = TeamAnalyzer.calculateOver15Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
-			Double over25Index = TeamAnalyzer.calculateOver25Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
-			Double bttsIndex = TeamAnalyzer.calculateBttsIndex(homeTeamAnalysisDto, awayTeamAnalysisDto);
-			Double over05Index = TeamAnalyzer.calculateOver05Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
-			Double firstHalfOver05Index = TeamAnalyzer.calculateFirstHalfOver05Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
-			Double firstHalfOver15Index = TeamAnalyzer.calculateFirstHalfOver15Index(homeTeamAnalysisDto, awayTeamAnalysisDto);
-			Double firstHalfBttsIndex = TeamAnalyzer.calculateFirstHalfBttsIndex(homeTeamAnalysisDto, awayTeamAnalysisDto);
-			String recommendedBet = TeamAnalyzer.determineRecommendedBet(over15Index, over25Index, bttsIndex, firstHalfOver05Index);
-			List<SofaMatchResponseDetailDto> headToHead = MatchAnalyzer.fetchHeadToHead(sofaHomeId, sofaAwayId);
-			if (headToHead.isEmpty()) {
-				log.warn("No head-to-head data found for teams {} vs {}", sofaHomeId, sofaAwayId);
-			}
-			GetAnalystDto.MatchAnalysisDto matchAnalysisDto = GetAnalystDto.MatchAnalysisDto.builder()
-					.match(match)
-					.homeTeamAnalysis(homeTeamAnalysisDto)
-					.awayTeamAnalysis(awayTeamAnalysisDto)
-					.over05Index(over05Index)
-					.over15Index(over15Index)
-					.over25Index(over25Index)
-					.bttsIndex(bttsIndex)
-					.firstHalfOver05Index(firstHalfOver05Index)
-					.firstHalfOver15Index(firstHalfOver15Index)
-					.firstHalfBttsIndex(firstHalfBttsIndex)
-//					.matchPriority(match.getTournamentId()) // Giả định tournamentId
-//					.headToHead(headToHeadDtos)
-					.recommendedBet(recommendedBet)
-					.build();
-			analyzedMatches.add(matchAnalysisDto);
-		}
-		return GetAnalystDto.Response.builder()
-				.analyzedMatches(analyzedMatches)
-				.build();
+		return teamHistories;
 	}
 
 	private void matchingMatches(List<ExBetMatchResponseDto> exBetMatchResponseDto) {

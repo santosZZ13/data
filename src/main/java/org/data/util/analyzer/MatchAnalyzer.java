@@ -10,43 +10,9 @@ import java.util.stream.Collectors;
 
 public class MatchAnalyzer {
 	/**
-	 * Phân tích lịch sử trận đấu của một đội.
-	 */
-	public static GetAnalystDto.TeamAnalysisDto analyzeTeam(Integer teamId, List<SofaMatchResponseDetailDto> history) {
-		if (history == null || history.isEmpty()) {
-			return GetAnalystDto.TeamAnalysisDto.builder()
-					.teamId(teamId)
-					.totalMatchesAnalyzed(0)
-					.build();
-		}
-
-		// Tính chỉ số và lấy thông tin đội
-		GetAnalystDto.TeamStats stats = calculateStats(history, teamId);
-		List<GetAnalystDto.RecentMatchDto> recentMatches = convertRecentMatches(history, teamId);
-		// Lấy tên đội từ trận đầu tiên
-		String teamName = history.stream()
-				.filter(match -> match.getHomeTeam().getId().equals(teamId))
-				.findFirst()
-				.map(match -> match.getHomeTeam().getName())
-				.orElse(history.stream()
-						.filter(match -> match.getAwayTeam().getId().equals(teamId))
-						.findFirst()
-						.map(match -> match.getAwayTeam().getName())
-						.orElse("Unknown"));
-
-		return GetAnalystDto.TeamAnalysisDto.builder()
-				.teamId(teamId)
-				.teamName(teamName)
-				.stats(stats)
-				.totalMatchesAnalyzed(history.size())
-				.recentMatches(recentMatches)
-				.build();
-	}
-
-	/**
 	 * Tính các chỉ số cho danh sách trận đấu.
 	 */
-	private static GetAnalystDto.TeamStats calculateStats(List<SofaMatchResponseDetailDto> history, Integer teamId) {
+	public static GetAnalystDto.TeamStats calculateStats(List<SofaMatchResponseDetailDto> history, Integer teamId) {
 		int size = history.size();
 
 		// Tính tỷ lệ trận đội ghi > 1.5 bàn
