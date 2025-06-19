@@ -1,4 +1,4 @@
-package org.data.response.sf.child;
+package org.data.external.sofa.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
@@ -9,8 +9,9 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class StatusResponse {
-	private Integer code;
-	private String description;
-	private String type;
+public class SeasonResponse {
+	private String name;
+	private String year;
+	private Integer id;
+
 }

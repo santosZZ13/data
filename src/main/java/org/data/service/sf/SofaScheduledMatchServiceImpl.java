@@ -6,7 +6,7 @@ import org.data.dto.sf.GetScheduledMatchesByName;
 import org.data.dto.sf.GetSofaMatchesByDate;
 import org.data.dto.sf.SaveScheduledMatchDto;
 import org.data.repository.sofa.SofaRepository;
-import org.data.response.sf.parent.SofaMatchResponseDetailDto;
+import org.data.external.sofa.model.SofaMatchResponseDetail;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -42,7 +42,7 @@ public class SofaScheduledMatchServiceImpl implements SofaScheduledMatchService 
 
 	@Override
 	public GetSofaMatchesByDate.Response getMatchesByDate(String date) {
-		List<SofaMatchResponseDetailDto> matchesByDate = sofaRepository.getMatchesByDate(date);
+		List<SofaMatchResponseDetail> matchesByDate = sofaRepository.getMatchesByDate(date);
 		return GetSofaMatchesByDate.Response.builder()
 				.matches(matchesByDate)
 				.size(matchesByDate.size())

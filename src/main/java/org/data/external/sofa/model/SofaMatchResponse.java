@@ -1,4 +1,4 @@
-package org.data.response.sf.parent;
+package org.data.external.sofa.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,6 +12,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SofaMatchResponse {
-	private List<SofaMatchResponseDetailDto> events;
+	private List<SofaMatchResponseDetail> events;
 	private Boolean hasNextPage;
 }

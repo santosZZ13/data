@@ -1,4 +1,4 @@
-package org.data.response.sf.child;
+package org.data.external.sofa.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;

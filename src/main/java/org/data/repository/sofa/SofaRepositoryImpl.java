@@ -8,9 +8,9 @@ import org.data.dto.common.TeamDto;
 import org.data.persistent.entity.SofaScheduledMatchEntity;
 import org.data.persistent.repository.SofaScheduledMatchMongoRepository;
 import org.data.repository.team.TeamRepository;
-import org.data.response.sf.parent.SofaMatchResponseDetailDto;
+import org.data.external.sofa.model.SofaMatchResponseDetail;
 import org.data.util.NormalizeTeamName;
-import org.data.util.service.SofaApiService;
+import org.data.external.sofa.service.SofaApiServiceImpl;
 import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.*;
@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 @Log4j2
 public class SofaRepositoryImpl implements SofaRepository {
 	private final SofaScheduledMatchMongoRepository sofaScheduledMatchMongoRepository;
-	private final SofaApiService sofaApiService;
+	private final SofaApiServiceImpl sofaApiServiceImpl;
 	private final TeamRepository teamRepository;
 	private final MongoTemplate mongoTemplate;
 
@@ -35,17 +35,17 @@ public class SofaRepositoryImpl implements SofaRepository {
 	 * @param matchesDto
 	 */
 	@Override
-	public void saveSofaScheduledMatches(List<SofaMatchResponseDetailDto> matchesDto) {
+	public void saveSofaScheduledMatches(List<SofaMatchResponseDetail> matchesDto) {
 		log.info("Starting to save {} matches.", matchesDto.size());
 		if (matchesDto.isEmpty()) {
 			log.warn("No matches to save.");
 			return;
 		}
 //		saveTeamDto(matchesDto);
-		Map<Integer, SofaMatchResponseDetailDto> uniqueMatchesDto = matchesDto.stream()
+		Map<Integer, SofaMatchResponseDetail> uniqueMatchesDto = matchesDto.stream()
 				.filter(matchDto -> matchDto.getMatchId() != null)
 				.collect(Collectors.toMap(
-						SofaMatchResponseDetailDto::getMatchId,
+						SofaMatchResponseDetail::getMatchId,
 						matchDto -> matchDto,
 						(existing, replacement) -> existing, LinkedHashMap::new)
 				);
@@ -66,7 +66,7 @@ public class SofaRepositoryImpl implements SofaRepository {
 				);
 
 		List<SofaScheduledMatchEntity> entitiesToSave = new ArrayList<>();
-		for (SofaMatchResponseDetailDto sofaMatchDto : uniqueMatchesDto.values()) {
+		for (SofaMatchResponseDetail sofaMatchDto : uniqueMatchesDto.values()) {
 			SofaScheduledMatchEntity matchEntityFromDto = SofaMatchConverter.toEntity(sofaMatchDto);
 			SofaScheduledMatchEntity existingEntityMatch = existingMatchEntitiesMap.get(sofaMatchDto.getMatchId());
 
@@ -281,8 +281,8 @@ public class SofaRepositoryImpl implements SofaRepository {
 	}
 
 	@Override
-	public List<SofaMatchResponseDetailDto> getMatchesByDate(String date) {
-		List<SofaMatchResponseDetailDto> sofaMatchByDate = sofaApiService.getSofaMatchByDate(date);
+	public List<SofaMatchResponseDetail> getMatchesByDate(String date) {
+		List<SofaMatchResponseDetail> sofaMatchByDate = sofaApiServiceImpl.getMatchesByDate(date);
 		saveSofaScheduledMatches(sofaMatchByDate);
 		return sofaMatchByDate;
 	}

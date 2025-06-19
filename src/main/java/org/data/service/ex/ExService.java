@@ -10,7 +10,6 @@ public interface ExService {
 
 	SaveMatchesDto.Response saveMatchesFavorite(SaveMatchesDto.Request request, boolean isFavorite);
 
-	MatchWithSofaDto.Response getMatchesWithSofa(MatchWithSofaDto.Request request);
 
 	/**
 	 * Saves match information for a specified date.

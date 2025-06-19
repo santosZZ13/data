@@ -1,4 +1,4 @@
-package org.data.response.sf.parent;
+package org.data.external.sofa.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -6,8 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.data.response.sf.child.StatusResponse;
-import org.data.response.sf.child.*;
 import org.data.util.utils.DateUtils;
 
 import java.time.Instant;
@@ -20,12 +18,12 @@ import java.time.format.DateTimeFormatter;
 @NoArgsConstructor
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SofaMatchResponseDetailDto {
+public class SofaMatchResponseDetail {
 	@JsonProperty("id")
 	private Integer matchId;
 	@JsonProperty("startTimestamp")
 	private Long startTimestamp;
-//	@JsonIgnore // Bỏ qua field này khi serialize nếu không cần
+	//	@JsonIgnore // Bỏ qua field này khi serialize nếu không cần
 	private String startTimeUtc; // Lưu thời gian UTC dưới dạng String
 	private TournamentResponse tournament;
 	private SeasonResponse season;

@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.data.response.sf.parent.SofaMatchResponseDetailDto;
+import org.data.external.sofa.model.SofaMatchResponseDetail;
 
 import java.util.List;
 
@@ -24,6 +24,6 @@ public interface GetSofaMatchesByDate {
 	@NoArgsConstructor
 	class Response {
 		private int size;
-		private List<SofaMatchResponseDetailDto> matches;
+		private List<SofaMatchResponseDetail> matches;
 	}
 }

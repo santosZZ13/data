@@ -10,7 +10,6 @@ public interface ExBetRepository {
 
 	List<ExBetMatchResponseDto> getExBetByDate(String date);
 
-	MatchedMatchesDto getMatchedMatch(ExBetMatchResponseDto exBetMatchResponseDto);
 
 	void updateStatusByIds(List<Integer> matchIds, String status);
 }

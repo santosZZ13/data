@@ -1,4 +1,4 @@
-package org.data.response.ex;
+package org.data.external.ex.modal;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;

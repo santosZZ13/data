@@ -1,4 +1,4 @@
-package org.data.response.ex;
+package org.data.external.ex.modal;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

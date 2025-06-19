@@ -1,8 +1,8 @@
 package org.data.util.analyzer;
 
 import org.data.dto.ex.GetAnalystDto;
-import org.data.response.sf.child.ScoreResponse;
-import org.data.response.sf.parent.SofaMatchResponseDetailDto;
+import org.data.external.sofa.model.ScoreResponse;
+import org.data.external.sofa.model.SofaMatchResponseDetail;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +12,7 @@ public class MatchAnalyzer {
 	/**
 	 * Tính các chỉ số cho danh sách trận đấu.
 	 */
-	public static GetAnalystDto.TeamStats calculateStats(List<SofaMatchResponseDetailDto> history, Integer teamId) {
+	public static GetAnalystDto.TeamStats calculateStats(List<SofaMatchResponseDetail> history, Integer teamId) {
 		int size = history.size();
 
 		// Tính tỷ lệ trận đội ghi > 1.5 bàn
@@ -163,7 +163,7 @@ public class MatchAnalyzer {
 	/**
 	 * Chuyển đổi danh sách trận gần đây
 	 */
-	public static List<GetAnalystDto.RecentMatchDto> convertRecentMatches(List<SofaMatchResponseDetailDto> matches, Integer teamId) {
+	public static List<GetAnalystDto.RecentMatchDto> convertRecentMatches(List<SofaMatchResponseDetail> matches, Integer teamId) {
 		return matches.stream()
 				.limit(5)
 				.map(match -> {
@@ -195,7 +195,7 @@ public class MatchAnalyzer {
 	/**
 	 * Helper method để lấy tổng số bàn thắng
 	 */
-	public static int getTotalGoals(SofaMatchResponseDetailDto match) {
+	public static int getTotalGoals(SofaMatchResponseDetail match) {
 		if (match == null) {
 			return 0;
 		}
@@ -207,28 +207,28 @@ public class MatchAnalyzer {
 	/**
 	 * Helper method để lấy score đội nhà
 	 */
-	public static ScoreResponse getHomeScore(SofaMatchResponseDetailDto match) {
+	public static ScoreResponse getHomeScore(SofaMatchResponseDetail match) {
 		return match.getHomeScore() != null ? match.getHomeScore() : new ScoreResponse();
 	}
 
 	/**
 	 * Helper method để lấy score đội khách
 	 */
-	public static ScoreResponse getAwayScore(SofaMatchResponseDetailDto match) {
+	public static ScoreResponse getAwayScore(SofaMatchResponseDetail match) {
 		return match.getAwayScore() != null ? match.getAwayScore() : new ScoreResponse();
 	}
 
 	/**
 	 * Giả lập lấy lịch sử trận đấu của đội
 	 */
-	public static List<SofaMatchResponseDetailDto> fetchTeamHistory(Integer teamId) {
+	public static List<SofaMatchResponseDetail> fetchTeamHistory(Integer teamId) {
 		return new ArrayList<>();
 	}
 
 	/**
 	 * Giả lập lấy lịch sử đối đầu
 	 */
-	public static List<SofaMatchResponseDetailDto> fetchHeadToHead(Integer homeTeamId, Integer awayTeamId) {
+	public static List<SofaMatchResponseDetail> fetchHeadToHead(Integer homeTeamId, Integer awayTeamId) {
 		return new ArrayList<>();
 	}
 }

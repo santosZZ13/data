@@ -32,10 +32,6 @@ public class EightXBetController {
 		return exService.getMatchesByDate(date, true);
 	}
 
-	@PostMapping("/matchesWithSofa")
-	public MatchWithSofaDto.Response getMatchesWithSofa(@RequestBody MatchWithSofaDto.Request request) {
-		return exService.getMatchesWithSofa(request);
-	}
 
 //	@GetMapping("/matches")
 //	public GetMatchesExByDateDto.Response getMachesByDate(@Param("date") String[] date) {
