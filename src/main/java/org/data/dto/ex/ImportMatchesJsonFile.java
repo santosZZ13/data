@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.data.dto.common.ExBetMatchResponseDto;
+import org.data.dto.common.ExBetMatchDto;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -27,6 +27,6 @@ public interface ImportMatchesJsonFile {
 	class Response {
 		private int totalMatches;
 		private int totalMatchesSaved;
-		private List<ExBetMatchResponseDto> matches;
+		private List<ExBetMatchDto> matches;
 	}
 }

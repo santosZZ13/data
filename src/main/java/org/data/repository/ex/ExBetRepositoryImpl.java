@@ -3,15 +3,11 @@ package org.data.repository.ex;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.data.converter.ExBetMatchConverter;
-import org.data.dto.common.MatchedMatchesDto;
-import org.data.dto.common.SofaMatchDto;
-import org.data.dto.common.ExBetMatchResponseDto;
+import org.data.dto.common.ExBetMatchDto;
 import org.data.persistent.entity.ExBetMatchEntity;
 import org.data.persistent.repository.ExBetCustomRepository;
 import org.data.persistent.repository.ExBetMongoRepository;
 import org.data.repository.sofa.SofaRepository;
-import org.data.util.LevenshteinMatcher;
-import org.data.util.NormalizeTeamName;
 import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -34,17 +30,17 @@ public class ExBetRepositoryImpl implements ExBetRepository {
 	private final SofaRepository sofaRepository;
 	private final MongoTemplate mongoTemplate;
 
-	public void saveExBetMatchDto(List<ExBetMatchResponseDto> exBetMatchResponseDto) {
-		log.info("Starting to save {} matches from EightXBet", exBetMatchResponseDto.size());
-		if (exBetMatchResponseDto.isEmpty()) {
+	public void saveExBetMatchDto(List<ExBetMatchDto> exBetMatchDto) {
+		log.info("Starting to save {} matches from EightXBet", exBetMatchDto.size());
+		if (exBetMatchDto.isEmpty()) {
 			log.warn("No matches to save.");
 			return;
 		}
 
-		Map<Integer, ExBetMatchResponseDto> uniqueMatchesDto = exBetMatchResponseDto.stream()
+		Map<Integer, ExBetMatchDto> uniqueMatchesDto = exBetMatchDto.stream()
 				.filter(matchDto -> matchDto.getId() != 0)
 				.collect(Collectors.toMap(
-						ExBetMatchResponseDto::getId,
+						ExBetMatchDto::getId,
 						matchDto -> matchDto,
 						(existing, replacement) -> existing,
 						LinkedHashMap::new
@@ -59,7 +55,7 @@ public class ExBetRepositoryImpl implements ExBetRepository {
 		Map<Integer, ExBetMatchEntity> entitiesMapFromDB = exBetCustomRepository.getEntitiesMap(matchDtoIds);
 		List<ExBetMatchEntity> entitiesToSave = new ArrayList<>();
 
-		for (ExBetMatchResponseDto matchDto : uniqueMatchesDto.values()) {
+		for (ExBetMatchDto matchDto : uniqueMatchesDto.values()) {
 			ExBetMatchEntity entityMatchFromDto = ExBetMatchConverter.toEntity(matchDto);
 			ExBetMatchEntity existingEntityMatch = entitiesMapFromDB.get(matchDto.getId());
 			if (existingEntityMatch == null || !existingEntityMatch.equals(entityMatchFromDto)) {
@@ -79,7 +75,7 @@ public class ExBetRepositoryImpl implements ExBetRepository {
 
 
 	@Override
-	public List<ExBetMatchResponseDto> getExBetByDate(String date) {
+	public List<ExBetMatchDto> getExBetByDate(String date) {
 		if (date == null || !date.matches("\\d{4}-\\d{2}-\\d{2}")) {
 			log.warn("Invalid date format: {}. Expected YYYY-MM-DD.", date);
 			return List.of();

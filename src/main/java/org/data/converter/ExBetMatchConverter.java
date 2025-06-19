@@ -2,19 +2,16 @@ package org.data.converter;
 
 import lombok.extern.log4j.Log4j2;
 import org.data.dto.common.ExBetMatchCommonDto;
-import org.data.dto.common.ExBetMatchResponseDto;
+import org.data.dto.common.ExBetMatchDto;
 import org.data.persistent.entity.ExBetMatchEntity;
 import org.data.util.utils.DateUtils;
-
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 
 
 @Log4j2
 public class ExBetMatchConverter {
-	public static ExBetMatchResponseDto toDto(ExBetMatchEntity entity) {
+	public static ExBetMatchDto toDto(ExBetMatchEntity entity) {
 		try {
-			return ExBetMatchResponseDto.builder()
+			return ExBetMatchDto.builder()
 					.id(entity.getMatchId())
 					.tournamentName(entity.getTournamentName())
 					.kickoffTime(DateUtils.toTimestampMillis(entity.getKickoffTime()))
@@ -24,19 +21,19 @@ public class ExBetMatchConverter {
 					.awayName(entity.getAwayName())
 					.isFavorite(entity.isFavorite())
 					.status(entity.getStatus())
-					.isMatched(entity.getIsMatched())
-					.sofaData(
-							entity.getSofaDataEntity() == null ? null :
-									ExBetMatchCommonDto.SofaData
-											.builder()
-											.sofaMatchId(entity.getSofaDataEntity().getSofaMatchId())
-											.sofaHomeId(entity.getSofaDataEntity().getSofaHomeId())
-											.sofaHomeName(entity.getSofaDataEntity().getSofaHomeName())
-											.sofaAwayId(entity.getSofaDataEntity().getSofaAwayId())
-											.sofaAwayName(entity.getSofaDataEntity().getSofaAwayName())
-											.build()
-
-					)
+//					.isMatched(entity.getIsMatched())
+//					.sofaData(
+//							entity.getSofaDataEntity() == null ? null :
+//									ExBetMatchCommonDto.SofaData
+//											.builder()
+//											.sofaMatchId(entity.getSofaDataEntity().getSofaMatchId())
+//											.sofaHomeId(entity.getSofaDataEntity().getSofaHomeId())
+//											.sofaHomeName(entity.getSofaDataEntity().getSofaHomeName())
+//											.sofaAwayId(entity.getSofaDataEntity().getSofaAwayId())
+//											.sofaAwayName(entity.getSofaDataEntity().getSofaAwayName())
+//											.build()
+//
+//					)
 					.round(ExBetMatchCommonDto.RoundDto.builder()
 							.roundName(entity.getRound().getRoundName())
 							.roundType(entity.getRound().getRoundType())
@@ -48,7 +45,7 @@ public class ExBetMatchConverter {
 		}
 	}
 
-	public static ExBetMatchEntity toEntity(ExBetMatchResponseDto dto) {
+	public static ExBetMatchEntity toEntity(ExBetMatchDto dto) {
 		try {
 			return ExBetMatchEntity.builder()
 					.matchId(dto.getId())
@@ -60,19 +57,19 @@ public class ExBetMatchConverter {
 					.awayName(dto.getAwayName())
 					.isFavorite(dto.isFavorite())
 					.status(dto.getStatus() == null ? "notstarted" : dto.getStatus())
-					.isMatched(dto.getIsMatched())
-					.sofaDataEntity(
-							dto.getSofaData() == null ? null :
-									ExBetMatchEntity.SofaDataEntity
-											.builder()
-											.sofaMatchId(dto.getSofaData().getSofaMatchId())
-											.sofaHomeId(dto.getSofaData().getSofaHomeId())
-											.sofaHomeName(dto.getSofaData().getSofaHomeName())
-											.sofaAwayId(dto.getSofaData().getSofaAwayId())
-											.sofaAwayName(dto.getSofaData().getSofaAwayName())
-											.build()
-
-					)
+//					.isMatched(dto.getIsMatched())
+//					.sofaDataEntity(
+//							dto.getSofaData() == null ? null :
+//									ExBetMatchEntity.SofaDataEntity
+//											.builder()
+//											.sofaMatchId(dto.getSofaData().getSofaMatchId())
+//											.sofaHomeId(dto.getSofaData().getSofaHomeId())
+//											.sofaHomeName(dto.getSofaData().getSofaHomeName())
+//											.sofaAwayId(dto.getSofaData().getSofaAwayId())
+//											.sofaAwayName(dto.getSofaData().getSofaAwayName())
+//											.build()
+//
+//					)
 					.round(ExBetMatchEntity.RoundEntity.builder()
 							.roundName(dto.getRound().getRoundName())
 							.roundType(dto.getRound().getRoundType())

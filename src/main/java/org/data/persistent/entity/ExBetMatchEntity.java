@@ -26,8 +26,8 @@ public class ExBetMatchEntity extends BaseEntity {
 	private RoundEntity round;
 	private boolean isFavorite;
 	private String status; // notstarted, inprogress, finished
-	private Boolean isMatched;
-	private SofaDataEntity sofaDataEntity;
+//	private Boolean isMatched;
+//	private SofaDataEntity sofaDataEntity;
 
 	@Override
 	public boolean equals(Object o) {
@@ -39,29 +39,29 @@ public class ExBetMatchEntity extends BaseEntity {
 //				Objects.equals(kickoffTime, that.kickoffTime) &&
 				Objects.equals(homeName, that.homeName) &&
 				Objects.equals(awayName, that.awayName) &&
-				Objects.equals(status, that.status) &&
-				Objects.equals(isMatched, that.isMatched);
+				Objects.equals(status, that.status);
+//				Objects.equals(isMatched, that.isMatched);
 	}
 
 	@Override
 	public int hashCode() {
 		return Objects.hash(super.hashCode(), id, matchId, tournamentName, kickoffTime,
 				homeId, homeName, awayId, awayName, round, isFavorite,
-				status, isMatched, sofaDataEntity);
+				status);
 	}
 
-	@Builder
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	public static class SofaDataEntity {
-		private Integer sofaMatchId;
-		private Integer sofaHomeId;
-		private Integer sofaAwayId;
-		private String sofaHomeName;
-		private String sofaAwayName;
-	}
-
+	//	@Builder
+//	@Data
+//	@AllArgsConstructor
+//	@NoArgsConstructor
+//	public static class SofaDataEntity {
+//		private Integer sofaMatchId;
+//		private Integer sofaHomeId;
+//		private Integer sofaAwayId;
+//		private String sofaHomeName;
+//		private String sofaAwayName;
+//	}
+//
 	@Builder
 	@Data
 	@AllArgsConstructor

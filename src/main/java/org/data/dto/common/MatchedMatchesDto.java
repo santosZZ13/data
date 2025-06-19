@@ -19,7 +19,8 @@ public class MatchedMatchesDto {
 	private String awayName;
 	private int homeId;
 	private int awayId;
-	private Boolean isMatched;
 	private String status;
+	private ExBetMatchCommonDto.RoundDto round;
+	private Boolean isMatched;
 	private ExBetMatchCommonDto.SofaData sofaData;
 }

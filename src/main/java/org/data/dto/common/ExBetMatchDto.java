@@ -5,13 +5,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.ZonedDateTime;
-
 @Builder
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ExBetMatchResponseDto {
+public class ExBetMatchDto {
 	private int id;
 	private String tournamentName;
 	private long kickoffTime;
@@ -20,8 +18,8 @@ public class ExBetMatchResponseDto {
 	private int awayId;
 	private String awayName;
 	private String status;
-	private boolean isFavorite;
-	private Boolean isMatched;
 	private ExBetMatchCommonDto.RoundDto round;
-	private ExBetMatchCommonDto.SofaData sofaData;
+	private boolean isFavorite;
+//	private Boolean isMatched;
+//	private ExBetMatchCommonDto.SofaData sofaData;
 }

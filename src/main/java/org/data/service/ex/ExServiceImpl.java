@@ -47,11 +47,11 @@ public class ExServiceImpl implements ExService {
 			ExBetResponse exBetResponse = objectMapper.readValue(inputStream, ExBetResponse.class);
 			ExBetResponse.Data data = exBetResponse.getData();
 			List<ExBetTournamentResponse> tournaments = data.getTournaments();
-			List<ExBetMatchResponseDto> exBetMatchResponseDtos = convertToExBetMatchResponseDto(tournaments);
-			int saveToDB = saveToDB(exBetMatchResponseDtos);
+			List<ExBetMatchDto> exBetMatchDtos = convertToExBetMatchResponseDto(tournaments);
+			int saveToDB = saveToDB(exBetMatchDtos);
 			return ImportMatchesJsonFile.Response.builder()
-					.matches(exBetMatchResponseDtos)
-					.totalMatches(exBetMatchResponseDtos.size())
+					.matches(exBetMatchDtos)
+					.totalMatches(exBetMatchDtos.size())
 					.totalMatchesSaved(saveToDB)
 					.build();
 
@@ -72,9 +72,9 @@ public class ExServiceImpl implements ExService {
 	// Implementation for saving matches will go here
 	@Override
 	public SaveMatchesDto.Response saveMatchesFavorite(SaveMatchesDto.Request request, boolean isFavorite) {
-		List<ExBetMatchResponseDto> matchesDto = request.getMatches();
+		List<ExBetMatchDto> matchesDto = request.getMatches();
 		if (matchesDto != null && !matchesDto.isEmpty()) {
-			for (ExBetMatchResponseDto match : matchesDto) {
+			for (ExBetMatchDto match : matchesDto) {
 				match.setFavorite(isFavorite);
 			}
 			int savedCount = saveToDB(matchesDto);
@@ -89,7 +89,7 @@ public class ExServiceImpl implements ExService {
 	}
 
 
-	private List<ExBetMatchResponseDto> convertToExBetMatchResponseDto(List<ExBetTournamentResponse> tournaments) {
+	private List<ExBetMatchDto> convertToExBetMatchResponseDto(List<ExBetTournamentResponse> tournaments) {
 //		List<ExBetMatchDto> exBetMatchResponseDtos = new ArrayList<>();
 //		for (ExBetTournamentResponse tournament : tournaments) {
 //			String tournamentName = tournament.getName();
@@ -116,7 +116,7 @@ public class ExServiceImpl implements ExService {
 	}
 
 
-	public int saveToDB(List<ExBetMatchResponseDto> exBetMatchResponseDtos) {
+	public int saveToDB(List<ExBetMatchDto> exBetMatchDtos) {
 //		return exBetRepository.saveExBetMatchDto(exBetMatchResponseDtos);
 		return 0;
 	}
@@ -124,49 +124,27 @@ public class ExServiceImpl implements ExService {
 	@Override
 	public SaveExBetMatchDto.Response saveMatches(SaveExBetMatchDto.Request request, String date) {
 		try {
-			if (request == null || request.getMatches() == null) {
-				log.warn("Invalid request: matches list is null");
-				throw new InvalidRequestException(
-						"Matches list cannot be null",
-						ErrorCodeRegistry.INVALID_REQUEST
-				);
-			}
-			log.info("Fetching Sofa matches for date: {}", date);
 			sofaRepository.getMatchesByDate(date);
-
-			log.info("Fetching ExBet matches for date: {}", date);
-			List<ExBetMatchResponseDto> exBetMatchResponseFromDB = exBetRepository.getExBetByDate(date);
-			if (exBetMatchResponseFromDB == null) {
-				log.warn("No ExBet matches found for date: {}", date);
-				exBetMatchResponseFromDB = List.of();
-			}
-
-
+			List<MatchedMatchesDto> matchedMatchesDto = new ArrayList<>();
+			List<ExBetMatchDto> matchesFromDB = exBetRepository.getExBetByDate(date);
 			List<ExBetMatchRequestDto> matchesFromRequest = request.getMatches();
-			SaveExBetMatchDto.Response responses = new SaveExBetMatchDto.Response();
 
 			if (matchesFromRequest == null || matchesFromRequest.isEmpty()) {
-				log.info("No matches in request, processing existing matches for date: {}", date);
-				matchingMatches(exBetMatchResponseFromDB);
-				responses.setMatches(exBetMatchResponseFromDB);
-				return responses;
+				matchedMatchesDto = matchingMatches(matchesFromDB);
+				return SaveExBetMatchDto.Response.builder()
+						.matches(matchedMatchesDto)
+						.build();
 			}
-
-			log.info("Updating ended matches for date: {}", date);
-			updateEndedMatches(matchesFromRequest, exBetMatchResponseFromDB);
-
-			log.info("Saving new matches for date: {}", date);
+			updateEndedMatches(matchesFromRequest, matchesFromDB);
 			exBetRepository.saveExBetMatchDto(toExBetMatchResponseDto(matchesFromRequest));
-
-			log.info("Fetching updated ExBet matches for date: {}", date);
-			List<ExBetMatchResponseDto> exBetMatchesByDate = exBetRepository.getExBetByDate(date);
+			List<ExBetMatchDto> exBetMatchesByDate = exBetRepository.getExBetByDate(date);
 			if (exBetMatchesByDate == null) {
-				log.warn("No updated ExBet matches found for date: {}", date);
 				exBetMatchesByDate = List.of();
 			}
-			matchingMatches(exBetMatchesByDate);
-			responses.setMatches(exBetMatchesByDate);
-			return responses;
+			matchedMatchesDto = matchingMatches(exBetMatchesByDate);
+			return SaveExBetMatchDto.Response.builder()
+					.matches(matchedMatchesDto)
+					.build();
 		} catch (Exception ex) {
 			return null;
 		}
@@ -178,12 +156,12 @@ public class ExServiceImpl implements ExService {
 			if (request.getMatches() == null || request.getMatches().isEmpty()) {
 				throw new InvalidRequestException("Matches list cannot be null or empty", ErrorCodeRegistry.INVALID_REQUEST);
 			}
-			List<ExBetMatchResponseDto> matches = request.getMatches();
+			List<MatchedMatchesDto> matches = request.getMatches();
 			List<GetAnalystDto.MatchAnalysisDto> analyzedMatches = new ArrayList<>();
 			Set<Integer> teamIds = getIds(matches);
 			Map<Integer, List<SofaMatchResponseDetail>> teamHistories = sofaApiService.getHistoriesByTeamIds(teamIds);
 
-			for (ExBetMatchResponseDto match : matches) {
+			for (MatchedMatchesDto match : matches) {
 				if (match.getSofaData() == null) {
 					log.warn("No SofaScore data for match: {} vs {}", match.getHomeName(), match.getAwayName());
 					continue;
@@ -243,7 +221,7 @@ public class ExServiceImpl implements ExService {
 	}
 
 	private GetAnalystDto.TeamAnalysisDto getTeamAnalysis(Integer teamId,
-														  ExBetMatchResponseDto match,
+														  MatchedMatchesDto match,
 														  List<SofaMatchResponseDetail> histories) {
 		GetAnalystDto.TeamAnalysisDto analysisDto = null;
 		try {
@@ -272,7 +250,7 @@ public class ExServiceImpl implements ExService {
 	}
 
 
-	private Set<Integer> getIds(List<ExBetMatchResponseDto> matches) {
+	private Set<Integer> getIds(List<MatchedMatchesDto> matches) {
 		return matches.stream()
 				.flatMap(match -> Stream.of(match.getSofaData().getSofaHomeId(), match.getSofaData().getSofaAwayId()))
 				.filter(Objects::nonNull)
@@ -280,14 +258,16 @@ public class ExServiceImpl implements ExService {
 	}
 
 
-	private void matchingMatches(List<ExBetMatchResponseDto> exBetMatchResponseDto) {
+	private List<MatchedMatchesDto> matchingMatches(List<ExBetMatchDto> exBetMatchDto) {
+		List<MatchedMatchesDto> result = new ArrayList<>();
 		try {
-			if (exBetMatchResponseDto == null || exBetMatchResponseDto.isEmpty()) {
+			if (exBetMatchDto == null || exBetMatchDto.isEmpty()) {
 				log.info("No matches to match with SofaScore data");
-				return;
+				return null;
 			}
 
-			for (ExBetMatchResponseDto dto : exBetMatchResponseDto) {
+			for (ExBetMatchDto dto : exBetMatchDto) {
+				MatchedMatchesDto matchedMatchesDto = new MatchedMatchesDto();
 				String normalizedHomeName = NormalizeTeamName.normalize(dto.getHomeName());
 				String normalizedAwayName = NormalizeTeamName.normalize(dto.getAwayName());
 
@@ -356,15 +336,14 @@ public class ExServiceImpl implements ExService {
 		}
 	}
 
-	private void updateEndedMatches(List<ExBetMatchRequestDto> exBetMatchRequestDto, List<ExBetMatchResponseDto> exBetMatchResponseDtoFromDB) {
+	private void updateEndedMatches(List<ExBetMatchRequestDto> matchesFromRequest, List<ExBetMatchDto> matchesFromDB) {
 		try {
-			List<Integer> requestMatchIds = exBetMatchRequestDto.stream()
+			List<Integer> requestMatchIds = matchesFromRequest.stream()
 					.map(ExBetMatchRequestDto::getId)
-					.filter(Objects::nonNull)
 					.toList();
 
-			List<Integer> endedMatchIds = exBetMatchResponseDtoFromDB.stream()
-					.map(ExBetMatchResponseDto::getId)
+			List<Integer> endedMatchIds = matchesFromDB.stream()
+					.map(ExBetMatchDto::getId)
 					.filter(id -> !requestMatchIds.contains(id))
 					.toList();
 
@@ -383,10 +362,10 @@ public class ExServiceImpl implements ExService {
 	}
 
 
-	private List<ExBetMatchResponseDto> toExBetMatchResponseDto(List<ExBetMatchRequestDto> exBetMatchesRequestDto) {
-		List<ExBetMatchResponseDto> exBetMatchesResponseDto = new ArrayList<>();
+	private List<ExBetMatchDto> toExBetMatchResponseDto(List<ExBetMatchRequestDto> exBetMatchesRequestDto) {
+		List<ExBetMatchDto> exBetMatchesResponseDto = new ArrayList<>();
 		exBetMatchesRequestDto.forEach(exBetMatchRequestDto -> {
-			ExBetMatchResponseDto build = ExBetMatchResponseDto.builder()
+			ExBetMatchDto build = ExBetMatchDto.builder()
 					.id(exBetMatchRequestDto.getId())
 					.tournamentName(exBetMatchRequestDto.getTournamentName())
 					.kickoffTime(exBetMatchRequestDto.getKickoffTime())
@@ -396,8 +375,6 @@ public class ExServiceImpl implements ExService {
 					.awayName(exBetMatchRequestDto.getAwayName())
 					.status("notstarted")
 					.round(exBetMatchRequestDto.getRound())
-					.isMatched(false)
-					.sofaData(null)
 					.build();
 			exBetMatchesResponseDto.add(build);
 		});
