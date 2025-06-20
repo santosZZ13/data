@@ -57,9 +57,9 @@ public class ExBetCustomRepositoryImpl implements ExBetCustomRepository {
 						.set("awayName", entity.getAwayName())
 						.set("isFavorite", entity.isFavorite())
 						.set("round", entity.getRound())
-						.set("status", entity.getStatus())
-						.set("isMatched", entity.getIsMatched())
-						.set("sofaDataEntity", entity.getSofaDataEntity());
+						.set("status", entity.getStatus());
+//						.set("isMatched", entity.getIsMatched())
+//						.set("sofaDataEntity", entity.getSofaDataEntity());
 				bulkOps.upsert(upsertQuery, update);
 			}
 			bulkOps.execute();

@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.ZonedDateTime;
+
 @Builder
 @Data
 @AllArgsConstructor
@@ -12,7 +14,7 @@ import lombok.NoArgsConstructor;
 public class ExBetMatchDto {
 	private int id;
 	private String tournamentName;
-	private long kickoffTime;
+	private ZonedDateTime kickoffTime;
 	private int homeId;
 	private String homeName;
 	private int awayId;

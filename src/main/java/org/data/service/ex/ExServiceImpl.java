@@ -18,6 +18,7 @@ import org.data.util.LevenshteinMatcher;
 import org.data.util.NormalizeTeamName;
 import org.data.util.analyzer.TeamAnalyzer;
 import org.data.util.response.ErrorCodeRegistry;
+import org.data.util.utils.DateUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -259,15 +260,31 @@ public class ExServiceImpl implements ExService {
 
 
 	private List<MatchedMatchesDto> matchingMatches(List<ExBetMatchDto> exBetMatchDto) {
-		List<MatchedMatchesDto> result = new ArrayList<>();
 		try {
 			if (exBetMatchDto == null || exBetMatchDto.isEmpty()) {
 				log.info("No matches to match with SofaScore data");
-				return null;
+				return List.of();
 			}
 
+			List<MatchedMatchesDto> result = new ArrayList<>();
 			for (ExBetMatchDto dto : exBetMatchDto) {
-				MatchedMatchesDto matchedMatchesDto = new MatchedMatchesDto();
+				if (dto.getHomeName() == null || dto.getAwayName() == null) {
+					log.warn("Invalid match data: homeName or awayName is null for match ID {}", dto.getId());
+					continue;
+				}
+
+				MatchedMatchesDto matchedDto = MatchedMatchesDto.builder()
+						.id(dto.getId())
+						.tournamentName(dto.getTournamentName())
+//						.kickoffTime(DateUtils.toUtcZonedDateTime(dto.getKickoffTime()))
+						.homeId(dto.getHomeId())
+						.homeName(dto.getHomeName())
+						.awayId(dto.getAwayId())
+						.awayName(dto.getAwayName())
+						.status(dto.getStatus())
+						.round(dto.getRound())
+						.build();
+
 				String normalizedHomeName = NormalizeTeamName.normalize(dto.getHomeName());
 				String normalizedAwayName = NormalizeTeamName.normalize(dto.getAwayName());
 
@@ -278,8 +295,9 @@ public class ExServiceImpl implements ExService {
 
 				if (candidates == null || candidates.isEmpty()) {
 					log.info("No SofaScore candidates found for match: {} vs {}", dto.getHomeName(), dto.getAwayName());
-					dto.setIsMatched(false);
-					dto.setSofaData(null);
+					matchedDto.setIsMatched(false);
+					matchedDto.setSofaData(null);
+					result.add(matchedDto);
 					continue;
 				}
 
@@ -307,7 +325,7 @@ public class ExServiceImpl implements ExService {
 				}
 
 				if (bestMatch != null) {
-					log.info("Found SofaScore match for 8xbet match: {} vs {} with SofaScore match: {} vs {}",
+					log.info("Found SofaScore match for match: {} vs {} with SofaScore match: {} vs {}",
 							dto.getHomeName(), dto.getAwayName(), bestMatch.getHomeTeam().getName(), bestMatch.getAwayTeam().getName());
 
 					ExBetMatchCommonDto.SofaData sofa = ExBetMatchCommonDto.SofaData.builder()
@@ -318,14 +336,16 @@ public class ExServiceImpl implements ExService {
 							.sofaAwayName(bestMatch.getAwayTeam().getName())
 							.build();
 
-					dto.setSofaData(sofa);
-					dto.setIsMatched(Boolean.TRUE);
+					matchedDto.setSofaData(sofa);
+					matchedDto.setIsMatched(true);
 				} else {
-					log.info("No SofaScore match found for 8xbet match: {} vs {}", dto.getHomeName(), dto.getAwayName());
-					dto.setIsMatched(false);
-					dto.setSofaData(null);
+					log.info("No SofaScore match found for match: {} vs {}", dto.getHomeName(), dto.getAwayName());
+					matchedDto.setIsMatched(false);
+					matchedDto.setSofaData(null);
 				}
+				result.add(matchedDto);
 			}
+			return result;
 		} catch (Exception e) {
 			log.error("Failed to match matches with SofaScore data: {}", e.getMessage(), e);
 			throw new AnalysisProcessingException(
@@ -368,7 +388,7 @@ public class ExServiceImpl implements ExService {
 			ExBetMatchDto build = ExBetMatchDto.builder()
 					.id(exBetMatchRequestDto.getId())
 					.tournamentName(exBetMatchRequestDto.getTournamentName())
-					.kickoffTime(exBetMatchRequestDto.getKickoffTime())
+					.kickoffTime(DateUtils.toUtcZonedDateTime(exBetMatchRequestDto.getKickoffTime()))
 					.homeId(exBetMatchRequestDto.getHomeId())
 					.homeName(exBetMatchRequestDto.getHomeName())
 					.awayId(exBetMatchRequestDto.getAwayId())
