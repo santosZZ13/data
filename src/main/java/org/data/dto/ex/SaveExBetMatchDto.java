@@ -26,6 +26,8 @@ public interface SaveExBetMatchDto {
 		private int total;
 		private int totalMatched;
 		private int totalUnmatched;
+		private int totalSaved;
+		private int totalUpdated;
 		private List<ExBetMatchDto> matches;
 	}
 }
