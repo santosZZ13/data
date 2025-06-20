@@ -5,7 +5,6 @@ import lombok.experimental.SuperBuilder;
 import org.data.persistent.entity.base.BaseEntity;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 
@@ -26,8 +25,8 @@ public class ExBetMatchEntity extends BaseEntity {
 	private RoundEntity round;
 	private boolean isFavorite;
 	private String status; // notstarted, inprogress, finished
-//	private Boolean isMatched;
-//	private SofaDataEntity sofaDataEntity;
+	private Boolean isMatched;
+	private SofaDataEntity sofaDataEntity;
 
 	@Override
 	public boolean equals(Object o) {
@@ -39,8 +38,8 @@ public class ExBetMatchEntity extends BaseEntity {
 //				Objects.equals(kickoffTime, that.kickoffTime) &&
 				Objects.equals(homeName, that.homeName) &&
 				Objects.equals(awayName, that.awayName) &&
-				Objects.equals(status, that.status);
-//				Objects.equals(isMatched, that.isMatched);
+				Objects.equals(status, that.status) &&
+				Objects.equals(isMatched, that.isMatched);
 	}
 
 	@Override
@@ -50,18 +49,18 @@ public class ExBetMatchEntity extends BaseEntity {
 				status);
 	}
 
-	//	@Builder
-//	@Data
-//	@AllArgsConstructor
-//	@NoArgsConstructor
-//	public static class SofaDataEntity {
-//		private Integer sofaMatchId;
-//		private Integer sofaHomeId;
-//		private Integer sofaAwayId;
-//		private String sofaHomeName;
-//		private String sofaAwayName;
-//	}
-//
+	@Builder
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class SofaDataEntity {
+		private Integer sofaMatchId;
+		private Integer sofaHomeId;
+		private Integer sofaAwayId;
+		private String sofaHomeName;
+		private String sofaAwayName;
+	}
+
 	@Builder
 	@Data
 	@AllArgsConstructor

@@ -10,7 +10,7 @@ public interface ExBetMatchCommonDto {
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	public static class SofaData {
+	class SofaData {
 		private Integer sofaMatchId;
 		private Integer sofaHomeId;
 		private Integer sofaAwayId;
@@ -22,7 +22,7 @@ public interface ExBetMatchCommonDto {
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	public static class RoundDto {
+	class RoundDto {
 		private String roundName;
 		private String roundType;
 	}

@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.data.dto.common.ExBetMatchDto;
-import org.data.dto.common.MatchedMatchesDto;
 
 import java.util.List;
 
@@ -19,7 +18,7 @@ public interface GetAnalystDto {
 	class Request {
 		@NotNull(message = "Matches cannot be null")
 		@NotEmpty(message = "Matches cannot be empty")
-		private List<MatchedMatchesDto> matches;
+		private List<ExBetMatchDto> matches;
 	}
 
 	@Builder
@@ -35,7 +34,7 @@ public interface GetAnalystDto {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class MatchAnalysisDto {
-		private MatchedMatchesDto match; // Thông tin trận đấu
+		private ExBetMatchDto match; // Thông tin trận đấu
 		private TeamAnalysisDto homeTeamAnalysis; // Phân tích đội nhà
 		private TeamAnalysisDto awayTeamAnalysis; // Phân tích đội khách
 		private Double over15Index; // Chỉ số Over 1.5

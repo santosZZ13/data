@@ -2,6 +2,8 @@ package org.data.service.ex;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import org.data.dto.common.*;
 import org.data.dto.ex.*;
@@ -125,29 +127,81 @@ public class ExServiceImpl implements ExService {
 	@Override
 	public SaveExBetMatchDto.Response saveMatches(SaveExBetMatchDto.Request request, String date) {
 		try {
-			sofaRepository.getMatchesByDate(date);
-			List<MatchedMatchesDto> matchedMatchesDto = new ArrayList<>();
-			List<ExBetMatchDto> matchesFromDB = exBetRepository.getExBetByDate(date);
-			List<ExBetMatchRequestDto> matchesFromRequest = request.getMatches();
+			// Validate input
+//			if (request == null || request.getMatches() == null) {
+//				log.warn("Invalid request: matches list is null for date {}", date);
+//				throw new InvalidRequestException("Matches list cannot be null", ErrorCodeRegistry.INVALID_REQUEST);
+//			}
+//			if (!date.matches("\\d{4}-\\d{2}-\\d{2}")) {
+//				log.warn("Invalid date format: {}. Expected YYYY-MM-DD", date);
+//				throw new InvalidRequestException("Invalid date format. Expected YYYY-MM-DD", ErrorCodeRegistry.INVALID_REQUEST);
+//			}
 
-			if (matchesFromRequest == null || matchesFromRequest.isEmpty()) {
-				matchedMatchesDto = matchingMatches(matchesFromDB);
-				return SaveExBetMatchDto.Response.builder()
-						.matches(matchedMatchesDto)
-						.build();
+			// Fetch SofaScore matches for the day
+			log.info("Fetching SofaScore matches for date: {}", date);
+			List<SofaMatchResponseDetail> sofaMatches = sofaRepository.getMatchesByDate(date);
+			if (sofaMatches == null) {
+				sofaMatches = List.of();
 			}
+
+			// Fetch ExBet matches from DB
+			log.info("Fetching ExBet matches from DB for date: {}", date);
+			List<ExBetMatchDto> matchesFromDB = exBetRepository.getExBetByDate(date);
+			if (matchesFromDB == null) {
+				matchesFromDB = List.of();
+			}
+
+			// Update ended matches
+			List<ExBetMatchRequestDto> matchesFromRequest = request.getMatches();
 			updateEndedMatches(matchesFromRequest, matchesFromDB);
-			exBetRepository.saveExBetMatchDto(toExBetMatchResponseDto(matchesFromRequest));
-			List<ExBetMatchDto> exBetMatchesByDate = exBetRepository.getExBetByDate(date);
-			if (exBetMatchesByDate == null) {
-				exBetMatchesByDate = List.of();
+
+			// Convert and save new matches
+			List<ExBetMatchDto> newMatches = toExBetMatchResponseDto(matchesFromRequest);
+			if (!newMatches.isEmpty()) {
+				log.info("Saving {} new matches to DB for date: {}", newMatches.size(), date);
+				exBetRepository.saveExBetMatchDto(newMatches);
 			}
-			matchedMatchesDto = matchingMatches(exBetMatchesByDate);
+
+			//  Fetchupdated matches from DB
+			List<ExBetMatchDto> updatedMatches = exBetRepository.getExBetByDate(date);
+			if (updatedMatches == null) {
+				updatedMatches = List.of();
+			}
+
+			// Match with SofaScore and update DB
+			log.info("Matching {} matches with SofaScore data for date: {}", updatedMatches.size(), date);
+			List<ExBetMatchDto> matchedMatches = matchingMatches(updatedMatches, sofaMatches);
+			if (!matchedMatches.isEmpty()) {
+				log.info("Updating {} matches with isMatched and sofaData in DB", matchedMatches.size());
+				exBetRepository.saveExBetMatchDto(matchedMatches);
+			}
+
+			int total = matchedMatches.size();
+			int totalMatched = (int) matchedMatches.stream()
+					.filter(ExBetMatchDto::getIsMatched)
+					.count();
+			int totalUnmatched = total - totalMatched;
+
 			return SaveExBetMatchDto.Response.builder()
-					.matches(matchedMatchesDto)
+					.total(total)
+					.totalMatched(totalMatched)
+					.totalUnmatched(totalUnmatched)
+					.matches(matchedMatches)
 					.build();
-		} catch (Exception ex) {
-			return null;
+
+		} catch (InvalidRequestException e) {
+			log.warn("Invalid request for date {}: {}", date, e.getMessage());
+			throw e;
+		} catch (ExternalServiceException e) {
+			log.error("External service error for date {}: {}", date, e.getMessage(), e);
+			throw e;
+		} catch (Exception e) {
+			log.error("Failed to save matches for date {}: {}", date, e.getMessage(), e);
+			throw new AnalysisProcessingException(
+					"Failed to save matches for date: " + date,
+					ErrorCodeRegistry.ANALYSIS_ERROR,
+					e
+			);
 		}
 	}
 
@@ -157,12 +211,12 @@ public class ExServiceImpl implements ExService {
 			if (request.getMatches() == null || request.getMatches().isEmpty()) {
 				throw new InvalidRequestException("Matches list cannot be null or empty", ErrorCodeRegistry.INVALID_REQUEST);
 			}
-			List<MatchedMatchesDto> matches = request.getMatches();
+			List<ExBetMatchDto> matches = request.getMatches();
 			List<GetAnalystDto.MatchAnalysisDto> analyzedMatches = new ArrayList<>();
 			Set<Integer> teamIds = getIds(matches);
 			Map<Integer, List<SofaMatchResponseDetail>> teamHistories = sofaApiService.getHistoriesByTeamIds(teamIds);
 
-			for (MatchedMatchesDto match : matches) {
+			for (ExBetMatchDto match : matches) {
 				if (match.getSofaData() == null) {
 					log.warn("No SofaScore data for match: {} vs {}", match.getHomeName(), match.getAwayName());
 					continue;
@@ -222,7 +276,7 @@ public class ExServiceImpl implements ExService {
 	}
 
 	private GetAnalystDto.TeamAnalysisDto getTeamAnalysis(Integer teamId,
-														  MatchedMatchesDto match,
+														  ExBetMatchDto match,
 														  List<SofaMatchResponseDetail> histories) {
 		GetAnalystDto.TeamAnalysisDto analysisDto = null;
 		try {
@@ -251,7 +305,7 @@ public class ExServiceImpl implements ExService {
 	}
 
 
-	private Set<Integer> getIds(List<MatchedMatchesDto> matches) {
+	private Set<Integer> getIds(List<ExBetMatchDto> matches) {
 		return matches.stream()
 				.flatMap(match -> Stream.of(match.getSofaData().getSofaHomeId(), match.getSofaData().getSofaAwayId()))
 				.filter(Objects::nonNull)
@@ -259,55 +313,50 @@ public class ExServiceImpl implements ExService {
 	}
 
 
-	private List<MatchedMatchesDto> matchingMatches(List<ExBetMatchDto> exBetMatchDto) {
+	private List<ExBetMatchDto> matchingMatches(List<ExBetMatchDto> exBetMatchDtos, List<SofaMatchResponseDetail> sofaMatches) {
 		try {
-			if (exBetMatchDto == null || exBetMatchDto.isEmpty()) {
-				log.info("No matches to match with SofaScore data");
+			if (exBetMatchDtos == null || exBetMatchDtos.isEmpty()) {
+				log.info("No ExBet matches to match with SofaScore data");
 				return List.of();
 			}
+			if (sofaMatches == null || sofaMatches.isEmpty()) {
+				log.info("No SofaScore matches available for matching");
+				exBetMatchDtos.forEach(dto -> {
+					dto.setIsMatched(false);
+					dto.setSofaData(null);
+				});
+				return exBetMatchDtos;
+			}
 
-			List<MatchedMatchesDto> result = new ArrayList<>();
-			for (ExBetMatchDto dto : exBetMatchDto) {
+			// Normalize SofaScore team names once
+			Map<SofaMatchResponseDetail, Pair<String, String>> sofaTeamNames = sofaMatches.stream()
+					.collect(Collectors.toMap(
+							sofaMatch -> sofaMatch,
+							sofaMatch -> new Pair<>(
+									NormalizeTeamName.normalize(sofaMatch.getHomeTeam().getName()),
+									NormalizeTeamName.normalize(sofaMatch.getAwayTeam().getName())
+							)
+					));
+
+			for (ExBetMatchDto dto : exBetMatchDtos) {
 				if (dto.getHomeName() == null || dto.getAwayName() == null) {
 					log.warn("Invalid match data: homeName or awayName is null for match ID {}", dto.getId());
+					dto.setIsMatched(false);
+					dto.setSofaData(null);
 					continue;
 				}
-
-				MatchedMatchesDto matchedDto = MatchedMatchesDto.builder()
-						.id(dto.getId())
-						.tournamentName(dto.getTournamentName())
-//						.kickoffTime(DateUtils.toUtcZonedDateTime(dto.getKickoffTime()))
-						.homeId(dto.getHomeId())
-						.homeName(dto.getHomeName())
-						.awayId(dto.getAwayId())
-						.awayName(dto.getAwayName())
-						.status(dto.getStatus())
-						.round(dto.getRound())
-						.build();
 
 				String normalizedHomeName = NormalizeTeamName.normalize(dto.getHomeName());
 				String normalizedAwayName = NormalizeTeamName.normalize(dto.getAwayName());
 
-				List<SofaMatchDto> candidates = sofaRepository.findSofaMatchByName(normalizedHomeName);
-				if (candidates == null || candidates.isEmpty()) {
-					candidates = sofaRepository.findSofaMatchByName(normalizedAwayName);
-				}
-
-				if (candidates == null || candidates.isEmpty()) {
-					log.info("No SofaScore candidates found for match: {} vs {}", dto.getHomeName(), dto.getAwayName());
-					matchedDto.setIsMatched(false);
-					matchedDto.setSofaData(null);
-					result.add(matchedDto);
-					continue;
-				}
-
-				SofaMatchDto bestMatch = null;
+				SofaMatchResponseDetail bestMatch = null;
 				int minDistance = Integer.MAX_VALUE;
 				int threshold = 3;
 
-				for (SofaMatchDto sofaMatch : candidates) {
-					String sofaHome = sofaMatch.getHomeTeam().getNormalizedName();
-					String sofaAway = sofaMatch.getAwayTeam().getNormalizedName();
+				for (Map.Entry<SofaMatchResponseDetail, Pair<String, String>> entry : sofaTeamNames.entrySet()) {
+					SofaMatchResponseDetail sofaMatch = entry.getKey();
+					String sofaHome = entry.getValue().getFirst();
+					String sofaAway = entry.getValue().getSecond();
 
 					int homeDistance = LevenshteinMatcher.calculateLevenshteinDistance(normalizedHomeName, sofaHome);
 					int awayDistance = LevenshteinMatcher.calculateLevenshteinDistance(normalizedHomeName, sofaAway);
@@ -336,16 +385,15 @@ public class ExServiceImpl implements ExService {
 							.sofaAwayName(bestMatch.getAwayTeam().getName())
 							.build();
 
-					matchedDto.setSofaData(sofa);
-					matchedDto.setIsMatched(true);
+					dto.setSofaData(sofa);
+					dto.setIsMatched(true);
 				} else {
 					log.info("No SofaScore match found for match: {} vs {}", dto.getHomeName(), dto.getAwayName());
-					matchedDto.setIsMatched(false);
-					matchedDto.setSofaData(null);
+					dto.setIsMatched(false);
+					dto.setSofaData(null);
 				}
-				result.add(matchedDto);
 			}
-			return result;
+			return exBetMatchDtos;
 		} catch (Exception e) {
 			log.error("Failed to match matches with SofaScore data: {}", e.getMessage(), e);
 			throw new AnalysisProcessingException(
@@ -382,23 +430,53 @@ public class ExServiceImpl implements ExService {
 	}
 
 
-	private List<ExBetMatchDto> toExBetMatchResponseDto(List<ExBetMatchRequestDto> exBetMatchesRequestDto) {
-		List<ExBetMatchDto> exBetMatchesResponseDto = new ArrayList<>();
-		exBetMatchesRequestDto.forEach(exBetMatchRequestDto -> {
-			ExBetMatchDto build = ExBetMatchDto.builder()
-					.id(exBetMatchRequestDto.getId())
-					.tournamentName(exBetMatchRequestDto.getTournamentName())
-					.kickoffTime(DateUtils.toUtcZonedDateTime(exBetMatchRequestDto.getKickoffTime()))
-					.homeId(exBetMatchRequestDto.getHomeId())
-					.homeName(exBetMatchRequestDto.getHomeName())
-					.awayId(exBetMatchRequestDto.getAwayId())
-					.awayName(exBetMatchRequestDto.getAwayName())
-					.status("notstarted")
-					.round(exBetMatchRequestDto.getRound())
-					.build();
-			exBetMatchesResponseDto.add(build);
-		});
+	private List<ExBetMatchDto> toExBetMatchResponseDto(List<ExBetMatchRequestDto> matchesRequests) {
+		try {
+			if (matchesRequests == null || matchesRequests.isEmpty()) {
+				return List.of();
+			}
+			List<ExBetMatchDto> matchesDto = new ArrayList<>();
+			for (ExBetMatchRequestDto reqDto : matchesRequests) {
+				if (reqDto.getId() == 0 || reqDto.getHomeName() == null || reqDto.getAwayName() == null) {
+					log.warn("Invalid match data: {}", reqDto);
+					throw new InvalidRequestException(
+							"Invalid match data: ID, homeName, or awayName is null or invalid",
+							ErrorCodeRegistry.INVALID_REQUEST
+					);
+				}
+				ExBetMatchDto dto = ExBetMatchDto.builder()
+						.id(reqDto.getId())
+						.tournamentName(reqDto.getTournamentName())
+						.kickoffTime(reqDto.getKickoffTime())
+						.homeId(reqDto.getHomeId())
+						.homeName(reqDto.getHomeName())
+						.awayId(reqDto.getAwayId())
+						.awayName(reqDto.getAwayName())
+						.status("notstarted")
+						.round(reqDto.getRound())
+						.isMatched(false)
+						.sofaData(null)
+						.build();
+				matchesDto.add(dto);
+			}
+			return matchesDto;
+		} catch (InvalidRequestException e) {
+			throw e;
+		} catch (Exception e) {
+			log.error("Failed to convert match request to response DTO: {}", e.getMessage(), e);
+			throw new AnalysisProcessingException(
+					"Failed to convert match request to response DTO",
+					ErrorCodeRegistry.ANALYSIS_ERROR,
+					e
+			);
+		}
+	}
 
-		return exBetMatchesResponseDto;
+	@Getter
+	@Setter
+	@AllArgsConstructor
+	private static class Pair<F, S> {
+		private final F first;
+		private final S second;
 	}
 }

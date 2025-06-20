@@ -4,9 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.data.dto.common.ExBetMatchRequestDto;
 import org.data.dto.common.ExBetMatchDto;
-import org.data.dto.common.MatchedMatchesDto;
+import org.data.dto.common.ExBetMatchRequestDto;
 
 import java.util.List;
 
@@ -24,6 +23,9 @@ public interface SaveExBetMatchDto {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class Response {
-		private List<MatchedMatchesDto> matches;
+		private int total;
+		private int totalMatched;
+		private int totalUnmatched;
+		private List<ExBetMatchDto> matches;
 	}
 }

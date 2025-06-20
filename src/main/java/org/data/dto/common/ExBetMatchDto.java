@@ -14,7 +14,7 @@ import java.time.ZonedDateTime;
 public class ExBetMatchDto {
 	private int id;
 	private String tournamentName;
-	private ZonedDateTime kickoffTime;
+	private long kickoffTime;
 	private int homeId;
 	private String homeName;
 	private int awayId;
@@ -22,6 +22,6 @@ public class ExBetMatchDto {
 	private String status;
 	private ExBetMatchCommonDto.RoundDto round;
 	private boolean isFavorite;
-//	private Boolean isMatched;
-//	private ExBetMatchCommonDto.SofaData sofaData;
+	private Boolean isMatched;
+	private ExBetMatchCommonDto.SofaData sofaData;
 }
