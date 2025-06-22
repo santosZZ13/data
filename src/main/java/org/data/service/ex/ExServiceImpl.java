@@ -20,7 +20,6 @@ import org.data.util.LevenshteinMatcher;
 import org.data.util.NormalizeTeamName;
 import org.data.util.analyzer.TeamAnalyzer;
 import org.data.util.response.ErrorCodeRegistry;
-import org.data.util.utils.DateUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -288,10 +287,11 @@ public class ExServiceImpl implements ExService {
 			} else {
 				GetAnalystDto.TeamStats statsHomeSofa = calculateStats(histories, teamId);
 				List<GetAnalystDto.RecentMatchDto> recentMatchesHomeSofa = convertRecentMatches(histories, teamId);
-				String teamHomeNameSofa = match.getSofaData().getSofaHomeName();
+				String name = Objects.equals(match.getSofaData().getSofaHomeId(), teamId) ? match.getSofaData().getSofaHomeName() :
+						match.getSofaData().getSofaAwayName();
 				analysisDto = GetAnalystDto.TeamAnalysisDto.builder()
 						.teamId(teamId)
-						.teamName(teamHomeNameSofa)
+						.teamName(name)
 						.stats(statsHomeSofa)
 						.totalMatchesAnalyzed(histories.size())
 						.recentMatches(recentMatchesHomeSofa)
@@ -327,6 +327,13 @@ public class ExServiceImpl implements ExService {
 				});
 				return exBetMatchDtos;
 			}
+			log.info("Fetched {} SofaScore matches for date: {}", sofaMatches.size());
+			sofaMatches.forEach(match ->
+					log.info("Match ID {}: homeScore={}, awayScore={}",
+							match.getMatchId(),
+							match.getHomeScore() != null ? match.getHomeScore() : "null",
+							match.getAwayScore() != null ? match.getAwayScore() : "null"));
+
 
 			// Normalize SofaScore team names once
 			Map<SofaMatchResponseDetail, Pair<String, String>> sofaTeamNames = sofaMatches.stream()
@@ -385,8 +392,40 @@ public class ExServiceImpl implements ExService {
 							.sofaAwayName(bestMatch.getAwayTeam().getName())
 							.build();
 
+					ExBetMatchCommonDto.ScoreData homeScoreData = ExBetMatchCommonDto.ScoreData.builder()
+							.period1(bestMatch.getHomeScore().getPeriod1())
+							.period2(bestMatch.getHomeScore().getPeriod2())
+							.current(bestMatch.getHomeScore().getCurrent())
+							.display(bestMatch.getHomeScore().getDisplay())
+							.normalTime(bestMatch.getHomeScore().getNormalTime())
+							.extra1(bestMatch.getHomeScore().getExtra1())
+							.extra2(bestMatch.getHomeScore().getExtra2())
+							.overtime(bestMatch.getHomeScore().getOvertime())
+							.penalties(bestMatch.getHomeScore().getPenalties())
+							.scoreEmpty(bestMatch.getHomeScore().getScoreEmpty())
+							.aggregated(bestMatch.getHomeScore().getAggregated())
+							.build();
+
+					ExBetMatchCommonDto.ScoreData awayScoreData = ExBetMatchCommonDto.ScoreData.builder()
+							.period1(bestMatch.getAwayScore().getPeriod1())
+							.period2(bestMatch.getAwayScore().getPeriod2())
+							.current(bestMatch.getAwayScore().getCurrent())
+							.display(bestMatch.getAwayScore().getDisplay())
+							.normalTime(bestMatch.getAwayScore().getNormalTime())
+							.extra1(bestMatch.getAwayScore().getExtra1())
+							.extra2(bestMatch.getAwayScore().getExtra2())
+							.overtime(bestMatch.getAwayScore().getOvertime())
+							.penalties(bestMatch.getAwayScore().getPenalties())
+							.scoreEmpty(bestMatch.getAwayScore().getScoreEmpty())
+							.aggregated(bestMatch.getAwayScore().getAggregated())
+							.build();
+
+
+					sofa.setHomeScore(homeScoreData);
+					sofa.setAwayScore(awayScoreData);
 					dto.setSofaData(sofa);
 					dto.setIsMatched(true);
+
 				} else {
 					log.info("No SofaScore match found for match: {} vs {}", dto.getHomeName(), dto.getAwayName());
 					dto.setIsMatched(false);

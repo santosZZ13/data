@@ -16,6 +16,8 @@ public interface ExBetMatchCommonDto {
 		private Integer sofaAwayId;
 		private String sofaHomeName;
 		private String sofaAwayName;
+		private ScoreData homeScore;
+		private ScoreData awayScore;
 	}
 
 	@Builder
@@ -25,5 +27,23 @@ public interface ExBetMatchCommonDto {
 	class RoundDto {
 		private String roundName;
 		private String roundType;
+	}
+
+	@Builder
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	class ScoreData {
+		private Integer current;
+		private Integer display;
+		private Integer period1;
+		private Integer period2;
+		private Integer normalTime;
+		private Integer extra1;
+		private Integer extra2;
+		private Integer overtime;
+		private Integer penalties;
+		private Boolean scoreEmpty;
+		private Integer aggregated;
 	}
 }

@@ -4,6 +4,14 @@ import org.data.dto.ex.GetAnalystDto;
 
 public class TeamAnalyzer {
 	/**
+	 * Tính chỉ số Over 0.5
+	 */
+	public static Double calculateOver05Index(GetAnalystDto.TeamAnalysisDto home, GetAnalystDto.TeamAnalysisDto away) {
+		return 0.6 * (home.getStats().getScoringRate() + away.getStats().getScoringRate()) / 2 +
+				0.4 * (home.getStats().getAverageGoalsScored() + away.getStats().getAverageGoalsScored());
+	}
+
+	/**
 	 * Tính chỉ số Over 1.5
 	 */
 	public static Double calculateOver15Index(GetAnalystDto.TeamAnalysisDto home, GetAnalystDto.TeamAnalysisDto away) {
@@ -24,14 +32,6 @@ public class TeamAnalyzer {
 	 */
 	public static Double calculateBttsIndex(GetAnalystDto.TeamAnalysisDto home, GetAnalystDto.TeamAnalysisDto away) {
 		return 0.6 * (home.getStats().getScoringRate() * away.getStats().getScoringRate()) +
-				0.4 * (home.getStats().getAverageGoalsScored() + away.getStats().getAverageGoalsScored());
-	}
-
-	/**
-	 * Tính chỉ số Over 0.5
-	 */
-	public static Double calculateOver05Index(GetAnalystDto.TeamAnalysisDto home, GetAnalystDto.TeamAnalysisDto away) {
-		return 0.6 * (home.getStats().getScoringRate() + away.getStats().getScoringRate()) / 2 +
 				0.4 * (home.getStats().getAverageGoalsScored() + away.getStats().getAverageGoalsScored());
 	}
 

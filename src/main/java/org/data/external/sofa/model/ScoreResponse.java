@@ -1,5 +1,6 @@
 package org.data.external.sofa.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.AllArgsConstructor;
@@ -11,6 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ScoreResponse {
 	private Integer current;
 	private Integer display;
@@ -18,6 +20,7 @@ public class ScoreResponse {
 	private Integer period1;
 	@JsonPropertyDescription("Second Half")
 	private Integer period2;
+	private Integer period3;
 	@JsonPropertyDescription("Full Time")
 	@JsonProperty("normaltime")
 	private Integer normalTime;
