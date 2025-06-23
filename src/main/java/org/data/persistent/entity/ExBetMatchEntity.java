@@ -2,6 +2,7 @@ package org.data.persistent.entity;
 
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.data.dto.common.ExBetMatchCommonDto;
 import org.data.persistent.entity.base.BaseEntity;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -59,6 +60,26 @@ public class ExBetMatchEntity extends BaseEntity {
 		private Integer sofaAwayId;
 		private String sofaHomeName;
 		private String sofaAwayName;
+		private ScoreEntity homeScore;
+		private ScoreEntity awayScore;
+	}
+
+	@Builder
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class ScoreEntity {
+		private Integer current;
+		private Integer display;
+		private Integer period1;
+		private Integer period2;
+		private Integer normalTime;
+		private Integer extra1;
+		private Integer extra2;
+		private Integer overtime;
+		private Integer penalties;
+		private Boolean scoreEmpty;
+		private Integer aggregated;
 	}
 
 	@Builder

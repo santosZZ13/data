@@ -25,6 +25,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -126,22 +130,16 @@ public class ExServiceImpl implements ExService {
 	@Override
 	public SaveExBetMatchDto.Response saveMatches(SaveExBetMatchDto.Request request, String date) {
 		try {
-			// Validate input
-//			if (request == null || request.getMatches() == null) {
-//				log.warn("Invalid request: matches list is null for date {}", date);
-//				throw new InvalidRequestException("Matches list cannot be null", ErrorCodeRegistry.INVALID_REQUEST);
-//			}
-//			if (!date.matches("\\d{4}-\\d{2}-\\d{2}")) {
-//				log.warn("Invalid date format: {}. Expected YYYY-MM-DD", date);
-//				throw new InvalidRequestException("Invalid date format. Expected YYYY-MM-DD", ErrorCodeRegistry.INVALID_REQUEST);
-//			}
-
-			// Fetch SofaScore matches for the day
-			log.info("Fetching SofaScore matches for date: {}", date);
-			List<SofaMatchResponseDetail> sofaMatches = sofaRepository.getMatchesByDate(date);
-			if (sofaMatches == null) {
-				sofaMatches = List.of();
+			if (request == null || request.getMatches() == null) {
+				log.warn("Invalid request: matches list is null for date {}", date);
+				throw new InvalidRequestException("Matches list cannot be null", ErrorCodeRegistry.INVALID_REQUEST);
 			}
+			if (!date.matches("\\d{4}-\\d{2}-\\d{2}")) {
+				log.warn("Invalid date format: {}. Expected YYYY-MM-DD", date);
+				throw new InvalidRequestException("Invalid date format. Expected YYYY-MM-DD", ErrorCodeRegistry.INVALID_REQUEST);
+			}
+
+			ZonedDateTime currentTime = ZonedDateTime.now(); // Thời gian hiện tại
 
 			// Fetch ExBet matches from DB
 			log.info("Fetching ExBet matches from DB for date: {}", date);
@@ -150,43 +148,32 @@ public class ExServiceImpl implements ExService {
 				matchesFromDB = List.of();
 			}
 
-			// Update ended matches
+			// Bước 2: Chuyển đổi và kết hợp dữ liệu từ request
 			List<ExBetMatchRequestDto> matchesFromRequest = request.getMatches();
-			updateEndedMatches(matchesFromRequest, matchesFromDB);
+			if (matchesFromRequest.isEmpty()) {
+				log.info("No new matches from request, returning matches from DB: {}", matchesFromDB.size());
+				return processAndReturnResponse(matchesFromDB, currentTime);
+			}
 
-			// Convert and save new matches
+			Map<Integer, ExBetMatchDto> combinedMatches = matchesFromDB.stream()
+					.collect(Collectors.toMap(ExBetMatchDto::getId, dto -> dto, (existing, replacement) -> existing));
 			List<ExBetMatchDto> newMatches = toExBetMatchResponseDto(matchesFromRequest);
-			if (!newMatches.isEmpty()) {
-				log.info("Saving {} new matches to DB for date: {}", newMatches.size(), date);
-				exBetRepository.saveExBetMatchDto(newMatches);
+			for (ExBetMatchDto newMatch : newMatches) {
+				combinedMatches.putIfAbsent(newMatch.getId(), newMatch);
 			}
 
-			//  Fetchupdated matches from DB
-			List<ExBetMatchDto> updatedMatches = exBetRepository.getExBetByDate(date);
-			if (updatedMatches == null) {
-				updatedMatches = List.of();
-			}
+			List<ExBetMatchDto> allMatches = new ArrayList<>(combinedMatches.values());
+			updateMatchStatuses(allMatches, currentTime);
 
-			// Match with SofaScore and update DB
-			log.info("Matching {} matches with SofaScore data for date: {}", updatedMatches.size(), date);
-			List<ExBetMatchDto> matchedMatches = matchingMatches(updatedMatches, sofaMatches);
+			log.info("Matching {} matches with SofaScore data for date: {}", allMatches.size(), date);
+			List<ExBetMatchDto> matchedMatches = matchingMatches(allMatches, date);
+
 			if (!matchedMatches.isEmpty()) {
-				log.info("Updating {} matches with isMatched and sofaData in DB", matchedMatches.size());
+				log.info("Saving {} matches to DB for date: {}", matchedMatches.size(), date);
 				exBetRepository.saveExBetMatchDto(matchedMatches);
 			}
 
-			int total = matchedMatches.size();
-			int totalMatched = (int) matchedMatches.stream()
-					.filter(ExBetMatchDto::getIsMatched)
-					.count();
-			int totalUnmatched = total - totalMatched;
-
-			return SaveExBetMatchDto.Response.builder()
-					.total(total)
-					.totalMatched(totalMatched)
-					.totalUnmatched(totalUnmatched)
-					.matches(matchedMatches)
-					.build();
+			return processAndReturnResponse(matchedMatches, currentTime);
 
 		} catch (InvalidRequestException e) {
 			log.warn("Invalid request for date {}: {}", date, e.getMessage());
@@ -202,6 +189,71 @@ public class ExServiceImpl implements ExService {
 					e
 			);
 		}
+	}
+
+	private void updateMatchStatuses(List<ExBetMatchDto> matches, ZonedDateTime currentTime) {
+		matches.forEach(match -> {
+			// Chuyển long (timestamp giây) thành Instant
+			Instant instant = Instant.ofEpochSecond(match.getKickoffTime()); // Sử dụng giây
+			ZonedDateTime kickoffTime = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault());
+			ZonedDateTime endTime = kickoffTime.plusMinutes(95); // Giả định trận đấu 95 phút
+
+			if (currentTime.isBefore(kickoffTime)) {
+				match.setStatus("scheduled");
+			} else if (currentTime.isBefore(endTime)) {
+				match.setStatus("inprogress");
+			} else {
+				match.setStatus("ended");
+			}
+		});
+	}
+
+	private SaveExBetMatchDto.Response processAndReturnResponse(List<ExBetMatchDto> matches, ZonedDateTime currentTime) {
+		List<ExBetMatchDto> matchedNeedUpdate = matches.stream()
+				.filter(match -> {
+					boolean isUpdateMatch = match.getIsMatched() == null || !match.getIsMatched() || match.getSofaData() == null
+							|| match.getSofaData().getHomeScore() == null || match.getSofaData().getAwayScore() == null;
+
+					return isUpdateMatch;
+				})
+				.toList();
+
+		if (!matchedNeedUpdate.isEmpty()) {
+			List<ExBetMatchDto> updatedMatches = matchingMatches(matchedNeedUpdate, currentTime.format(DateTimeFormatter.ISO_LOCAL_DATE));
+			if (!updatedMatches.isEmpty()) {
+				exBetRepository.saveExBetMatchDto(updatedMatches);
+				matches.removeIf(matchedNeedUpdate::contains); // Loại bỏ các trận cũ
+				matches.addAll(updatedMatches); // Thêm các trận đã cập nhật
+			}
+		}
+
+		int total = matches.size();
+		int totalMatched = (int) matches.stream()
+				.filter(ExBetMatchDto::getIsMatched)
+				.count();
+		int totalUnmatched = total - totalMatched;
+
+		// Cập nhật trạng thái ended cho các trận cũ không còn trong request
+		List<Integer> currentMatchIds = matches.stream()
+				.map(ExBetMatchDto::getId)
+				.toList();
+		List<ExBetMatchDto> allDbMatches = exBetRepository.getExBetByDate(currentTime.format(DateTimeFormatter.ISO_LOCAL_DATE));
+		List<Integer> endedMatchIds = allDbMatches.stream()
+				.filter(m -> !currentMatchIds.contains(m.getId()) && "inprogress".equals(m.getStatus()))
+				.map(ExBetMatchDto::getId)
+				.collect(Collectors.toList());
+
+		if (!endedMatchIds.isEmpty()) {
+			log.info("Updating status to 'ended' for {} matches", endedMatchIds.size());
+			exBetRepository.updateStatusByIds(endedMatchIds, "ended");
+		}
+
+		return SaveExBetMatchDto.Response.builder()
+				.total(total)
+				.totalMatched(totalMatched)
+				.totalUnmatched(totalUnmatched)
+				.matches(matches)
+				.build();
 	}
 
 	@Override
@@ -313,12 +365,10 @@ public class ExServiceImpl implements ExService {
 	}
 
 
-	private List<ExBetMatchDto> matchingMatches(List<ExBetMatchDto> exBetMatchDtos, List<SofaMatchResponseDetail> sofaMatches) {
+	private List<ExBetMatchDto> matchingMatches(List<ExBetMatchDto> exBetMatchDtos, String date) {
 		try {
-			if (exBetMatchDtos == null || exBetMatchDtos.isEmpty()) {
-				log.info("No ExBet matches to match with SofaScore data");
-				return List.of();
-			}
+			log.info("Fetching SofaScore matches for date: {}", date);
+			List<SofaMatchResponseDetail> sofaMatches = sofaRepository.getMatchesByDate(date);
 			if (sofaMatches == null || sofaMatches.isEmpty()) {
 				log.info("No SofaScore matches available for matching");
 				exBetMatchDtos.forEach(dto -> {
@@ -327,13 +377,11 @@ public class ExServiceImpl implements ExService {
 				});
 				return exBetMatchDtos;
 			}
-			log.info("Fetched {} SofaScore matches for date: {}", sofaMatches.size());
-			sofaMatches.forEach(match ->
-					log.info("Match ID {}: homeScore={}, awayScore={}",
-							match.getMatchId(),
-							match.getHomeScore() != null ? match.getHomeScore() : "null",
-							match.getAwayScore() != null ? match.getAwayScore() : "null"));
 
+			if (exBetMatchDtos == null || exBetMatchDtos.isEmpty()) {
+				log.info("No ExBet matches to match with SofaScore data");
+				return List.of();
+			}
 
 			// Normalize SofaScore team names once
 			Map<SofaMatchResponseDetail, Pair<String, String>> sofaTeamNames = sofaMatches.stream()
@@ -419,7 +467,6 @@ public class ExServiceImpl implements ExService {
 							.scoreEmpty(bestMatch.getAwayScore().getScoreEmpty())
 							.aggregated(bestMatch.getAwayScore().getAggregated())
 							.build();
-
 
 					sofa.setHomeScore(homeScoreData);
 					sofa.setAwayScore(awayScoreData);
