@@ -40,7 +40,8 @@ public class ExBetMatchEntity extends BaseEntity {
 				Objects.equals(homeName, that.homeName) &&
 				Objects.equals(awayName, that.awayName) &&
 				Objects.equals(status, that.status) &&
-				Objects.equals(isMatched, that.isMatched);
+				Objects.equals(isMatched, that.isMatched) &&
+				Objects.equals(sofaDataEntity, that.sofaDataEntity);
 	}
 
 	@Override
@@ -62,6 +63,26 @@ public class ExBetMatchEntity extends BaseEntity {
 		private String sofaAwayName;
 		private ScoreEntity homeScore;
 		private ScoreEntity awayScore;
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			SofaDataEntity that = (SofaDataEntity) o;
+			return
+					Objects.equals(sofaHomeId, that.sofaHomeId) &&
+					Objects.equals(sofaAwayId, that.sofaAwayId) &&
+					Objects.equals(sofaHomeName, that.sofaHomeName) &&
+					Objects.equals(sofaAwayName, that.sofaAwayName) &&
+					Objects.equals(homeScore, that.homeScore) &&
+					Objects.equals(awayScore, that.awayScore);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(sofaMatchId, sofaHomeId, sofaAwayId, sofaHomeName, sofaAwayName, homeScore, awayScore);
+		}
 	}
 
 	@Builder
@@ -80,6 +101,25 @@ public class ExBetMatchEntity extends BaseEntity {
 		private Integer penalties;
 		private Boolean scoreEmpty;
 		private Integer aggregated;
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			ScoreEntity that = (ScoreEntity) o;
+			return Objects.equals(current, that.current) &&
+					Objects.equals(display, that.display) &&
+					Objects.equals(period1, that.period1) &&
+					Objects.equals(period2, that.period2) &&
+					Objects.equals(normalTime, that.normalTime) &&
+					Objects.equals(extra1, that.extra1) &&
+					Objects.equals(extra2, that.extra2) &&
+					Objects.equals(overtime, that.overtime) &&
+					Objects.equals(penalties, that.penalties) &&
+					Objects.equals(scoreEmpty, that.scoreEmpty) &&
+					Objects.equals(aggregated, that.aggregated);
+		}
 	}
 
 	@Builder

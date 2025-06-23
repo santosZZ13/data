@@ -4,7 +4,6 @@ import lombok.extern.log4j.Log4j2;
 import org.data.dto.common.ExBetMatchCommonDto;
 import org.data.dto.common.ExBetMatchDto;
 import org.data.persistent.entity.ExBetMatchEntity;
-import org.data.persistent.entity.SofaScheduledMatchEntity;
 import org.data.util.utils.DateUtils;
 
 
@@ -32,6 +31,40 @@ public class ExBetMatchConverter {
 											.sofaHomeName(entity.getSofaDataEntity().getSofaHomeName())
 											.sofaAwayId(entity.getSofaDataEntity().getSofaAwayId())
 											.sofaAwayName(entity.getSofaDataEntity().getSofaAwayName())
+											.homeScore(
+													entity.getSofaDataEntity().getHomeScore() == null ? null :
+															ExBetMatchCommonDto.ScoreData
+																	.builder()
+																	.current(entity.getSofaDataEntity().getHomeScore().getCurrent())
+																	.display(entity.getSofaDataEntity().getHomeScore().getDisplay())
+																	.period1(entity.getSofaDataEntity().getHomeScore().getPeriod1())
+																	.period2(entity.getSofaDataEntity().getHomeScore().getPeriod2())
+																	.normalTime(entity.getSofaDataEntity().getHomeScore().getNormalTime())
+																	.extra1(entity.getSofaDataEntity().getHomeScore().getExtra1())
+																	.extra2(entity.getSofaDataEntity().getHomeScore().getExtra2())
+																	.overtime(entity.getSofaDataEntity().getHomeScore().getOvertime())
+																	.penalties(entity.getSofaDataEntity().getHomeScore().getPenalties())
+																	.scoreEmpty(entity.getSofaDataEntity().getHomeScore().getScoreEmpty())
+																	.aggregated(entity.getSofaDataEntity().getHomeScore().getAggregated())
+																	.build()
+											)
+											.awayScore(
+													entity.getSofaDataEntity().getAwayScore() == null ? null :
+															ExBetMatchCommonDto.ScoreData
+																	.builder()
+																	.current(entity.getSofaDataEntity().getAwayScore().getCurrent())
+																	.display(entity.getSofaDataEntity().getAwayScore().getDisplay())
+																	.period1(entity.getSofaDataEntity().getAwayScore().getPeriod1())
+																	.period2(entity.getSofaDataEntity().getAwayScore().getPeriod2())
+																	.normalTime(entity.getSofaDataEntity().getAwayScore().getNormalTime())
+																	.extra1(entity.getSofaDataEntity().getAwayScore().getExtra1())
+																	.extra2(entity.getSofaDataEntity().getAwayScore().getExtra2())
+																	.overtime(entity.getSofaDataEntity().getAwayScore().getOvertime())
+																	.penalties(entity.getSofaDataEntity().getAwayScore().getPenalties())
+																	.scoreEmpty(entity.getSofaDataEntity().getAwayScore().getScoreEmpty())
+																	.aggregated(entity.getSofaDataEntity().getAwayScore().getAggregated())
+																	.build()
+											)
 											.build()
 
 					)
