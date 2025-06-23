@@ -29,6 +29,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -139,7 +140,6 @@ public class ExServiceImpl implements ExService {
 				throw new InvalidRequestException("Invalid date format. Expected YYYY-MM-DD", ErrorCodeRegistry.INVALID_REQUEST);
 			}
 
-			ZonedDateTime currentTime = ZonedDateTime.now(); // Thời gian hiện tại
 
 			// Fetch ExBet matches from DB
 			log.info("Fetching ExBet matches from DB for date: {}", date);
@@ -152,7 +152,7 @@ public class ExServiceImpl implements ExService {
 			List<ExBetMatchRequestDto> matchesFromRequest = request.getMatches();
 			if (matchesFromRequest.isEmpty()) {
 				log.info("No new matches from request, returning matches from DB: {}", matchesFromDB.size());
-				return processAndReturnResponse(matchesFromDB, currentTime);
+				return processAndReturnResponse(matchesFromDB);
 			}
 
 			Map<Integer, ExBetMatchDto> combinedMatches = matchesFromDB.stream()
@@ -163,7 +163,7 @@ public class ExServiceImpl implements ExService {
 			}
 
 			List<ExBetMatchDto> allMatches = new ArrayList<>(combinedMatches.values());
-			updateMatchStatuses(allMatches, currentTime);
+			updateMatchStatuses(allMatches);
 
 			log.info("Matching {} matches with SofaScore data for date: {}", allMatches.size(), date);
 			List<ExBetMatchDto> matchedMatches = matchingMatches(allMatches, date);
@@ -173,7 +173,7 @@ public class ExServiceImpl implements ExService {
 				exBetRepository.saveExBetMatchDto(matchedMatches);
 			}
 
-			return processAndReturnResponse(matchedMatches, currentTime);
+			return processAndReturnResponse(matchedMatches);
 
 		} catch (InvalidRequestException e) {
 			log.warn("Invalid request for date {}: {}", date, e.getMessage());
@@ -191,12 +191,21 @@ public class ExServiceImpl implements ExService {
 		}
 	}
 
-	private void updateMatchStatuses(List<ExBetMatchDto> matches, ZonedDateTime currentTime) {
+
+	/**
+	 * //TODO: change timeEnded to timeStatus
+	 * // scheduled: in 2 hours
+	 * // ended: 18 minutes ago
+	 * ...
+	 *
+	 * @param matches
+	 */
+	private void updateMatchStatuses(List<ExBetMatchDto> matches) {
+		ZonedDateTime currentTime = ZonedDateTime.now();
 		matches.forEach(match -> {
-			// Chuyển long (timestamp giây) thành Instant
-			Instant instant = Instant.ofEpochSecond(match.getKickoffTime()); // Sử dụng giây
-			ZonedDateTime kickoffTime = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault());
-			ZonedDateTime endTime = kickoffTime.plusMinutes(95); // Giả định trận đấu 95 phút
+			Instant instant = Instant.ofEpochSecond(match.getKickoffTime());
+			ZonedDateTime kickoffTime = ZonedDateTime.ofInstant(instant, ZoneId.of("Asia/Ho_Chi_Minh"));
+			ZonedDateTime endTime = kickoffTime.plusMinutes(95);
 
 			if (currentTime.isBefore(kickoffTime)) {
 				match.setStatus("scheduled");
@@ -205,11 +214,33 @@ public class ExServiceImpl implements ExService {
 			} else {
 				match.setStatus("ended");
 			}
+
+			// Thêm field timeEnd (không lưu vào DB)
+			if ("ended".equals(match.getStatus())) {
+				match.setTimeEnded(calculateTimeEnd(kickoffTime, currentTime)); // Tính thời gian kết thúc
+			} else {
+				match.setTimeEnded(null);
+			}
 		});
+
 	}
 
-	private SaveExBetMatchDto.Response processAndReturnResponse(List<ExBetMatchDto> matches, ZonedDateTime currentTime) {
-		List<ExBetMatchDto> matchedNeedUpdate = matches.stream()
+	//TODO: change to
+	private String calculateTimeEnd(ZonedDateTime kickoffTime, ZonedDateTime currentTime) {
+		ZonedDateTime endTime = kickoffTime.plusMinutes(95);
+		long minutesAgo = ChronoUnit.MINUTES.between(endTime, currentTime);
+		if (minutesAgo > 0) {
+			return minutesAgo + " minutes ago";
+		} else if (minutesAgo == 0) {
+			return "just ended";
+		} else {
+			return "in future"; // Trường hợp hiếm (currentTime < endTime)
+		}
+	}
+
+	private SaveExBetMatchDto.Response processAndReturnResponse(List<ExBetMatchDto> matches) {
+		ZonedDateTime currentTime = ZonedDateTime.now();
+		List<ExBetMatchDto> matchesToMatch = matches.stream()
 				.filter(match -> {
 					boolean isUpdateMatch = match.getIsMatched() == null || !match.getIsMatched() || match.getSofaData() == null
 							|| match.getSofaData().getHomeScore() == null || match.getSofaData().getAwayScore() == null;
@@ -218,14 +249,19 @@ public class ExServiceImpl implements ExService {
 				})
 				.toList();
 
-		if (!matchedNeedUpdate.isEmpty()) {
-			List<ExBetMatchDto> updatedMatches = matchingMatches(matchedNeedUpdate, currentTime.format(DateTimeFormatter.ISO_LOCAL_DATE));
-			if (!updatedMatches.isEmpty()) {
-				exBetRepository.saveExBetMatchDto(updatedMatches);
-				matches.removeIf(matchedNeedUpdate::contains); // Loại bỏ các trận cũ
-				matches.addAll(updatedMatches); // Thêm các trận đã cập nhật
-			}
+		List<ExBetMatchDto> updatedMatches = new ArrayList<>();
+		if (!matchesToMatch.isEmpty()) {
+			updatedMatches = matchingMatches(matchesToMatch, currentTime.format(DateTimeFormatter.ISO_LOCAL_DATE));
 		}
+
+		if (!updatedMatches.isEmpty()) {
+			matches.removeIf(matchesToMatch::contains);
+			matches.addAll(updatedMatches);
+		}
+
+		// Cập nhật lại trạng thái dựa trên currentTime
+		updateMatchStatuses(matches);
+		exBetRepository.saveExBetMatchDto(matches);
 
 		int total = matches.size();
 		int totalMatched = (int) matches.stream()
@@ -233,13 +269,15 @@ public class ExServiceImpl implements ExService {
 				.count();
 		int totalUnmatched = total - totalMatched;
 
-		// Cập nhật trạng thái ended cho các trận cũ không còn trong request
+		// Cập nhật trạng thái "ended" cho các trận không còn trong request và đã kết thúc
 		List<Integer> currentMatchIds = matches.stream()
 				.map(ExBetMatchDto::getId)
 				.toList();
+
 		List<ExBetMatchDto> allDbMatches = exBetRepository.getExBetByDate(currentTime.format(DateTimeFormatter.ISO_LOCAL_DATE));
+
 		List<Integer> endedMatchIds = allDbMatches.stream()
-				.filter(m -> !currentMatchIds.contains(m.getId()) && "inprogress".equals(m.getStatus()))
+				.filter(m -> !currentMatchIds.contains(m.getId()) && !"ended".equals(m.getStatus())) // Chỉ cập nhật nếu chưa ended
 				.map(ExBetMatchDto::getId)
 				.collect(Collectors.toList());
 

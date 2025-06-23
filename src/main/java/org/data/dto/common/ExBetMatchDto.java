@@ -20,6 +20,7 @@ public class ExBetMatchDto {
 	private String status;
 	private ExBetMatchCommonDto.RoundDto round;
 	private boolean isFavorite;
+	private String timeEnded;
 	private Boolean isMatched;
 	private ExBetMatchCommonDto.SofaData sofaData;
 }
