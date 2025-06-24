@@ -193,37 +193,74 @@ public class ExServiceImpl implements ExService {
 
 
 	/**
-	 * //TODO: change timeEnded to timeStatus
-	 * // scheduled: in 2 hours
-	 * // ended: 18 minutes ago
-	 * ...
+	 * Update match statuses and calculate time status based on kickoffTime.
 	 *
-	 * @param matches
+	 * @param matches List of matches to update
 	 */
 	private void updateMatchStatuses(List<ExBetMatchDto> matches) {
-		ZonedDateTime currentTime = ZonedDateTime.now();
+		ZonedDateTime currentTime = ZonedDateTime.now(ZoneId.systemDefault()); // Sử dụng múi giờ hệ thống
 		matches.forEach(match -> {
 			Instant instant = Instant.ofEpochSecond(match.getKickoffTime());
-			ZonedDateTime kickoffTime = ZonedDateTime.ofInstant(instant, ZoneId.of("Asia/Ho_Chi_Minh"));
+			ZonedDateTime kickoffTime = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault());
 			ZonedDateTime endTime = kickoffTime.plusMinutes(95);
 
 			if (currentTime.isBefore(kickoffTime)) {
-				match.setStatus("scheduled");
+				match.setStatus("notstarted");
+				match.setTime(calculateTimeBefore(kickoffTime, currentTime)); // "in X hours"
 			} else if (currentTime.isBefore(endTime)) {
 				match.setStatus("inprogress");
+				match.setTime(null); // Không cần time cho inprogress
 			} else {
-				match.setStatus("ended");
-			}
-
-			// Thêm field timeEnd (không lưu vào DB)
-			if ("ended".equals(match.getStatus())) {
-				match.setTimeEnded(calculateTimeEnd(kickoffTime, currentTime)); // Tính thời gian kết thúc
-			} else {
-				match.setTimeEnded(null);
+				match.setStatus("finished");
+				match.setTime(calculateTimeAfter(endTime, currentTime)); // "X minutes/hours/days/years ago"
 			}
 		});
-
 	}
+
+
+	/**
+	 * Calculate time status for matches that have not started (in X hours).
+	 *
+	 * @param kickoffTime Start time of the match
+	 * @param currentTime Current time
+	 * @return String representing time remaining (e.g., "in 2 hours")
+	 */
+	private String calculateTimeBefore(ZonedDateTime kickoffTime, ZonedDateTime currentTime) {
+		long minutesUntil = ChronoUnit.MINUTES.between(currentTime, kickoffTime);
+		if (minutesUntil >= 1440) { // > 1 ngày
+			long days = minutesUntil / 1440;
+			return "in " + days + " days";
+		} else if (minutesUntil >= 60) { // > 1 giờ
+			long hours = minutesUntil / 60;
+			return "in " + hours + " hours";
+		} else {
+			return "in " + minutesUntil + " minutes";
+		}
+	}
+
+	/**
+	 * Calculate time status for matches that have finished (X minutes/hours/days/years ago).
+	 *
+	 * @param endTime     End time of the match
+	 * @param currentTime Current time
+	 * @return String representing time elapsed (e.g., "18 minutes ago")
+	 */
+	private String calculateTimeAfter(ZonedDateTime endTime, ZonedDateTime currentTime) {
+		long minutesAgo = ChronoUnit.MINUTES.between(endTime, currentTime);
+		if (minutesAgo >= 525600) { // > 1 năm (365 ngày * 24 giờ * 60 phút)
+			long years = minutesAgo / 525600;
+			return years + " years ago";
+		} else if (minutesAgo >= 1440) { // > 1 ngày
+			long days = minutesAgo / 1440;
+			return days + " days ago";
+		} else if (minutesAgo >= 60) { // > 1 giờ
+			long hours = minutesAgo / 60;
+			return hours + " hours ago";
+		} else {
+			return minutesAgo + " minutes ago";
+		}
+	}
+
 
 	//TODO: change to
 	private String calculateTimeEnd(ZonedDateTime kickoffTime, ZonedDateTime currentTime) {
