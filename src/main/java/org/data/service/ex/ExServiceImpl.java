@@ -141,39 +141,61 @@ public class ExServiceImpl implements ExService {
 			}
 
 
-			// Fetch ExBet matches from DB
 			log.info("Fetching ExBet matches from DB for date: {}", date);
 			List<ExBetMatchDto> matchesFromDB = exBetRepository.getExBetByDate(date);
 			if (matchesFromDB == null) {
 				matchesFromDB = List.of();
 			}
-
-			// Bước 2: Chuyển đổi và kết hợp dữ liệu từ request
-			List<ExBetMatchRequestDto> matchesFromRequest = request.getMatches();
-			if (matchesFromRequest.isEmpty()) {
-				log.info("No new matches from request, returning matches from DB: {}", matchesFromDB.size());
-				return processAndReturnResponse(matchesFromDB);
-			}
-
 			Map<Integer, ExBetMatchDto> combinedMatches = matchesFromDB.stream()
-					.collect(Collectors.toMap(ExBetMatchDto::getId, dto -> dto, (existing, replacement) -> existing));
-			List<ExBetMatchDto> newMatches = toExBetMatchResponseDto(matchesFromRequest);
-			for (ExBetMatchDto newMatch : newMatches) {
-				combinedMatches.putIfAbsent(newMatch.getId(), newMatch);
+					.collect(
+							Collectors.toMap(
+									ExBetMatchDto::getId,
+									dto -> dto,
+									(existing, replacement) -> existing)
+					);
+
+			List<ExBetMatchRequestDto> matchesFromRequest = request.getMatches();
+			List<ExBetMatchDto> matchDtoFromRequest = toExBetMatchDto(matchesFromRequest);
+
+			for (ExBetMatchDto matchRequest : matchDtoFromRequest) {
+				ExBetMatchDto existingMatchDto = combinedMatches.get(matchRequest.getId());
+				if (existingMatchDto != null) {
+					// Trận đã tồn tại trong DB, kiểm tra cần cập nhật không
+					boolean isUpdateMatch = existingMatchDto.getIsMatched() == null || !existingMatchDto.getIsMatched() ||
+							existingMatchDto.getSofaData() == null || existingMatchDto.getSofaData().getHomeScore() == null ||
+							existingMatchDto.getSofaData().getAwayScore() == null;
+
+					if (isUpdateMatch) {
+						log.info("Updating match {} with new matching logic", existingMatchDto.getId());
+						matchingMatches(existingMatchDto); // Matching lại trận đơn
+					}
+				} else {
+					// Trận mới từ request, thêm vào danh sách
+					log.info("Adding new match from request: {}", matchRequest.getId());
+					matchingMatches(matchRequest);
+					combinedMatches.put(matchRequest.getId(), matchRequest);
+				}
+
 			}
 
 			List<ExBetMatchDto> allMatches = new ArrayList<>(combinedMatches.values());
 			updateMatchStatuses(allMatches);
+			log.info("Saving {} matches to DB for date: {}", allMatches.size(), date);
+			exBetRepository.saveExBetMatchDto(allMatches);
 
-			log.info("Matching {} matches with SofaScore data for date: {}", allMatches.size(), date);
-			List<ExBetMatchDto> matchedMatches = matchingMatches(allMatches, date);
+			// Xử lý các trận trong DB nhưng không còn trong request (cập nhật trạng thái "finished" nếu cần)
+//			List<Integer> requestMatchIds = matchesFromRequest.stream().map(ExBetMatchRequestDto::getId).toList();
+//			List<Integer> endedMatchIds = matchesFromDB.stream()
+//					.filter(m -> !requestMatchIds.contains(m.getId()) && !"finished".equals(m.getStatus()))
+//					.map(ExBetMatchDto::getId)
+//					.toList();
+//			if (!endedMatchIds.isEmpty()) {
+//				log.info("Updating status to 'finished' for {} matches", endedMatchIds.size());
+//				exBetRepository.updateStatusByIds(endedMatchIds, "finished");
+//			}
 
-			if (!matchedMatches.isEmpty()) {
-				log.info("Saving {} matches to DB for date: {}", matchedMatches.size(), date);
-				exBetRepository.saveExBetMatchDto(matchedMatches);
-			}
-
-			return processAndReturnResponse(matchedMatches);
+			// Trả về kết quả
+			return processAndReturnResponse(allMatches);
 
 		} catch (InvalidRequestException e) {
 			log.warn("Invalid request for date {}: {}", date, e.getMessage());
@@ -276,52 +298,9 @@ public class ExServiceImpl implements ExService {
 	}
 
 	private SaveExBetMatchDto.Response processAndReturnResponse(List<ExBetMatchDto> matches) {
-		ZonedDateTime currentTime = ZonedDateTime.now();
-		List<ExBetMatchDto> matchesToMatch = matches.stream()
-				.filter(match -> {
-					boolean isUpdateMatch = match.getIsMatched() == null || !match.getIsMatched() || match.getSofaData() == null
-							|| match.getSofaData().getHomeScore() == null || match.getSofaData().getAwayScore() == null;
-
-					return isUpdateMatch;
-				})
-				.toList();
-
-		List<ExBetMatchDto> updatedMatches = new ArrayList<>();
-		if (!matchesToMatch.isEmpty()) {
-			updatedMatches = matchingMatches(matchesToMatch, currentTime.format(DateTimeFormatter.ISO_LOCAL_DATE));
-		}
-
-		if (!updatedMatches.isEmpty()) {
-			matches.removeIf(matchesToMatch::contains);
-			matches.addAll(updatedMatches);
-		}
-
-		// Cập nhật lại trạng thái dựa trên currentTime
-		updateMatchStatuses(matches);
-		exBetRepository.saveExBetMatchDto(matches);
-
 		int total = matches.size();
-		int totalMatched = (int) matches.stream()
-				.filter(ExBetMatchDto::getIsMatched)
-				.count();
+		int totalMatched = (int) matches.stream().filter(ExBetMatchDto::getIsMatched).count();
 		int totalUnmatched = total - totalMatched;
-
-		// Cập nhật trạng thái "ended" cho các trận không còn trong request và đã kết thúc
-		List<Integer> currentMatchIds = matches.stream()
-				.map(ExBetMatchDto::getId)
-				.toList();
-
-		List<ExBetMatchDto> allDbMatches = exBetRepository.getExBetByDate(currentTime.format(DateTimeFormatter.ISO_LOCAL_DATE));
-
-		List<Integer> endedMatchIds = allDbMatches.stream()
-				.filter(m -> !currentMatchIds.contains(m.getId()) && !"ended".equals(m.getStatus())) // Chỉ cập nhật nếu chưa ended
-				.map(ExBetMatchDto::getId)
-				.collect(Collectors.toList());
-
-		if (!endedMatchIds.isEmpty()) {
-			log.info("Updating status to 'ended' for {} matches", endedMatchIds.size());
-			exBetRepository.updateStatusByIds(endedMatchIds, "ended");
-		}
 
 		return SaveExBetMatchDto.Response.builder()
 				.total(total)
@@ -565,6 +544,124 @@ public class ExServiceImpl implements ExService {
 		}
 	}
 
+	/**
+	 * Match a single match with SofaScore data.
+	 */
+	private void matchingMatches(ExBetMatchDto match) {
+		try {
+			String date = ZonedDateTime.ofInstant(Instant.ofEpochSecond(match.getKickoffTime()), ZoneId.systemDefault())
+					.format(DateTimeFormatter.ISO_LOCAL_DATE);
+			List<SofaMatchResponseDetail> sofaMatches = sofaRepository.getMatchesByDate(date);
+			if (sofaMatches == null || sofaMatches.isEmpty()) {
+				log.info("No SofaScore matches available for matching on date: {}", date);
+				match.setIsMatched(false);
+				match.setSofaData(null);
+				return;
+			}
+
+			if (match.getHomeName() == null || match.getAwayName() == null) {
+				log.warn("Invalid match data: homeName or awayName is null for match ID {}", match.getId());
+				match.setIsMatched(false);
+				match.setSofaData(null);
+				return;
+			}
+
+			String normalizedHomeName = NormalizeTeamName.normalize(match.getHomeName());
+			String normalizedAwayName = NormalizeTeamName.normalize(match.getAwayName());
+
+			SofaMatchResponseDetail bestMatch = null;
+			int minDistance = Integer.MAX_VALUE;
+			int threshold = 3;
+
+			Map<SofaMatchResponseDetail, Pair<String, String>> sofaTeamNames = sofaMatches.stream()
+					.collect(Collectors.toMap(
+							sofaMatch -> sofaMatch,
+							sofaMatch -> new Pair<>(
+									NormalizeTeamName.normalize(sofaMatch.getHomeTeam().getName()),
+									NormalizeTeamName.normalize(sofaMatch.getAwayTeam().getName())
+							)
+					));
+
+			for (Map.Entry<SofaMatchResponseDetail, Pair<String, String>> entry : sofaTeamNames.entrySet()) {
+				SofaMatchResponseDetail sofaMatch = entry.getKey();
+				String sofaHome = entry.getValue().getFirst();
+				String sofaAway = entry.getValue().getSecond();
+
+				int homeDistance = LevenshteinMatcher.calculateLevenshteinDistance(normalizedHomeName, sofaHome);
+				int awayDistance = LevenshteinMatcher.calculateLevenshteinDistance(normalizedHomeName, sofaAway);
+
+				if (homeDistance <= threshold || awayDistance <= threshold) {
+					String otherTeam = homeDistance <= threshold ? normalizedAwayName : normalizedHomeName;
+					String otherSofaTeam = homeDistance <= threshold ? sofaAway : sofaHome;
+					int otherDistance = LevenshteinMatcher.calculateLevenshteinDistance(otherTeam, otherSofaTeam);
+
+					if (otherDistance <= threshold && (homeDistance + otherDistance) < minDistance) {
+						minDistance = homeDistance + otherDistance;
+						bestMatch = sofaMatch;
+					}
+				}
+			}
+
+			if (bestMatch != null) {
+				log.info("Found SofaScore match for match: {} vs {} with SofaScore match: {} vs {}",
+						match.getHomeName(), match.getAwayName(), bestMatch.getHomeTeam().getName(), bestMatch.getAwayTeam().getName());
+
+				ExBetMatchCommonDto.SofaData sofa = ExBetMatchCommonDto.SofaData.builder()
+						.sofaMatchId(bestMatch.getMatchId())
+						.sofaHomeId(bestMatch.getHomeTeam().getId())
+						.sofaAwayId(bestMatch.getAwayTeam().getId())
+						.sofaHomeName(bestMatch.getHomeTeam().getName())
+						.sofaAwayName(bestMatch.getAwayTeam().getName())
+						.build();
+
+				ExBetMatchCommonDto.ScoreData homeScoreData = ExBetMatchCommonDto.ScoreData.builder()
+						.period1(bestMatch.getHomeScore().getPeriod1())
+						.period2(bestMatch.getHomeScore().getPeriod2())
+						.current(bestMatch.getHomeScore().getCurrent())
+						.display(bestMatch.getHomeScore().getDisplay())
+						.normalTime(bestMatch.getHomeScore().getNormalTime())
+						.extra1(bestMatch.getHomeScore().getExtra1())
+						.extra2(bestMatch.getHomeScore().getExtra2())
+						.overtime(bestMatch.getHomeScore().getOvertime())
+						.penalties(bestMatch.getHomeScore().getPenalties())
+						.scoreEmpty(bestMatch.getHomeScore().getScoreEmpty())
+						.aggregated(bestMatch.getHomeScore().getAggregated())
+						.build();
+
+				ExBetMatchCommonDto.ScoreData awayScoreData = ExBetMatchCommonDto.ScoreData.builder()
+						.period1(bestMatch.getAwayScore().getPeriod1())
+						.period2(bestMatch.getAwayScore().getPeriod2())
+						.current(bestMatch.getAwayScore().getCurrent())
+						.display(bestMatch.getAwayScore().getDisplay())
+						.normalTime(bestMatch.getAwayScore().getNormalTime())
+						.extra1(bestMatch.getAwayScore().getExtra1())
+						.extra2(bestMatch.getAwayScore().getExtra2())
+						.overtime(bestMatch.getAwayScore().getOvertime())
+						.penalties(bestMatch.getAwayScore().getPenalties())
+						.scoreEmpty(bestMatch.getAwayScore().getScoreEmpty())
+						.aggregated(bestMatch.getAwayScore().getAggregated())
+						.build();
+
+				sofa.setHomeScore(homeScoreData);
+				sofa.setAwayScore(awayScoreData);
+				match.setSofaData(sofa);
+				match.setIsMatched(true);
+			} else {
+				log.info("No SofaScore match found for match: {} vs {}", match.getHomeName(), match.getAwayName());
+				match.setIsMatched(false);
+				match.setSofaData(null);
+			}
+		} catch (Exception e) {
+			log.error("Failed to match match with SofaScore data: {}", e.getMessage(), e);
+			throw new AnalysisProcessingException(
+					"Failed to match match with SofaScore data",
+					ErrorCodeRegistry.ANALYSIS_ERROR,
+					e
+			);
+		}
+	}
+
+
 	private void updateEndedMatches(List<ExBetMatchRequestDto> matchesFromRequest, List<ExBetMatchDto> matchesFromDB) {
 		try {
 			List<Integer> requestMatchIds = matchesFromRequest.stream()
@@ -591,7 +688,7 @@ public class ExServiceImpl implements ExService {
 	}
 
 
-	private List<ExBetMatchDto> toExBetMatchResponseDto(List<ExBetMatchRequestDto> matchesRequests) {
+	private List<ExBetMatchDto> toExBetMatchDto(List<ExBetMatchRequestDto> matchesRequests) {
 		try {
 			if (matchesRequests == null || matchesRequests.isEmpty()) {
 				return List.of();
