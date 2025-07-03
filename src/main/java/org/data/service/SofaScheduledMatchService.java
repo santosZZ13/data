@@ -1,4 +1,4 @@
-package org.data.service.sf;
+package org.data.service;
 
 import org.data.dto.sf.GetScheduledMatchByName;
 import org.data.dto.sf.GetScheduledMatchesByName;

@@ -1,4 +1,4 @@
-package org.data.repository.ex;
+package org.data.repository.impl;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -7,7 +7,8 @@ import org.data.dto.common.ExBetMatchDto;
 import org.data.persistent.entity.ExBetMatchEntity;
 import org.data.persistent.repository.ExBetCustomRepository;
 import org.data.persistent.repository.ExBetMongoRepository;
-import org.data.repository.sofa.SofaRepository;
+import org.data.repository.ExBetRepository;
+import org.data.repository.SofaRepository;
 import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;

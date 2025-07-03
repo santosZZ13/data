@@ -1,12 +1,13 @@
-package org.data.service.sf;
+package org.data.service.impl;
 
 import lombok.AllArgsConstructor;
 import org.data.dto.sf.GetScheduledMatchByName;
 import org.data.dto.sf.GetScheduledMatchesByName;
 import org.data.dto.sf.GetSofaMatchesByDate;
 import org.data.dto.sf.SaveScheduledMatchDto;
-import org.data.repository.sofa.SofaRepository;
+import org.data.repository.SofaRepository;
 import org.data.external.sofa.model.SofaMatchResponseDetail;
+import org.data.service.SofaScheduledMatchService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

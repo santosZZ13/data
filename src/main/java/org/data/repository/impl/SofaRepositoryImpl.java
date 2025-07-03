@@ -1,4 +1,4 @@
-package org.data.repository.sofa;
+package org.data.repository.impl;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -7,7 +7,8 @@ import org.data.dto.common.SofaMatchDto;
 import org.data.dto.common.TeamDto;
 import org.data.persistent.entity.SofaScheduledMatchEntity;
 import org.data.persistent.repository.SofaScheduledMatchMongoRepository;
-import org.data.repository.team.TeamRepository;
+import org.data.repository.SofaRepository;
+import org.data.repository.TeamRepository;
 import org.data.external.sofa.model.SofaMatchResponseDetail;
 import org.data.util.NormalizeTeamName;
 import org.data.external.sofa.service.SofaApiServiceImpl;

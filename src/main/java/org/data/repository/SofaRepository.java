@@ -1,4 +1,4 @@
-package org.data.repository.sofa;
+package org.data.repository;
 
 import org.data.dto.common.SofaMatchDto;
 import org.data.external.sofa.model.SofaMatchResponseDetail;

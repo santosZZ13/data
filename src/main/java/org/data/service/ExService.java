@@ -1,4 +1,4 @@
-package org.data.service.ex;
+package org.data.service;
 
 import org.data.dto.ex.*;
 import org.springframework.web.multipart.MultipartFile;

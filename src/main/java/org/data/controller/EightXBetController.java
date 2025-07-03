@@ -3,7 +3,7 @@ package org.data.controller;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.data.dto.ex.*;
-import org.data.service.ex.ExService;
+import org.data.service.ExService;
 import org.data.util.annotation.ValidDate;
 import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.*;

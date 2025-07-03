@@ -1,4 +1,4 @@
-package org.data.service.ex;
+package org.data.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
@@ -10,12 +10,13 @@ import org.data.dto.ex.*;
 import org.data.exception.AnalysisProcessingException;
 import org.data.exception.ExternalServiceException;
 import org.data.exception.InvalidRequestException;
-import org.data.repository.ex.ExBetRepository;
-import org.data.repository.sofa.SofaRepository;
+import org.data.repository.ExBetRepository;
+import org.data.repository.SofaRepository;
 import org.data.external.ex.modal.ExBetResponse;
 import org.data.external.ex.modal.ExBetTournamentResponse;
 import org.data.external.sofa.model.SofaMatchResponseDetail;
 import org.data.external.sofa.service.SofaApiService;
+import org.data.service.ExService;
 import org.data.util.LevenshteinMatcher;
 import org.data.util.NormalizeTeamName;
 import org.data.util.analyzer.TeamAnalyzer;

@@ -3,10 +3,9 @@ package org.data.controller;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.data.dto.sf.GetScheduledMatchByName;
-import org.data.dto.sf.GetScheduledMatchesByName;
 import org.data.dto.sf.GetSofaMatchesByDate;
 import org.data.dto.sf.SaveScheduledMatchDto;
-import org.data.service.sf.SofaScheduledMatchService;
+import org.data.service.SofaScheduledMatchService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

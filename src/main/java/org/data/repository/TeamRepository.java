@@ -1,8 +1,6 @@
-package org.data.repository.team;
+package org.data.repository;
 
-import org.data.dto.common.SofaMatchDto;
 import org.data.dto.common.TeamDto;
-import org.data.persistent.entity.TeamEntity;
 
 import java.util.List;
 

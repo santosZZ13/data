@@ -1,4 +1,4 @@
-package org.data.repository.ex;
+package org.data.repository;
 
 import org.data.dto.common.ExBetMatchDto;
 
