@@ -15,7 +15,7 @@ public class LotteryDto {
 	private int roundId;
 	private int lotteryID;
 	private String roundTime;
-	private String closeTime;
+//	private String closeTime;
 	private int specialPrize;
 	private int firstPrize;
 	private List<Integer> secondPrize;
