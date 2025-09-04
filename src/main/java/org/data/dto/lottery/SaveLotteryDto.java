@@ -4,8 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.data.dto.common.LotteryDto;
-import org.data.dto.ex.GetAnalystDto;
+import org.data.dto.common.lottery.LotteryResultDto;
 
 import java.util.List;
 
@@ -15,7 +14,7 @@ public interface SaveLotteryDto {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class Request {
-		List<LotteryDto> lotteries;
+		List<LotteryResultDto> lotteries;
 	}
 
 	@Builder

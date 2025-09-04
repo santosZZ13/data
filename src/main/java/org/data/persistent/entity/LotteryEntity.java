@@ -16,8 +16,8 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class LotteryEntity {
-	@Id
-	private Integer roundId; // Sử dụng roundId làm _id
+
+	private long roundId; // Sử dụng roundId làm _id
 	private int lotteryID;
 	private String roundTime;
 	private String closeTime;

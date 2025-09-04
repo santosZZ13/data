@@ -1,8 +1,8 @@
 package org.data.converter;
 
 import lombok.extern.log4j.Log4j2;
-import org.data.dto.common.ExBetMatchCommonDto;
-import org.data.dto.common.ExBetMatchDto;
+import org.data.dto.common.ex.ExBetMatchCommonDto;
+import org.data.dto.common.ex.ExBetMatchDto;
 import org.data.persistent.entity.ExBetMatchEntity;
 import org.data.util.utils.DateUtils;
 

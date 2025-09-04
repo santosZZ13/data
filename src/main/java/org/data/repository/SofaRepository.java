@@ -1,6 +1,6 @@
 package org.data.repository;
 
-import org.data.dto.common.SofaMatchDto;
+import org.data.dto.common.sofa.SofaMatchDto;
 import org.data.external.sofa.model.SofaMatchResponseDetail;
 
 import java.util.List;

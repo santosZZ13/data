@@ -1,6 +1,6 @@
 package org.data.repository;
 
-import org.data.dto.common.ExBetMatchDto;
+import org.data.dto.common.ex.ExBetMatchDto;
 
 import java.util.List;
 

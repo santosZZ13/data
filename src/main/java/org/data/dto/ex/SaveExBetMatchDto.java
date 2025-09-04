@@ -4,8 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.data.dto.common.ExBetMatchDto;
-import org.data.dto.common.ExBetMatchRequestDto;
+import org.data.dto.common.ex.ExBetMatchDto;
+import org.data.dto.common.ex.ExBetMatchRequestDto;
 
 import java.util.List;
 

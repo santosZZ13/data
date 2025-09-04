@@ -1,4 +1,4 @@
-package org.data.dto.common;
+package org.data.dto.common.sofa;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

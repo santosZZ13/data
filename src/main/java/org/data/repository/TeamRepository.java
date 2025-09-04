@@ -1,6 +1,6 @@
 package org.data.repository;
 
-import org.data.dto.common.TeamDto;
+import org.data.dto.common.sofa.TeamDto;
 
 import java.util.List;
 

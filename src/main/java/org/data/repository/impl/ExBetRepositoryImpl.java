@@ -3,7 +3,7 @@ package org.data.repository.impl;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.data.converter.ExBetMatchConverter;
-import org.data.dto.common.ExBetMatchDto;
+import org.data.dto.common.ex.ExBetMatchDto;
 import org.data.persistent.entity.ExBetMatchEntity;
 import org.data.persistent.repository.ExBetCustomRepository;
 import org.data.persistent.repository.ExBetMongoRepository;

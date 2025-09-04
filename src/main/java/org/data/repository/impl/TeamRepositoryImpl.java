@@ -2,7 +2,7 @@ package org.data.repository.impl;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.data.dto.common.TeamDto;
+import org.data.dto.common.sofa.TeamDto;
 import org.data.persistent.entity.TeamEntity;
 import org.data.persistent.repository.TeamMongoRepository;
 import org.data.repository.TeamRepository;

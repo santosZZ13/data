@@ -1,11 +1,11 @@
 package org.data.repository;
 
-import org.data.dto.common.LotteryDto;
+import org.data.dto.common.lottery.LotteryResultDto;
 
 
 import java.util.List;
 
 
 public interface LotteryRepository {
-	void saveLotteryDto(List<LotteryDto> lotteriesDto);
+	void saveLotteryDto(List<LotteryResultDto> lotteriesDto);
 }

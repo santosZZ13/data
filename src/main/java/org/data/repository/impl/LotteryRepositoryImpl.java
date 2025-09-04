@@ -1,7 +1,7 @@
 package org.data.repository.impl;
 
 import lombok.AllArgsConstructor;
-import org.data.dto.common.LotteryDto;
+import org.data.dto.common.lottery.LotteryResultDto;
 import org.data.persistent.entity.LotteryEntity;
 import org.data.persistent.repository.LotteryRepositoryMongoRepository;
 import org.data.repository.LotteryRepository;
@@ -17,7 +17,7 @@ public class LotteryRepositoryImpl implements LotteryRepository {
 	private final LotteryRepositoryMongoRepository lotteryRepositoryMongoRepository;
 
 	@Override
-	public void saveLotteryDto(List<LotteryDto> lotteriesDto) {
+	public void saveLotteryDto(List<LotteryResultDto> lotteriesDto) {
 		List<LotteryEntity> entities = lotteriesDto.stream().map(dto -> {
 			LotteryEntity entity = LotteryEntity.builder()
 					.roundId(dto.getRoundId())

@@ -1,7 +1,7 @@
 package org.data.converter;
 
 import lombok.extern.log4j.Log4j2;
-import org.data.dto.common.SofaMatchDto;
+import org.data.dto.common.sofa.SofaMatchDto;
 import org.data.persistent.entity.SofaScheduledMatchEntity;
 import org.data.external.sofa.model.SofaMatchResponseDetail;
 import org.data.util.NormalizeTeamName;

@@ -1,4 +1,4 @@
-package org.data.dto.common;
+package org.data.dto.common.lottery;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,11 +11,11 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class LotteryDto {
+public class LotteryResultDto {
 	private int roundId;
 	private int lotteryID;
 	private String roundTime;
-//	private String closeTime;
+	private String closeTime;
 	private int specialPrize;
 	private int firstPrize;
 	private List<Integer> secondPrize;

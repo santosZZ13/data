@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.data.dto.common.SofaMatchDto;
+import org.data.dto.common.sofa.SofaMatchDto;
 
 import java.util.List;
 
