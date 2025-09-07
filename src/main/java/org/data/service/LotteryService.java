@@ -1,6 +1,7 @@
 package org.data.service;
 
-import org.data.dto.lottery.LotteryResultPredictDto;
+import org.data.dto.lottery.GetLotteryResultPredictDto;
+import org.data.dto.lottery.PostLotteryResultPredictDto;
 import org.data.dto.lottery.SaveLotteryDto;
 
 public interface LotteryService {
@@ -12,7 +13,8 @@ public interface LotteryService {
 	 */
 	SaveLotteryDto.Response saveLotteries(SaveLotteryDto.Request request);
 
-	LotteryResultPredictDto.Response predictResults(LotteryResultPredictDto.Request request);
+	PostLotteryResultPredictDto.Response predictResults(PostLotteryResultPredictDto.Request request);
+	GetLotteryResultPredictDto.Response predictResults();
 
 //	/**
 //	 * Finds lotteries by name.

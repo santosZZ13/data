@@ -17,11 +17,10 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PredictionLotteryEntity {
-	@Id
-	private int id;
+	private String id;
 	private long phaseId;
-	private ZonedDateTime startTime;
-	private ZonedDateTime endTime;
+	private LocalDateTime startTime;
+	private LocalDateTime endTime;
 	private int total;
 	private int win;
 	private int lose;
@@ -47,18 +46,18 @@ public class PredictionLotteryEntity {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	public static class LotteryResultEntity {
-		private int roundId;
+		private long roundId;
 		private int lotteryID;
-		private String roundTime;
-		private String closeTime;
-		private int specialPrize;
-		private int firstPrize;
-		private List<Integer> secondPrize;
-		private List<Integer> thirdPrize;
-		private List<Integer> fourthPrize;
-		private List<Integer> fifthPrize;
-		private List<Integer> sixthPrize;
-		private List<Integer> seventhPrize;
+		private long roundTime;
+//		private long closeTime;
+		private String specialPrize;
+		private String firstPrize;
+		private List<String> secondPrize;
+		private List<String> thirdPrize;
+		private List<String> fourthPrize;
+		private List<String> fifthPrize;
+		private List<String> sixthPrize;
+		private List<String> seventhPrize;
 	}
 
 	@Builder
@@ -66,7 +65,7 @@ public class PredictionLotteryEntity {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	public static class PredictedResultEntity {
-		private int roundId;
+		private long roundId;
 		private String predict;
 		private String result;
 		private String status;

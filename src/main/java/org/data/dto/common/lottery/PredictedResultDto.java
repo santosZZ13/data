@@ -11,15 +11,16 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PredictedResultDto {
-	private int roundId;
+	private long roundId;
 	private String predict;
+	private Double betAmount;
+
+
 	private String result;
 	private String status;
 	private String specialPrize;
-
-	private Double betAmount;
-	private Double initialBalance;
-	private Double currentBalance;
+//	private Double initialBalance;
+//	private Double currentBalance;
 	private Double profit;
 	private Double loss;
 	private Double totalProfit;

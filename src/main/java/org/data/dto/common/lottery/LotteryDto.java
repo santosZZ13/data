@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class LotteryDto {
-	private LotteryResultDto lotteryResultDto;
-	private PredictedResultDto predictedResultDto;
+	private LotteryResultDto lotteryResult;
+	private PredictedResultDto predictedResult;
 }

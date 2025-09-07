@@ -21,9 +21,8 @@ public class LotteryRepositoryImpl implements LotteryRepository {
 		List<LotteryEntity> entities = lotteriesDto.stream().map(dto -> {
 			LotteryEntity entity = LotteryEntity.builder()
 					.roundId(dto.getRoundId())
-					.lotteryID(dto.getLotteryID())
+					.lotteryID(dto.getLotteryId())
 					.roundTime(dto.getRoundTime())
-					.closeTime(dto.getCloseTime())
 					.specialPrize(dto.getSpecialPrize())
 					.firstPrize(dto.getFirstPrize())
 					.secondPrize(dto.getSecondPrize())

@@ -2,7 +2,8 @@ package org.data.controller;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.data.dto.lottery.LotteryResultPredictDto;
+import org.data.dto.lottery.GetLotteryResultPredictDto;
+import org.data.dto.lottery.PostLotteryResultPredictDto;
 import org.data.dto.lottery.SaveLotteryDto;
 import org.data.service.LotteryService;
 import org.springframework.web.bind.annotation.*;
@@ -22,9 +23,15 @@ public class LotteryController {
 		return lotteryService.saveLotteries(request);
 	}
 
-	@PostMapping("/save")
-	public LotteryResultPredictDto.Response predictResults(@RequestBody LotteryResultPredictDto.Request request) {
+	@PostMapping("/savePredict")
+	public PostLotteryResultPredictDto.Response predictResults(@RequestBody PostLotteryResultPredictDto.Request request) {
 		log.info("Received request to predict lottery results");
 		return lotteryService.predictResults(request);
+	}
+
+	@GetMapping("/predict")
+	public GetLotteryResultPredictDto.Response predictResults() {
+		log.info("Received request to get predicted lottery results");
+		return lotteryService.predictResults();
 	}
 }

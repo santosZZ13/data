@@ -39,6 +39,15 @@ public class TimeUtil {
 		return LocalDateTime.parse(date, formatter);
 	}
 
+//	        "startTime": "2025-09-05T20:42:00+07:00",
+//					"endTime": "2025-09-05T21:42:00+07:00",
+	public static LocalDateTime convertStringToLocalDateTimeWithZone(@NotNull String date) {
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX");
+		LocalDateTime localDateTime = LocalDateTime.parse(date, formatter);
+		return localDateTime
+				.atZone(ZoneId.systemDefault())
+				.toLocalDateTime();
+	}
 
 	public static long calculateTimeElapsed(Instant start, Instant finish) {
 		return Duration.between(start, finish).toMillis();

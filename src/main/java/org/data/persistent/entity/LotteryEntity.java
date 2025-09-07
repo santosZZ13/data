@@ -19,16 +19,17 @@ public class LotteryEntity {
 
 	private long roundId; // Sử dụng roundId làm _id
 	private int lotteryID;
-	private String roundTime;
-	private String closeTime;
-	private int specialPrize;
-	private int firstPrize;
-	private List<Integer> secondPrize;
-	private List<Integer> thirdPrize;
-	private List<Integer> fourthPrize;
-	private List<Integer> fifthPrize;
-	private List<Integer> sixthPrize;
-	private List<Integer> seventhPrize;
+	private long roundTime;
+	private long closeTime;
+
+	private String specialPrize;
+	private String firstPrize;
+	private List<String> secondPrize;
+	private List<String> thirdPrize;
+	private List<String> fourthPrize;
+	private List<String> fifthPrize;
+	private List<String> sixthPrize;
+	private List<String> seventhPrize;
 	private LocalDateTime created;
 	private LocalDateTime updated;
 }

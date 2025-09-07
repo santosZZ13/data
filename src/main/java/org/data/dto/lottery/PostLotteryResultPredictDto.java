@@ -7,16 +7,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.data.dto.common.lottery.LotteryDto;
 
-import java.time.ZonedDateTime;
 import java.util.List;
 
-public interface LotteryResultPredictDto {
+public interface PostLotteryResultPredictDto {
 	@Builder
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class Request {
-		private LotteryResultDataRequest data;
+		private LotteryResultData data;
 	}
 
 
@@ -24,10 +23,10 @@ public interface LotteryResultPredictDto {
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
-	class LotteryResultDataRequest {
+	class LotteryResultData {
 //		private int phaseId;
-		private ZonedDateTime startTime;
-		private ZonedDateTime endTime;
+		private String startTime;
+		private String endTime;
 		private int total;
 		private int win;
 		private int lose;
