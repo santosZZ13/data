@@ -179,6 +179,7 @@ public class LotteryServiceImpl implements LotteryService {
 						);
 					}
 					return PostLotteryResultPredictDto.LotteryResultData.builder()
+							.phaseId(entity.getPhaseId())
 							.startTime(TimeUtil.convertLocalDateTimeToString(entity.getStartTime()))
 							.endTime(TimeUtil.convertLocalDateTimeToString(entity.getEndTime()))
 							.total(entity.getTotal())

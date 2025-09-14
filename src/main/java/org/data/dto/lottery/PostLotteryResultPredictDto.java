@@ -24,7 +24,7 @@ public interface PostLotteryResultPredictDto {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	class LotteryResultData {
-//		private int phaseId;
+		private long phaseId;
 		private String startTime;
 		private String endTime;
 		private int total;
